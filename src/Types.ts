@@ -2,48 +2,56 @@ import { CanvasType, QRErrorCorrectLevel } from './Enums';
 
 export interface QRCodeConfig {
     binarizeThreshold?: string;
-    binarize?: boolean,
-    size: number,
-    margin: number,
-    typeNumber: number,
-    colorDark: string,
-    colorLight: string,
-    correctLevel: QRErrorCorrectLevel,
-    backgroundImage?: string,
-    backgroundDimming: string,
-    logoImage?: string,
-    logoScale: number,
-    logoMargin: number,
-    logoCornerRadius: number,
-    whiteMargin?: boolean,
-    dotScale: number,
-    autoColor?: boolean,
-    text: string,
-    maskedDots: boolean,
-    canvasType?: CanvasType,
+    binarize?: boolean;
+    size: number;
+    margin: number;
+    typeNumber: number;
+    colorDark: string;
+    colorLight: string;
+    correctLevel: QRErrorCorrectLevel;
+    backgroundImage?: string;
+    backgroundDimming: string;
+    logoImage?: string;
+    logoScale: number;
+    logoMargin: number;
+    logoCornerRadius: number;
+    whiteMargin?: boolean;
+    dotScale: number;
+    autoColor?: boolean;
+    text: string;
+    maskedDots: boolean;
+    canvasType?: CanvasType;
+    eyeBallShape?: string;
+    eyeFrameShape?: string;
+    eyeBallColor?: string;
+    eyeFrameColor?: string;
 
     [key: string]: any;
 }
 
 export interface QRDrawingConfig {
-    size: number,
-    text: string,
-    nSize: number,
-    rawSize: number,
-    viewportSize: number,
-    margin: number,
-    whiteMargin?: boolean,
-    autoColor?: boolean,
-    dotScale: number,
-    moduleSize: number,
-    backgroundDimming: string,
-    backgroundImage?: string,
-    colorDark: string,
-    colorLight: string,
-    logoImage?: string,
-    logoScale: number,
-    logoMargin: number,
-    logoCornerRadius: number,
-    maskedDots: boolean,
-    canvasType?: CanvasType
+    size: number;
+    text: string;
+    nSize: number;
+    rawSize: number;
+    viewportSize: number;
+    margin: number;
+    whiteMargin?: boolean;
+    autoColor?: boolean;
+    dotScale: number;
+    moduleSize: number;
+    backgroundDimming: string;
+    backgroundImage?: string;
+    colorDark: string;
+    colorLight: string;
+    logoImage?: string;
+    logoScale: number;
+    logoMargin: number;
+    logoCornerRadius: number;
+    maskedDots: boolean;
+    canvasType?: CanvasType;
+    eyeBallShape?: string;
+    eyeFrameShape?: string;
+    eyeBallColor?: string;
+    eyeFrameColor?: string;
 }

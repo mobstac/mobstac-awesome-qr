@@ -604,29 +604,147 @@ export class Drawing {
         }
     }
 
+    private drawEyeFrames(context: CanvasRenderingContext2D, shape: string, color: string) {
+        const moduleSize = this.config.moduleSize;
+        const moduleCount = this.moduleCount;
+        switch (shape) {
+            case 'square': {
+                context.fillStyle = color;
+                context.fillRect(0, 0, 7 * moduleSize, moduleSize);
+                context.fillRect((moduleCount - 7) * moduleSize, 0, 7 * moduleSize, moduleSize);
+                context.fillRect(0, 6 * moduleSize, 7 * moduleSize, moduleSize);
+                context.fillRect((moduleCount - 7) * moduleSize, 6 * moduleSize, 7 * moduleSize, moduleSize);
+                context.fillRect(0, (moduleCount - 7) * moduleSize, 7 * moduleSize, moduleSize);
+                context.fillRect(0, (moduleCount - 7 + 6) * moduleSize, 7 * moduleSize, moduleSize);
+                context.fillRect(0, 0, moduleSize, 7 * moduleSize);
+                context.fillRect(6 * moduleSize, 0, moduleSize, 7 * moduleSize);
+                context.fillRect((moduleCount - 7) * moduleSize, 0, moduleSize, 7 * moduleSize);
+                context.fillRect((moduleCount - 7 + 6) * moduleSize, 0, moduleSize, 7 * moduleSize);
+                context.fillRect(0, (moduleCount - 7) * moduleSize, moduleSize, 7 * moduleSize);
+                context.fillRect(6 * moduleSize, (moduleCount - 7) * moduleSize, moduleSize, 7 * moduleSize);
+                context.fillStyle = this.config.colorDark;
+                break;
+            }
+            case 'circle': {
+                context.fillStyle = color;
+                context.beginPath();
+                context.arc(3.5*moduleSize, 3.5*moduleSize, moduleSize*3.5, 0, Math.PI*2, true);
+                context.arc(3.5*moduleSize, 3.5*moduleSize, moduleSize*2.5, 0, Math.PI*2, true);
+                context.fill('evenodd');
+                context.beginPath();
+                context.arc((moduleCount-3.5)*moduleSize, 3.5*moduleSize, moduleSize*3.5, 0, Math.PI*2, true);
+                context.arc((moduleCount-3.5)*moduleSize, 3.5*moduleSize, moduleSize*2.5, 0, Math.PI*2, true);
+                context.fill('evenodd');
+                context.beginPath();
+                context.arc(3.5*moduleSize, (moduleCount-3.5)*moduleSize, moduleSize*3.5, 0, Math.PI*2, true);
+                context.arc(3.5*moduleSize, (moduleCount-3.5)*moduleSize, moduleSize*2.5, 0, Math.PI*2, true);
+                context.fill('evenodd');
+                context.fillStyle = this.config.colorDark;
+                break;
+            }
+            case 'rounded': {
+                context.fillStyle = color;
+                context.strokeStyle = color;
+                const cornerRadius = moduleSize;
+                context.lineJoin = "round";
+                context.lineWidth = cornerRadius;
+
+                context.strokeRect(0+(cornerRadius/2), 0+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect((moduleCount - 7) * moduleSize+(cornerRadius/2), 0+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect(0+(cornerRadius/2), 6 * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect((moduleCount - 7) * moduleSize+(cornerRadius/2), 6 * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect(0+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect(0+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect(0+(cornerRadius/2), (moduleCount - 7 + 6) * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                context.strokeRect(0+(cornerRadius/2), 0+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                context.strokeRect(6 * moduleSize+(cornerRadius/2), 0+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                context.strokeRect((moduleCount - 7) * moduleSize+(cornerRadius/2), 0, moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                context.strokeRect((moduleCount - 7 + 6) * moduleSize+(cornerRadius/2), 0+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                context.strokeRect(0+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                context.strokeRect(6 * moduleSize+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                
+                // context.fillRect(0+(cornerRadius/2), 0+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect((moduleCount - 7) * moduleSize+(cornerRadius/2), 0+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect(0+(cornerRadius/2), 6 * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect((moduleCount - 7) * moduleSize+(cornerRadius/2), 6 * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect(0+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect(0+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect(0+(cornerRadius/2), (moduleCount - 7 + 6) * moduleSize+(cornerRadius/2), 7 * moduleSize-cornerRadius, moduleSize-cornerRadius);
+                // context.fillRect(0+(cornerRadius/2), 0+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                // context.fillRect(6 * moduleSize+(cornerRadius/2), 0+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                // context.fillRect((moduleCount - 7) * moduleSize+(cornerRadius/2), 0, moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                // context.fillRect((moduleCount - 7 + 6) * moduleSize+(cornerRadius/2), 0+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                // context.fillRect(0+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                // context.fillRect(6 * moduleSize+(cornerRadius/2), (moduleCount - 7) * moduleSize+(cornerRadius/2), moduleSize-cornerRadius, 7 * moduleSize-cornerRadius);
+                context.fillStyle = this.config.colorDark;
+                context.strokeStyle = this.config.colorDark;
+                break;
+            }
+        }
+    }
+
+    private drawEyeBalls(context: CanvasRenderingContext2D, shape: string, color:string) {
+        const moduleSize = this.config.moduleSize;
+        const moduleCount = this.moduleCount;
+        switch (shape) {
+            case 'square': {
+                context.fillStyle = color;
+                context.fillRect(2 * moduleSize, 2 * moduleSize , 3 * moduleSize , 3 * moduleSize);
+                context.fillRect((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, 3 * moduleSize , 3 * moduleSize);
+                context.fillRect(2 * moduleSize, (moduleCount - 7 + 2) * moduleSize, 3 * moduleSize, 3 * moduleSize);
+                context.fillStyle = this.config.colorDark;
+                break;
+            }
+            case 'circle': {
+                context.fillStyle = color;
+                context.beginPath();
+                context.arc(3.5*moduleSize, 3.5*moduleSize, moduleSize*1.5, 0, Math.PI*2, true);
+                context.fill('evenodd');
+                context.beginPath();
+                context.arc((moduleCount-3.5)*moduleSize, 3.5*moduleSize, moduleSize*1.5, 0, Math.PI*2, true);
+                context.fill('evenodd');
+                context.beginPath();
+                context.arc(3.5*moduleSize, (moduleCount-3.5)*moduleSize, moduleSize*1.5, 0, Math.PI*2, true);
+                context.fill('evenodd');
+                context.fillStyle = this.config.colorDark;
+                break;
+            }
+            case 'rounded': {
+                context.fillStyle = color;
+                context.strokeStyle = color;
+                const cornerRadius = moduleSize;
+                context.lineJoin = "round";
+                context.lineWidth = cornerRadius;
+
+                context.strokeRect(2 * moduleSize + (cornerRadius/2), 2 * moduleSize + (cornerRadius/2), 3 * moduleSize - cornerRadius, 3 * moduleSize- cornerRadius);
+                context.strokeRect((moduleCount - 7 + 2) * moduleSize + (cornerRadius/2), 2 * moduleSize + (cornerRadius/2), 3 * moduleSize - cornerRadius, 3 * moduleSize - cornerRadius);
+                context.strokeRect(2 * moduleSize + (cornerRadius/2), (moduleCount - 7 + 2) * moduleSize+(cornerRadius/2), 3 * moduleSize - cornerRadius, 3 * moduleSize - cornerRadius);
+
+                context.fillRect(2 * moduleSize + (cornerRadius/2), 2 * moduleSize + (cornerRadius/2), 3 * moduleSize - cornerRadius, 3 * moduleSize- cornerRadius);
+                context.fillRect((moduleCount - 7 + 2) * moduleSize + (cornerRadius/2), 2 * moduleSize + (cornerRadius/2), 3 * moduleSize - cornerRadius, 3 * moduleSize - cornerRadius);
+                context.fillRect(2 * moduleSize + (cornerRadius / 2), (moduleCount - 7 + 2) * moduleSize + (cornerRadius / 2), 3 * moduleSize - cornerRadius, 3 * moduleSize - cornerRadius);
+                context.fillStyle = this.config.colorDark;
+                context.strokeStyle = this.config.colorDark;
+                break;
+            }
+        }
+    }
+
     private drawPositionPatterns(context: CanvasRenderingContext2D) {
         context.fillStyle = this.config.colorDark;
 
         const moduleSize = this.config.moduleSize;
         const moduleCount = this.moduleCount;
-        context.fillRect(0, 0, 7 * moduleSize, moduleSize);
-        context.fillRect((moduleCount - 7) * moduleSize, 0, 7 * moduleSize, moduleSize);
-        context.fillRect(0, 6 * moduleSize, 7 * moduleSize, moduleSize);
-        context.fillRect((moduleCount - 7) * moduleSize, 6 * moduleSize, 7 * moduleSize, moduleSize);
-        context.fillRect(0, (moduleCount - 7) * moduleSize, 7 * moduleSize, moduleSize);
-        context.fillRect(0, (moduleCount - 7 + 6) * moduleSize, 7 * moduleSize, moduleSize);
-        context.fillRect(0, 0, moduleSize, 7 * moduleSize);
-        context.fillRect(6 * moduleSize, 0, moduleSize, 7 * moduleSize);
-        context.fillRect((moduleCount - 7) * moduleSize, 0, moduleSize, 7 * moduleSize);
-        context.fillRect((moduleCount - 7 + 6) * moduleSize, 0, moduleSize, 7 * moduleSize);
-        context.fillRect(0, (moduleCount - 7) * moduleSize, moduleSize, 7 * moduleSize);
-        context.fillRect(6 * moduleSize, (moduleCount - 7) * moduleSize, moduleSize, 7 * moduleSize);
 
-        context.fillRect(2 * moduleSize, 2 * moduleSize, 3 * moduleSize, 3 * moduleSize);
-        context.fillRect((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, 3 * moduleSize, 3 * moduleSize);
-        context.fillRect(2 * moduleSize, (moduleCount - 7 + 2) * moduleSize, 3 * moduleSize, 3 * moduleSize);
+        const eyeBallColor = this.config.eyeBallColor ? this.config.eyeBallColor : '#000000';
+        const eyeBallShape = this.config.eyeBallShape ? this.config.eyeBallShape : 'square';
+        const eyeFrameColor = this.config.eyeFrameColor ? this.config.eyeFrameColor : '#000000';
+        const eyeFrameShape = this.config.eyeFrameShape ? this.config.eyeFrameShape : 'square';
+        
+        this.drawEyeFrames(context, eyeFrameShape, eyeFrameColor);
+        this.drawEyeBalls(context, eyeBallShape, eyeBallColor);
 
-        for (let i = 0; i < moduleCount - 8; i += 2) {
+        for (let i = 0; i < moduleCount - 15; i += 2) {
             context.fillRect((8 + i) * moduleSize, 6 * moduleSize, moduleSize, moduleSize);
             context.fillRect(6 * moduleSize, (8 + i) * moduleSize, moduleSize, moduleSize);
         }

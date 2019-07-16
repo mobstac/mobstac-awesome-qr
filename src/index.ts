@@ -2,7 +2,6 @@ import { CanvasType, QRErrorCorrectLevel } from './Enums';
 import { QRCode } from './Models';
 import { QRCodeConfig } from './Types';
 
-
 export class QRCodeBuilder {
     private config: QRCodeConfig;
 
@@ -107,6 +106,26 @@ export class QRCodeBuilder {
 
     public setMaskedDots(maskedDots: boolean) {
         this.config.maskedDots = maskedDots;
+        return this;
+    }
+
+    public setEyeFrameShape(eyeFrameShape: string) {
+        this.config.eyeFrameShape = eyeFrameShape;
+        return this;
+    }
+
+    public setEyeBallShape(eyeBallShape: string) {
+        this.config.eyeBallShape = eyeBallShape;
+        return this;
+    }
+
+    public setEyeFrameColor(eyeFrameColor: string) {
+        this.config.eyeFrameColor = eyeFrameColor;
+        return this;
+    }
+
+    public setEyeBallColor(eyeBallColor: string) {
+        this.config.eyeBallColor = eyeBallColor;
         return this;
     }
 
