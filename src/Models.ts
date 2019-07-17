@@ -638,29 +638,18 @@ export class Drawing {
         switch (shape) {
             case 'square': {
                 context.fillStyle = color;
-                context.fillRect(0, 0, 7 * moduleSize, 7 * moduleSize);
-                context.clearRect(1 * moduleSize, 1 * moduleSize, 5 * moduleSize, 5 * moduleSize);
-                context.fillRect((moduleCount - 7) * moduleSize, 0, 7 * moduleSize, 7 * moduleSize);
-                context.clearRect((moduleCount - 6) * moduleSize, 1 * moduleSize, 5 * moduleSize, 5 * moduleSize);
-                context.fillRect(0, (moduleCount - 7) * moduleSize, 7 * moduleSize, 7 * moduleSize);
-                context.clearRect(1 * moduleSize, (moduleCount - 6) * moduleSize, 5 * moduleSize, 5 * moduleSize);
+                this.drawSquareFrame(0, 0, context, 7 * moduleSize, false);
+                this.drawSquareFrame((moduleCount - 7) * moduleSize, 0, context, 7 * moduleSize, false);
+                this.drawSquareFrame(0, (moduleCount - 7) * moduleSize, context, 7 * moduleSize, false);
                 context.fillStyle = this.config.colorDark;
                 break;
             }
             case 'circle': {
                 context.fillStyle = color;
-                context.beginPath();
-                context.arc(3.5 * moduleSize, 3.5 * moduleSize, moduleSize * 3.5, 0, Math.PI * 2, true);
-                context.arc(3.5 * moduleSize, 3.5 * moduleSize, moduleSize * 2.5, 0, Math.PI * 2, true);
-                context.fill('evenodd');
-                context.beginPath();
-                context.arc((moduleCount - 3.5) * moduleSize, 3.5 * moduleSize, moduleSize * 3.5, 0, Math.PI * 2, true);
-                context.arc((moduleCount - 3.5) * moduleSize, 3.5 * moduleSize, moduleSize * 2.5, 0, Math.PI * 2, true);
-                context.fill('evenodd');
-                context.beginPath();
-                context.arc(3.5 * moduleSize, (moduleCount - 3.5) * moduleSize, moduleSize * 3.5, 0, Math.PI * 2, true);
-                context.arc(3.5 * moduleSize, (moduleCount - 3.5) * moduleSize, moduleSize * 2.5, 0, Math.PI * 2, true);
-                context.fill('evenodd');
+                this.drawCircularFrame(3.5 * moduleSize, 3.5 * moduleSize, context);
+                this.drawCircularFrame((moduleCount - 3.5) * moduleSize, 3.5 * moduleSize, context);
+                this.drawCircularFrame(3.5 * moduleSize, (moduleCount - 3.5) * moduleSize, context);
+
                 context.fillStyle = this.config.colorDark;
                 break;
             }
@@ -669,170 +658,63 @@ export class Drawing {
                 context.strokeStyle = color;
                 const cornerRadius = moduleSize;
                 context.lineJoin = 'round';
-                context.lineWidth = cornerRadius;
+                context.lineWidth = cornerRadius * 0.7;
 
-                context.strokeRect(
+                this.drawSquareFrame(
                     0 + cornerRadius / 2,
                     0 + cornerRadius / 2,
+                    context,
                     7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
+                    true,
                 );
-                context.strokeRect(
+                this.drawSquareFrame(
                     (moduleCount - 7) * moduleSize + cornerRadius / 2,
                     0 + cornerRadius / 2,
+                    context,
                     7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
+                    true,
                 );
-                context.strokeRect(
-                    0 + cornerRadius / 2,
-                    6 * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    6 * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.strokeRect(
+                this.drawSquareFrame(
                     0 + cornerRadius / 2,
                     (moduleCount - 7) * moduleSize + cornerRadius / 2,
+                    context,
                     7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7 + 6) * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    0 + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    6 * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    (moduleCount - 7 + 6) * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.strokeRect(
-                    6 * moduleSize + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
+                    true,
                 );
 
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    6 * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    6 * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7 + 6) * moduleSize + cornerRadius / 2,
-                    7 * moduleSize - cornerRadius,
-                    moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    6 * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    0,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    (moduleCount - 7 + 6) * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
-                context.fillRect(
-                    6 * moduleSize + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    moduleSize - cornerRadius,
-                    7 * moduleSize - cornerRadius,
-                );
                 context.fillStyle = this.config.colorDark;
                 context.strokeStyle = this.config.colorDark;
                 break;
             }
         }
+    }
+
+    private drawSquareFrame(
+        startX: number,
+        startY: number,
+        context: CanvasRenderingContext2D,
+        dimension: number,
+        isRound: boolean,
+    ) {
+        const moduleSize = this.config.moduleSize;
+        if (isRound) {
+            context.strokeRect(startX, startY, dimension, dimension);
+        }
+        context.fillRect(startX, startY, dimension, dimension);
+        context.clearRect(
+            startX + 1 * moduleSize,
+            startY + 1 * moduleSize,
+            dimension - 2 * moduleSize,
+            dimension - 2 * moduleSize,
+        );
+    }
+
+    private drawCircularFrame(centerX: number, centerY: number, context: CanvasRenderingContext2D) {
+        const moduleSize = this.config.moduleSize;
+        context.beginPath();
+        context.arc(centerX, centerY, moduleSize * 3.5, 0, Math.PI * 2, true);
+        context.arc(centerX, centerY, moduleSize * 2.5, 0, Math.PI * 2, true);
+        context.fill('evenodd');
     }
 
     private drawEyeBalls(context: CanvasRenderingContext2D, shape: string, color: string) {
