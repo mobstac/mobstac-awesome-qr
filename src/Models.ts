@@ -638,18 +638,12 @@ export class Drawing {
         switch (shape) {
             case 'square': {
                 context.fillStyle = color;
-                context.fillRect(0, 0, 7 * moduleSize, moduleSize);
-                context.fillRect((moduleCount - 7) * moduleSize, 0, 7 * moduleSize, moduleSize);
-                context.fillRect(0, 6 * moduleSize, 7 * moduleSize, moduleSize);
-                context.fillRect((moduleCount - 7) * moduleSize, 6 * moduleSize, 7 * moduleSize, moduleSize);
-                context.fillRect(0, (moduleCount - 7) * moduleSize, 7 * moduleSize, moduleSize);
-                context.fillRect(0, (moduleCount - 7 + 6) * moduleSize, 7 * moduleSize, moduleSize);
-                context.fillRect(0, 0, moduleSize, 7 * moduleSize);
-                context.fillRect(6 * moduleSize, 0, moduleSize, 7 * moduleSize);
-                context.fillRect((moduleCount - 7) * moduleSize, 0, moduleSize, 7 * moduleSize);
-                context.fillRect((moduleCount - 7 + 6) * moduleSize, 0, moduleSize, 7 * moduleSize);
-                context.fillRect(0, (moduleCount - 7) * moduleSize, moduleSize, 7 * moduleSize);
-                context.fillRect(6 * moduleSize, (moduleCount - 7) * moduleSize, moduleSize, 7 * moduleSize);
+                context.fillRect(0, 0, 7 * moduleSize, 7 * moduleSize);
+                context.clearRect(1 * moduleSize, 1 * moduleSize, 5 * moduleSize, 5 * moduleSize);
+                context.fillRect((moduleCount - 7) * moduleSize, 0, 7 * moduleSize, 7 * moduleSize);
+                context.clearRect((moduleCount - 6) * moduleSize, 1 * moduleSize, 5 * moduleSize, 5 * moduleSize);
+                context.fillRect(0, (moduleCount - 7) * moduleSize, 7 * moduleSize, 7 * moduleSize);
+                context.clearRect(1 * moduleSize, (moduleCount - 6) * moduleSize, 5 * moduleSize, 5 * moduleSize);
                 context.fillStyle = this.config.colorDark;
                 break;
             }
