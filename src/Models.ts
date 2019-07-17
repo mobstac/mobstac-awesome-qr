@@ -656,9 +656,9 @@ export class Drawing {
             case 'rounded': {
                 context.fillStyle = color;
                 context.strokeStyle = color;
-                const cornerRadius = moduleSize;
+                const cornerRadius = moduleSize * 2;
                 context.lineJoin = 'round';
-                context.lineWidth = cornerRadius * 0.7;
+                context.lineWidth = cornerRadius;
 
                 this.drawSquareFrame(
                     0 + cornerRadius / 2,
@@ -697,9 +697,6 @@ export class Drawing {
         isRound: boolean,
     ) {
         const moduleSize = this.config.moduleSize;
-        if (isRound) {
-            context.strokeRect(startX, startY, dimension, dimension);
-        }
         context.fillRect(startX, startY, dimension, dimension);
         context.clearRect(
             startX + 1 * moduleSize,
@@ -707,6 +704,15 @@ export class Drawing {
             dimension - 2 * moduleSize,
             dimension - 2 * moduleSize,
         );
+        if (isRound) {
+            context.strokeRect(startX, startY, dimension, dimension);
+            context.clearRect(
+                startX + 0.5 * moduleSize,
+                startY + 0.5 * moduleSize,
+                dimension - 1 * moduleSize,
+                dimension - 1 * moduleSize,
+            );
+        }
     }
 
     private drawCircularFrame(centerX: number, centerY: number, context: CanvasRenderingContext2D) {
