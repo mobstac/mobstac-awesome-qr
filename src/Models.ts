@@ -661,30 +661,131 @@ export class Drawing {
                 context.lineWidth = cornerRadius;
 
                 this.drawSquareFrame(
-                    0 + cornerRadius / 2,
-                    0 + cornerRadius / 2,
+                    0 + cornerRadius / 4,
+                    0 + cornerRadius / 4,
                     context,
-                    7 * moduleSize - cornerRadius,
+                    7 * moduleSize - cornerRadius / 2,
                     true,
                 );
                 this.drawSquareFrame(
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
-                    0 + cornerRadius / 2,
+                    (moduleCount - 7) * moduleSize + cornerRadius / 4,
+                    0 + cornerRadius / 4,
                     context,
-                    7 * moduleSize - cornerRadius,
+                    7 * moduleSize - cornerRadius / 2,
                     true,
                 );
                 this.drawSquareFrame(
-                    0 + cornerRadius / 2,
-                    (moduleCount - 7) * moduleSize + cornerRadius / 2,
+                    0 + cornerRadius / 4,
+                    (moduleCount - 7) * moduleSize + cornerRadius / 4,
                     context,
-                    7 * moduleSize - cornerRadius,
+                    7 * moduleSize - cornerRadius / 2,
                     true,
                 );
-
                 context.fillStyle = this.config.colorDark;
                 context.strokeStyle = this.config.colorDark;
                 break;
+            }
+            case 'left-leaf': {
+                context.fillStyle = color;
+                context.strokeStyle = color;
+                const cornerRadius = moduleSize * 2;
+                context.lineJoin = 'round';
+                context.lineWidth = cornerRadius;
+
+                this.drawLeafFrame(
+                    0 + cornerRadius / 4,
+                    0 + cornerRadius / 4,
+                    context,
+                    7 * moduleSize - cornerRadius / 2,
+                    'left',
+                );
+                this.drawLeafFrame(
+                    (moduleCount - 7) * moduleSize + cornerRadius / 4,
+                    0 + cornerRadius / 4,
+                    context,
+                    7 * moduleSize - cornerRadius / 2,
+                    'left',
+                );
+                this.drawLeafFrame(
+                    0 + cornerRadius / 4,
+                    (moduleCount - 7) * moduleSize + cornerRadius / 4,
+                    context,
+                    7 * moduleSize - cornerRadius / 2,
+                    'left',
+                );
+                context.fillStyle = this.config.colorDark;
+                context.strokeStyle = this.config.colorDark;
+                break;
+            }
+            case 'right-leaf': {
+                context.fillStyle = color;
+                context.strokeStyle = color;
+                const cornerRadius = moduleSize * 2;
+                context.lineJoin = 'round';
+                context.lineWidth = cornerRadius;
+
+                this.drawLeafFrame(
+                    0 + cornerRadius / 4,
+                    0 + cornerRadius / 4,
+                    context,
+                    7 * moduleSize - cornerRadius / 2,
+                    'right',
+                );
+                this.drawLeafFrame(
+                    (moduleCount - 7) * moduleSize + cornerRadius / 4,
+                    0 + cornerRadius / 4,
+                    context,
+                    7 * moduleSize - cornerRadius / 2,
+                    'right',
+                );
+                this.drawLeafFrame(
+                    0 + cornerRadius / 4,
+                    (moduleCount - 7) * moduleSize + cornerRadius / 4,
+                    context,
+                    7 * moduleSize - cornerRadius / 2,
+                    'right',
+                );
+                context.fillStyle = this.config.colorDark;
+                context.strokeStyle = this.config.colorDark;
+                break;
+            }
+        }
+    }
+
+    private drawLeafFrame(
+        startX: number,
+        startY: number,
+        context: CanvasRenderingContext2D,
+        dimension: number,
+        direction: string,
+    ) {
+        const moduleSize = this.config.moduleSize;
+        const r = startX + dimension;
+        const b = startY + dimension;
+        const radius = moduleSize * 2;
+        context.beginPath();
+        context.lineWidth = moduleSize;
+        switch (direction) {
+            case 'right': {
+                context.moveTo(startX + radius, startY);
+                context.lineTo(r, startY);
+                context.lineTo(r, startY + dimension - radius);
+                context.quadraticCurveTo(r, b, r - radius, b);
+                context.lineTo(startX, b);
+                context.lineTo(startX, startY + radius);
+                context.quadraticCurveTo(startX, startY, startX + radius, startY);
+                context.stroke();
+                break;
+            }
+            case 'left': {
+                context.moveTo(startX, startY);
+                context.lineTo(r - radius, startY);
+                context.quadraticCurveTo(r, startY, r, startY + radius);
+                context.lineTo(r, startY + dimension);
+                context.lineTo(startX + radius, b);
+                context.quadraticCurveTo(startX, b, startX, b - radius);
+                context.lineTo(startX, startY - radius / 4);
+                context.stroke();
             }
         }
     }
@@ -697,20 +798,29 @@ export class Drawing {
         isRound: boolean,
     ) {
         const moduleSize = this.config.moduleSize;
-        context.fillRect(startX, startY, dimension, dimension);
-        context.clearRect(
-            startX + 1 * moduleSize,
-            startY + 1 * moduleSize,
-            dimension - 2 * moduleSize,
-            dimension - 2 * moduleSize,
-        );
         if (isRound) {
-            context.strokeRect(startX, startY, dimension, dimension);
+            const r = startX + dimension;
+            const b = startY + dimension;
+            const radius = moduleSize * 2;
+            context.beginPath();
+            context.lineWidth = moduleSize;
+            context.moveTo(startX + radius, startY);
+            context.lineTo(r - radius, startY);
+            context.quadraticCurveTo(r, startY, r, startY + radius);
+            context.lineTo(r, startY + dimension - radius);
+            context.quadraticCurveTo(r, b, r - radius, b);
+            context.lineTo(startX + radius, b);
+            context.quadraticCurveTo(startX, b, startX, b - radius);
+            context.lineTo(startX, startY + radius);
+            context.quadraticCurveTo(startX, startY, startX + radius, startY);
+            context.stroke();
+        } else {
+            context.fillRect(startX, startY, dimension, dimension);
             context.clearRect(
-                startX + 0.5 * moduleSize,
-                startY + 0.5 * moduleSize,
-                dimension - 1 * moduleSize,
-                dimension - 1 * moduleSize,
+                startX + 1 * moduleSize,
+                startY + 1 * moduleSize,
+                dimension - 2 * moduleSize,
+                dimension - 2 * moduleSize,
             );
         }
     }
@@ -735,11 +845,19 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'diamond': {
+            case 'left-diamond': {
                 context.fillStyle = color;
                 this.drawDiamond(2 * moduleSize, 2 * moduleSize, context, 'left');
                 this.drawDiamond((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 'left');
                 this.drawDiamond(2 * moduleSize, (moduleCount - 7 + 2) * moduleSize, context, 'left');
+                context.fillStyle = this.config.colorDark;
+                break;
+            }
+            case 'right-diamond': {
+                context.fillStyle = color;
+                this.drawDiamond(2 * moduleSize, 2 * moduleSize, context, 'right');
+                this.drawDiamond((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 'right');
+                this.drawDiamond(2 * moduleSize, (moduleCount - 7 + 2) * moduleSize, context, 'right');
                 context.fillStyle = this.config.colorDark;
                 break;
             }
