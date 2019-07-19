@@ -1,10 +1,9 @@
 import { Canvas, CanvasRenderingContext2D, createCanvas, JPEGStream, PDFStream, PNGStream } from 'canvas';
 import { BCH, CanvasUtil, QRMath, Util } from './Common';
 import * as constants from './Constants';
-import { CanvasType, QRErrorCorrectLevel, QRMode } from './Enums';
+import { CanvasType, QRErrorCorrectLevel, QRMode, EyeBallShape, EyeFrameShape } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { loadImage } from './Util';
-import { start } from 'repl';
 
 export class QRPolynomial {
     public num: number[];
@@ -632,19 +631,11 @@ export class Drawing {
         }
     }
 
-    private drawEyeFrames(context: CanvasRenderingContext2D, shape: string, color: string) {
+    private drawEyeFrames(context: CanvasRenderingContext2D, shape: EyeFrameShape, color: string) {
         const moduleSize = this.config.moduleSize;
         const moduleCount = this.moduleCount;
         switch (shape) {
-            case 'square': {
-                context.fillStyle = color;
-                this.drawSquareFrame(0, 0, context, 7 * moduleSize, false);
-                this.drawSquareFrame((moduleCount - 7) * moduleSize, 0, context, 7 * moduleSize, false);
-                this.drawSquareFrame(0, (moduleCount - 7) * moduleSize, context, 7 * moduleSize, false);
-                context.fillStyle = this.config.colorDark;
-                break;
-            }
-            case 'circle': {
+            case EyeFrameShape.CIRCLE: {
                 context.fillStyle = color;
                 this.drawCircularFrame(3.5 * moduleSize, 3.5 * moduleSize, context);
                 this.drawCircularFrame((moduleCount - 3.5) * moduleSize, 3.5 * moduleSize, context);
@@ -653,7 +644,7 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'rounded': {
+            case EyeFrameShape.ROUNDED: {
                 context.fillStyle = color;
                 context.strokeStyle = color;
                 const cornerRadius = moduleSize * 2;
@@ -685,7 +676,7 @@ export class Drawing {
                 context.strokeStyle = this.config.colorDark;
                 break;
             }
-            case 'left-leaf': {
+            case EyeFrameShape.LEFT_LEAF: {
                 context.fillStyle = color;
                 context.strokeStyle = color;
                 const cornerRadius = moduleSize * 2;
@@ -717,7 +708,7 @@ export class Drawing {
                 context.strokeStyle = this.config.colorDark;
                 break;
             }
-            case 'right-leaf': {
+            case EyeFrameShape.RIGHT_LEAF: {
                 context.fillStyle = color;
                 context.strokeStyle = color;
                 const cornerRadius = moduleSize * 2;
@@ -747,6 +738,14 @@ export class Drawing {
                 );
                 context.fillStyle = this.config.colorDark;
                 context.strokeStyle = this.config.colorDark;
+                break;
+            }
+            default: {
+                context.fillStyle = color;
+                this.drawSquareFrame(0, 0, context, 7 * moduleSize, false);
+                this.drawSquareFrame((moduleCount - 7) * moduleSize, 0, context, 7 * moduleSize, false);
+                this.drawSquareFrame(0, (moduleCount - 7) * moduleSize, context, 7 * moduleSize, false);
+                context.fillStyle = this.config.colorDark;
                 break;
             }
         }
@@ -833,19 +832,11 @@ export class Drawing {
         context.fill('evenodd');
     }
 
-    private drawEyeBalls(context: CanvasRenderingContext2D, shape: string, color: string) {
+    private drawEyeBalls(context: CanvasRenderingContext2D, shape: EyeBallShape, color: string) {
         const moduleSize = this.config.moduleSize;
         const moduleCount = this.moduleCount;
         switch (shape) {
-            case 'square': {
-                context.fillStyle = color;
-                this.drawSquare(2 * moduleSize, 2 * moduleSize, context, 3 * moduleSize, false);
-                this.drawSquare((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 3 * moduleSize, false);
-                this.drawSquare(2 * moduleSize, (moduleCount - 7 + 2) * moduleSize, context, 3 * moduleSize, false);
-                context.fillStyle = this.config.colorDark;
-                break;
-            }
-            case 'left-diamond': {
+            case EyeBallShape.LEFT_DIAMOND: {
                 context.fillStyle = color;
                 this.drawDiamond(2 * moduleSize, 2 * moduleSize, context, 'left');
                 this.drawDiamond((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 'left');
@@ -853,7 +844,7 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'right-diamond': {
+            case EyeBallShape.RIGHT_DIAMOND: {
                 context.fillStyle = color;
                 this.drawDiamond(2 * moduleSize, 2 * moduleSize, context, 'right');
                 this.drawDiamond((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 'right');
@@ -861,7 +852,7 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'circle': {
+            case EyeBallShape.CIRCLE: {
                 context.fillStyle = color;
                 this.drawCircle(3.5 * moduleSize, 3.5 * moduleSize, context);
                 this.drawCircle((moduleCount - 3.5) * moduleSize, 3.5 * moduleSize, context);
@@ -869,7 +860,7 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'left-leaf': {
+            case EyeBallShape.LEFT_LEAF: {
                 context.fillStyle = color;
                 this.drawDiamond(2 * moduleSize, 2 * moduleSize, context, 'left');
                 this.drawDiamond((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 'left');
@@ -880,7 +871,7 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'right-leaf': {
+            case EyeBallShape.RIGHT_LEAF: {
                 context.fillStyle = color;
                 this.drawDiamond(2 * moduleSize, 2 * moduleSize, context, 'right');
                 this.drawDiamond((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 'right');
@@ -891,7 +882,7 @@ export class Drawing {
                 context.fillStyle = this.config.colorDark;
                 break;
             }
-            case 'rounded': {
+            case EyeBallShape.ROUNDED: {
                 context.fillStyle = color;
                 context.strokeStyle = color;
                 const cornerRadius = moduleSize * 2;
@@ -921,6 +912,14 @@ export class Drawing {
                 );
                 context.fillStyle = this.config.colorDark;
                 context.strokeStyle = this.config.colorDark;
+                break;
+            }
+            default: {
+                context.fillStyle = color;
+                this.drawSquare(2 * moduleSize, 2 * moduleSize, context, 3 * moduleSize, false);
+                this.drawSquare((moduleCount - 7 + 2) * moduleSize, 2 * moduleSize, context, 3 * moduleSize, false);
+                this.drawSquare(2 * moduleSize, (moduleCount - 7 + 2) * moduleSize, context, 3 * moduleSize, false);
+                context.fillStyle = this.config.colorDark;
                 break;
             }
         }
@@ -981,9 +980,9 @@ export class Drawing {
         const moduleCount = this.moduleCount;
 
         const eyeBallColor = this.config.eyeBallColor ? this.config.eyeBallColor : '#000000';
-        const eyeBallShape = this.config.eyeBallShape ? this.config.eyeBallShape : 'square';
+        const eyeBallShape = this.config.eyeBallShape ? this.config.eyeBallShape : EyeBallShape.SQUARE;
         const eyeFrameColor = this.config.eyeFrameColor ? this.config.eyeFrameColor : '#000000';
-        const eyeFrameShape = this.config.eyeFrameShape ? this.config.eyeFrameShape : 'square';
+        const eyeFrameShape = this.config.eyeFrameShape ? this.config.eyeFrameShape : EyeFrameShape.SQUARE;
 
         this.drawEyeFrames(context, eyeFrameShape, eyeFrameColor);
         this.drawEyeBalls(context, eyeBallShape, eyeBallColor);

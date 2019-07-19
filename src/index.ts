@@ -1,4 +1,4 @@
-import { CanvasType, QRErrorCorrectLevel } from './Enums';
+import { CanvasType, QRErrorCorrectLevel, EyeBallShape, EyeFrameShape } from './Enums';
 import { QRCode } from './Models';
 import { QRCodeConfig } from './Types';
 
@@ -109,12 +109,12 @@ export class QRCodeBuilder {
         return this;
     }
 
-    public setEyeFrameShape(eyeFrameShape: string) {
+    public setEyeFrameShape(eyeFrameShape: EyeFrameShape) {
         this.config.eyeFrameShape = eyeFrameShape;
         return this;
     }
 
-    public setEyeBallShape(eyeBallShape: string) {
+    public setEyeBallShape(eyeBallShape: EyeBallShape) {
         this.config.eyeBallShape = eyeBallShape;
         return this;
     }

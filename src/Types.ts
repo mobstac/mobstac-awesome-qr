@@ -1,4 +1,4 @@
-import { CanvasType, QRErrorCorrectLevel } from './Enums';
+import { CanvasType, QRErrorCorrectLevel, EyeBallShape, EyeFrameShape } from './Enums';
 
 export interface QRCodeConfig {
     binarizeThreshold?: string;
@@ -21,8 +21,8 @@ export interface QRCodeConfig {
     text: string;
     maskedDots: boolean;
     canvasType?: CanvasType;
-    eyeBallShape?: string;
-    eyeFrameShape?: string;
+    eyeBallShape?: EyeBallShape;
+    eyeFrameShape?: EyeFrameShape;
     eyeBallColor?: string;
     eyeFrameColor?: string;
 
@@ -50,8 +50,8 @@ export interface QRDrawingConfig {
     logoCornerRadius: number;
     maskedDots: boolean;
     canvasType?: CanvasType;
-    eyeBallShape?: string;
-    eyeFrameShape?: string;
+    eyeBallShape?: EyeBallShape;
+    eyeFrameShape?: EyeFrameShape;
     eyeBallColor?: string;
     eyeFrameColor?: string;
 }
