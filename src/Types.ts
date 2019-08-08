@@ -1,4 +1,12 @@
-import { CanvasType, QRErrorCorrectLevel, EyeBallShape, EyeFrameShape, DataPattern, GradientType, QRCodeFrame } from './Enums';
+import {
+    CanvasType,
+    QRErrorCorrectLevel,
+    EyeBallShape,
+    EyeFrameShape,
+    DataPattern,
+    GradientType,
+    QRCodeFrame,
+} from './Enums';
 
 export interface QRCodeConfig {
     binarizeThreshold?: string;
