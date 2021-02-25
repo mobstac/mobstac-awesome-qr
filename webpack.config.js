@@ -1,5 +1,5 @@
 const path = require('path');
-
+var nodeExternals = require('webpack-node-externals');
 
 module.exports = {
     entry: './src/index.ts',
@@ -15,10 +15,11 @@ module.exports = {
     resolve: {
         extensions: [ '.tsx', '.ts', '.js' ]
     },
-    externals: { fs: "commonjs fs" },
     output: {
         library: 'QRCodeGenerator',
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist')
-    }
+    },
+    target: 'node',
+    externals: [nodeExternals(), { fs: "commonjs fs" }],
 };
