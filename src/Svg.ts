@@ -75,13 +75,17 @@ export class SVGDrawing {
 
 
 
-        const { createSVGWindow } = require('svgdom');
-        const svgWindow = createSVGWindow();
-        const svgDocument = svgWindow.document;
-        const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+        // uncomment these for node
 
-        registerWindow(svgWindow, svgDocument);
-        this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
+        // const { createSVGWindow } = require('svgdom');
+        // const svgWindow = createSVGWindow();
+        const svgWindow = null;
+        // @ts-ignore
+        const svgDocument = svgWindow.document;
+        // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+
+        // registerWindow(svgWindow, svgDocument);
+        // this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
     }
 
     public async drawSVG(): Promise<any> {
@@ -91,10 +95,14 @@ export class SVGDrawing {
         let canvasHeight: number;
         let canvasWidth: number;
 
-        const { createSVGWindow } = require('svgdom');
-        const svgWindow = createSVGWindow();
+        // uncomment these for node
+
+        // const { createSVGWindow } = require('svgdom');
+        // const svgWindow = createSVGWindow();
+        const svgWindow = null;
+        // @ts-ignore
         const svgDocument = svgWindow.document;
-        const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+        // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
 
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
@@ -110,7 +118,11 @@ export class SVGDrawing {
                 canvasHeight = 1.25 * size;
             }
 
-            mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
+            // uncomment these for node
+
+            // mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
+            // @ts-ignore
+            mainCanvas = null;
 
             // @ts-ignore
             mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
@@ -150,7 +162,9 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
+            // uncomment these for node
+
+            // mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
 
             // @ts-ignore
             mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
@@ -159,6 +173,7 @@ export class SVGDrawing {
         const gradient: string = this.config.colorDark;
 
 
+        // @ts-ignore
         return this.drawFrame(mainCanvas, this.config.frameStyle, this.config.frameColor, this.config.frameText)
             .then(() => {
                 return this.addBackground(mainCanvas, this.config.size, this.config.backgroundImage, this.config.backgroundColor);
@@ -1023,8 +1038,10 @@ export class SVGDrawing {
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
 
         if (isNode) {
-            const path = require('path');
-            const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto');
+            // uncomment these for node
+
+            // const path = require('path');
+            // const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto');
             // const {setFontDir, setFontFamilyMappings, preloadFonts} = require('svgdom');
             // setFontDir(fontPath);
             // setFontFamilyMappings({'Roboto': 'Roboto-Regular.ttf'});

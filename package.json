@@ -1,6 +1,6 @@
 {
     "name": "mobstac-awesome-qr",
-    "version": "2.1.5-beta.1",
+    "version": "2.1.5-beta.2",
     "description": "MobStac Awesome QR code library",
     "homepage": "https://github.com/mobstac/mobstac-awesome-qr",
     "bugs": "https://github.com/mobstac/mobstac-awesome-qr/issues",
@@ -42,7 +42,7 @@
         "@types/chai": "4.1.7",
         "@types/mocha": "5.2.6",
         "chai": "4.2.0",
-        "file-loader": "^4.2.0",
+        "file-loader": "^6.2.0",
         "json-loader": "^0.5.7",
         "mocha": "^6.2.0",
         "nyc": "^14.1.1",
@@ -53,8 +53,8 @@
         "tslint": "5.14.0",
         "tslint-config-prettier": "1.18.0",
         "typescript": "3.4.3",
-        "webpack": "4.29.6",
-        "webpack-cli": "3.3.0"
+        "webpack": "^5.23.0",
+        "webpack-cli": "^4.5.0"
     },
     "files": [
         "lib/**/*",
@@ -64,6 +64,7 @@
         "@svgdotjs/svg.js": "^3.0.16",
         "@types/node": "11.13.0",
         "canvas": "2.5.0",
-        "svgdom": "^0.1.8"
+        "svgdom": "^0.1.8",
+        "webpack-node-externals": "^2.5.2"
     }
 }
