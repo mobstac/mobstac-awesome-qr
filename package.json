@@ -62,7 +62,6 @@
     ],
     "dependencies": {
         "@types/node": "11.13.0",
-        "canvas": "2.5.0",
-        "mime": "^2.5.2"
+        "canvas": "2.5.0"
     }
 }

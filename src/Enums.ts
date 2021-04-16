@@ -54,7 +54,6 @@ export enum DataPattern {
     KITE = 'kite',
     LEFT_DIAMOND = 'left-diamond',
     RIGHT_DIAMOND = 'right-diamond',
-    RECTANGLE = 'rectangle',
 }
 
 export enum GradientType {

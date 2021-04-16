@@ -1,7 +1,5 @@
 /* tslint:disable:no-var-requires */
 import { Canvas, CanvasRenderingContext2D, createCanvas, JPEGStream, PDFStream, PNGStream, registerFont } from 'canvas';
-import { fstat } from 'fs';
-import { start } from 'repl';
 import { BCH, CanvasUtil, QRMath, Util } from './Common';
 import * as constants from './Constants';
 import {
@@ -17,8 +15,6 @@ import {
 } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { isNode, loadImage } from './Util';
-const fs = require('fs');
-const mime = require("mime");
 if (isNode) {
     const path = require('path');
     const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto/Roboto-Regular.ttf');
@@ -1235,9 +1231,6 @@ export class Drawing {
         }
         context.fillRect(startX, startY, width, height);
     }
-    private drawRect(startX: number, startY: number, context: CanvasRenderingContext2D, width: number, height: number, isRound: boolean) {
-        context.fillRect(startX, startY, width/2, height);
-    }
     private drawKite(startX: number, startY: number, context: CanvasRenderingContext2D, width: number, height: number, isRound?: boolean) {
         context.beginPath();
         context.moveTo(startX + width / 2, startY);
@@ -1279,10 +1272,6 @@ export class Drawing {
                 case DataPattern.RIGHT_DIAMOND:
                     this.drawDiamond((8 + i) * moduleSize, 6 * moduleSize, context, moduleSize, moduleSize, true);
                     this.drawDiamond(6 * moduleSize, (8 + i) * moduleSize, context, moduleSize, moduleSize, true);
-                    break;
-                case DataPattern.RECTANGLE:
-                    this.drawRect((8 + i) * moduleSize, 6 * moduleSize, context, moduleSize, moduleSize, false);
-                    this.drawRect(6 * moduleSize, (8 + i) * moduleSize, context, moduleSize, moduleSize, false);
                     break;
                 default:
                     this.drawSquare((8 + i) * moduleSize, 6 * moduleSize, context, moduleSize, moduleSize, false);
@@ -1329,9 +1318,6 @@ export class Drawing {
             case DataPattern.RIGHT_DIAMOND:
                 drawShape = this.drawDiamond;
                 boolFlag = true;
-                break;
-            case DataPattern.RECTANGLE:
-                drawShape = this.drawRect;
                 break;
             default:
                 drawShape = this.drawSquare;
@@ -1471,9 +1457,6 @@ export class Drawing {
                     break;
                 case DataPattern.RIGHT_DIAMOND:
                     this.drawDiamond(x, y, canvas, w, h, true);
-                    break;
-                case DataPattern.RECTANGLE:
-                    this.drawRect(x,y,canvas,w,h,false);
                     break;
                 default:
                     this.drawSquare(x, y, canvas, w, h, false);
