@@ -54,6 +54,7 @@ export enum DataPattern {
     KITE = 'kite',
     LEFT_DIAMOND = 'left-diamond',
     RIGHT_DIAMOND = 'right-diamond',
+    RECTANGLE = 'rectangle',
 }
 
 export enum GradientType {
@@ -73,4 +74,9 @@ export enum QRCodeFrame {
     BALLOON_BOTTOM = 'balloon-bottom',
     BALLOON_TOP = 'balloon-top',
     // BOX_LIGHT = 'box-light',
+}
+
+export enum Design {
+    NONE ='none',
+    Circular = 'circular',
 }
