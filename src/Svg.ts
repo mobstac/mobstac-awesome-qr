@@ -77,11 +77,11 @@ export class SVGDrawing {
 
         // uncomment these for node
 
-        const { createSVGWindow } = require('svgdom');
-        const svgWindow = createSVGWindow();
+       // const { createSVGWindow } = require('svgdom');
+       // const svgWindow = createSVGWindow();
         // const svgWindow = null;
         // @ts-ignore
-        const svgDocument = svgWindow.document;
+        // const svgDocument = svgWindow.document;
         // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
 
         // registerWindow(svgWindow, svgDocument);
