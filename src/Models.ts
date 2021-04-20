@@ -5,6 +5,7 @@ import * as constants from './Constants';
 import {
     CanvasType,
     DataPattern,
+    Design,
     EyeBallShape,
     EyeFrameShape,
     GradientType,
@@ -593,6 +594,9 @@ export class Drawing {
                 return this.scaleFinalImage(mainCanvas);
             })
             .then((canvas: Canvas) => {
+                return this.addDesign(canvas,gradient);
+            })
+            .then((canvas: Canvas) => {
                 return this.drawFrame(canvas, this.config.frameStyle, this.config.frameColor, this.config.frameText);
             })
             .then((canvas: Canvas) => {
@@ -600,7 +604,58 @@ export class Drawing {
                 return canvas;
             });
     }
+    private async addDesign(canvas: Canvas, gradient: CanvasGradient | string) {
+        const size = this.config.rawSize;
+        const finalCanvas: Canvas = createCanvas(Math.sqrt(2)*size,Math.sqrt(2)*size,this.canvasType);
+        const finalContext = finalCanvas.getContext('2d');
+        const design = this.config.designStyle?this.config.designStyle:'none';
+        switch(design){
+            case Design.Circular:
+                finalContext.beginPath();
+                finalContext.arc(Math.sqrt(2)*size/2, Math.sqrt(2)*size/2, size/Math.sqrt(2), 0, 2*Math.PI);
+                finalContext.fillStyle = this.config.backgroundColor?this.config.backgroundColor:'white' ;
+                finalContext.lineWidth = 10;
+                finalContext.fill();
+                finalContext.clip();    
+                break;
+            default:
+                return canvas;
+        }
+        finalContext.fillStyle = gradient;
+        if(this.config.designBorder){ 
+            finalContext.strokeStyle = "black";
+            finalContext.stroke();
+        }
+        
+        const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+        const moduleSize = this.config.dotScale*this.config.moduleSize;
 
+        for(let i =0 ;i<2*size;i+=moduleSize) {
+            for(let j = 0;j<2*size;j+=moduleSize) {
+                if(Math.floor(Math.random() * 2) === 1) {
+                    switch (dataPattern) {
+                        case DataPattern.CIRCLE:
+                            this.drawCircle(i+moduleSize/2,j+moduleSize/2,finalContext,moduleSize/2);
+                            break;
+                        case DataPattern.KITE:
+                            this.drawKite(i,j,finalContext,moduleSize,moduleSize);
+                            break;
+                        case DataPattern.LEFT_DIAMOND:
+                            this.drawDiamond(i,j,finalContext,moduleSize,moduleSize,false);
+                            break;
+                        case DataPattern.RIGHT_DIAMOND:
+                            this.drawDiamond(i,j,finalContext,moduleSize,moduleSize,true);
+                            break;
+                        default:
+                           this.drawSquare(i,j,finalContext,moduleSize,moduleSize,false);
+                           break;
+                    }
+                }
+            }
+        }
+        finalContext.drawImage(canvas,size/4.6,size/4.6,size,size);
+        return finalCanvas;
+    }
     private async drawFrame(canvas: Canvas, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined): Promise<Canvas> {
         if (!frameStyle || frameStyle === QRCodeFrame.NONE) {
             return canvas;
@@ -1444,7 +1499,12 @@ export class Drawing {
 
     private async addBackground(context: CanvasRenderingContext2D, size: number, backgroundImage?: string, backgroundColor?: string) {
         if (!backgroundImage) {
-            context.rect(0, 0, size, size);
+            if(this.config.designStyle === Design.Circular){
+                const moduleSize = this.config.moduleSize;
+                context.rect(2*moduleSize, 2*moduleSize, size-4*moduleSize, size-4*moduleSize);
+            }else {
+                context.rect(0, 0, size, size);
+            }
             context.fillStyle = backgroundColor ? backgroundColor : '#ffffff';
             context.fill();
             return;
