@@ -1,5 +1,5 @@
 import 'mocha';
-import { CanvasType, DataPattern,Design, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
 import { QRCodeBuilder } from '../index';
 
 const vCardSampleData = `BEGIN:VCARD
@@ -28,15 +28,13 @@ const config = {
     colorLight: '#4494fc',
     dotScale: 1,
     // gradientType: GradientType.VERTICAL,
-    // frameStyle: QRCodeFrame.BALLOON_BOTTOM,
-    frameColor: '#0b1257',
+    frameStyle: QRCodeFrame.CIRCULAR,
+    frameColor: 'blue',
     // frameText: 'HEY QR',
     // logoMargin: 10,
     // logoScale: 0.25,
     // margin: 80,
     size: 2048,
-    designStyle:Design.Circular,
-    designBorder:true,
     isVCard: false,
     useCanvas: false,
     useOpacity: true,
@@ -87,7 +85,7 @@ describe('QR code tests', () => {
             
             
             // const fs = require('fs');
-            // fs.writeFileSync(__dirname + '/test.' + CanvasType.PNG.toLowerCase(), qrCode.toBuffer());
+            // fs.writeFileSync(__dirname + '/test.' + CanvasType.SVG.toLowerCase(), qrCode.toBuffer());
             // done();
         }).catch(err => {
             console.error(err);

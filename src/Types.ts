@@ -57,8 +57,6 @@ export interface QRDrawingConfig {
     colorLight: string;
     logoImage?: string;
     logoScale: number;
-    designStyle?:string;
-    designBorder?: boolean;
     logoMargin: number;
     logoCornerRadius: number;
     maskedDots: boolean;
