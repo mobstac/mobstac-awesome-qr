@@ -620,6 +620,19 @@ export class Drawing {
             default:
                 return canvas;
         }
+       
+        if(this.config.gradientType === GradientType.RADIAL) {
+            gradient = finalContext.createRadialGradient(
+                Math.sqrt(2)*size/2,
+                Math.sqrt(2)*size/2,
+                (this.config.moduleSize * this.moduleCount) / 6,
+                Math.sqrt(2)*size/2,
+                Math.sqrt(2)*size/2,
+                (this.config.moduleSize * this.moduleCount) / 2,
+            );
+            gradient.addColorStop(0, this.config.colorLight);
+            gradient.addColorStop(1, this.config.colorDark);
+        }
         finalContext.fillStyle = gradient;
         finalContext.strokeStyle = this.config.frameColor?this.config.frameColor:"black";
         finalContext.stroke();
@@ -651,7 +664,7 @@ export class Drawing {
                 }
             }
         }
-        finalContext.drawImage(canvas,size/4.6,size/4.6,size,size);
+       finalContext.drawImage(canvas,size/4.6,size/4.6,size,size);
         return finalCanvas;
     }
     private async drawFrame(canvas: Canvas, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined): Promise<Canvas> {
