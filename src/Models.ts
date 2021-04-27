@@ -634,16 +634,19 @@ export class Drawing {
             gradient.addColorStop(1, this.config.colorDark);
         }
         finalContext.fillStyle = gradient;
-        finalContext.strokeStyle = this.config.frameColor?this.config.frameColor:"black";
+        if(this.config.backgroundColor) {
+            finalContext.strokeStyle = this.config.frameColor?this.config.frameColor:"black";
+        }
+        finalContext.lineWidth =10;
         finalContext.stroke();
         
         
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
         const moduleSize = this.config.dotScale*this.config.moduleSize;
-
+        const radius = Math.sqrt(2)*size/2;
         for(let i =0 ;i<2*size;i+=moduleSize) {
             for(let j = 0;j<2*size;j+=moduleSize) {
-                if(Math.floor(Math.random() * 2) === 1) {
+                if(Math.floor(Math.random() * 2) === 1 && ((i<radius && ((i-radius)*(i-radius)+(j-radius)*(j-radius))<radius*radius) || (i>radius && ((i-radius)*(i-radius)+(j-radius)*(j-radius))<radius*radius))) {
                     switch (dataPattern) {
                         case DataPattern.CIRCLE:
                             this.drawCircle(i+moduleSize/2,j+moduleSize/2,finalContext,moduleSize/2);
