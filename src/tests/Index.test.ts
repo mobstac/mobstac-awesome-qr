@@ -36,7 +36,8 @@ const config = {
     // logoScale: 0.25,
     logoMargin: 10,
 logoScale: 0.20039999999999997,
-    margin: 80,
+    margin: 0,
+
     size: 2048,
     isVCard: false,
     useCanvas: false,
