@@ -605,13 +605,13 @@ export class Drawing {
     }
     private async addDesign(canvas: Canvas, gradient: CanvasGradient | string) {
         const size = this.config.rawSize;
-        const finalCanvas: Canvas = createCanvas(Math.sqrt(2)*size,Math.sqrt(2)*size,this.canvasType);
+        const finalCanvas: Canvas = createCanvas(2*size,2*size,this.canvasType);
         const finalContext = finalCanvas.getContext('2d');
         const design = this.config.frameStyle?this.config.frameStyle:'none';
         switch(design){
             case QRCodeFrame.CIRCULAR:
                 finalContext.beginPath();
-                finalContext.arc(Math.sqrt(2)*size/2, Math.sqrt(2)*size/2, size/Math.sqrt(2), 0, 2*Math.PI);
+                finalContext.arc(size, size, size, 0, 2*Math.PI);
                 finalContext.fillStyle = this.config.backgroundColor?this.config.backgroundColor:'white' ;
                 finalContext.lineWidth = 10;
                 finalContext.fill();
@@ -647,7 +647,7 @@ export class Drawing {
         const radius = Math.sqrt(2)*size/2;
         for(let i =0 ;i<2*size;i+=increment) {
             for(let j = 0;j<2*size;j+=increment) {
-                if(Math.floor(Math.random() * 2) === 1 && ((i<radius && ((i-radius)*(i-radius)+(j-radius)*(j-radius))<radius*radius) || (i>radius && ((i-radius)*(i-radius)+(j-radius)*(j-radius))<radius*radius))) {
+                if(Math.floor(Math.random() * 2) === 1) {
                     switch (dataPattern) {
                         case DataPattern.CIRCLE:
                             this.drawCircle(i+moduleSize/2,j+moduleSize/2,finalContext,moduleSize/2);
@@ -666,9 +666,10 @@ export class Drawing {
                            break;
                     }
                 }
+                
             }
         }
-       finalContext.drawImage(canvas,size/2.8,size/2.8,5*size/7,5*size/7);
+        finalContext.drawImage(canvas,size/2,size/2,size,size);
         return finalCanvas;
     }
     private async drawFrame(canvas: Canvas, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined): Promise<Canvas> {
