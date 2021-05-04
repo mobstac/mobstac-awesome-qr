@@ -24,7 +24,7 @@ const config = {
     canvasType: CanvasType.SVG,
     eyeFrameShape: EyeFrameShape.CIRCLE,
     eyeBallShape: EyeBallShape.CIRCLE,
-    dataPattern: DataPattern.SQUARE,
+    dataPattern: DataPattern.RIGHT_DIAMOND,
     colorDark: "#000000",
     colorLight: "#ffffff",
     dotScale: 1,
