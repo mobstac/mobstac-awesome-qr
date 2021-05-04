@@ -641,9 +641,8 @@ export class Drawing {
         finalContext.fillStyle = gradient;
         finalContext.strokeStyle = gradient;
         finalContext.lineWidth = 2*this.config.moduleSize;
-        if (this.config.backgroundColor || this.config.backgroundImage) {
-            finalContext.stroke();
-        }
+        finalContext.stroke();
+        
 
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
         const moduleSize = this.config.dotScale*this.config.moduleSize;
