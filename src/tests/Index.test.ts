@@ -24,7 +24,7 @@ const config = {
     canvasType: CanvasType.SVG,
     eyeFrameShape: EyeFrameShape.CIRCLE,
     eyeBallShape: EyeBallShape.CIRCLE,
-    dataPattern: DataPattern.RIGHT_DIAMOND,
+    dataPattern: DataPattern.KITE,
     colorDark: "#000000",
     colorLight: "#ffffff",
     dotScale: 1,
@@ -36,7 +36,7 @@ const config = {
     // logoScale: 0.25,
     logoMargin: 10,
 logoScale: 0.20039999999999997,
-    margin: 0,
+    margin: 80,
 
     size: 2048,
     isVCard: false,
