@@ -201,7 +201,22 @@ export class SVGDrawing {
                 return mainCanvas.svg();
             });
     }
-
+    private inShape(x: number, y: number,pt: number,side: number): boolean {
+        
+        const bottomX = pt ;
+        const bottomY = pt  ;
+        const topX = pt+side;
+        const topY = pt+side;
+        let inX = false,inY = false;
+        if (x>bottomX && x<topX) {
+            inX = true;
+        }
+        if(y> bottomY && y<topY) {
+            inY = true;
+        }
+       
+        return !(inX && inY);
+    }
     private setupCanvasForGradient(ctx: CanvasRenderingContext2D, size: number) {
 
         let gradient: string | CanvasGradient | CanvasPattern = this.config.colorDark ? this.config.colorDark : '#000000';
