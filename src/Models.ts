@@ -665,7 +665,7 @@ export class Drawing {
         const coor = (Math.sqrt(2)*size + 2*this.config.moduleSize-size) / 2 ; // posx = (sizeA - sizeB) /2 ;
         for(let i =0 ;i<limit;i+=increment) {
             for(let j = 0;j<limit;j+=increment) {
-                if(Math.floor(Math.random() * 2) === 1 && this.inShape(i, j, coor, size) && this.inShape(i+moduleSize,j+moduleSize,coor,size)) {
+                if(Math.floor(Math.random() * 2) === 1 && this.inShape(i, j, coor, size) && this.inShape(i+moduleSize,j+moduleSize,coor,size) && this.inShape(i,j+moduleSize,coor,size) &&this.inShape(i+moduleSize,j,coor,size)) {
                     switch (dataPattern) {
                         case DataPattern.CIRCLE:
                             this.drawCircle(i+moduleSize/2,j+moduleSize/2,finalContext,moduleSize/2);
