@@ -28,6 +28,7 @@ export enum CanvasType {
     SVG = 'svg',
     JPEG = 'jpeg',
     PNG = 'png',
+    EPS = 'eps'
 }
 
 export enum EyeFrameShape {
