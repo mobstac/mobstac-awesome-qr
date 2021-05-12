@@ -21,6 +21,7 @@ END:VCARD`;
 const config = {
     text: 'https://www.beaconstac.com',
     logoImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
+    logoBackground: false,
     backgroundImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
     backgroundColor: 'white',
     canvasType: CanvasType.SVG,
