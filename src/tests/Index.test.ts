@@ -20,28 +20,25 @@ END:VCARD`;
 
 const config = {
     text: 'https://www.beaconstac.com',
-    logoImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
-    backgroundImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
+   // logoImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
+   // backgroundImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
+ // backgroundImage:'https://www.fnordware.com/superpng/pnggrad16rgb.png',
+ // backgroundImage:'https://png.pngtree.com/png-clipart/20200721/original/pngtree-design-scene-prototype-renderings-logo-sample-material-png-image_4913697.jpg',
     backgroundColor: 'white',
     canvasType: CanvasType.SVG,
-    eyeFrameShape: EyeFrameShape.SQUARE,
-    eyeBallShape: EyeBallShape.SQUARE,
+    eyeFrameShape: EyeFrameShape.CIRCLE,
+    eyeBallShape: EyeBallShape.CIRCLE,
     dataPattern: DataPattern.SQUARE,
-   colorDark: 'yellow',
-   colorLight: '#4494fc',
     dotScale: 1,
      gradientType: GradientType.NONE,
-    frameStyle: QRCodeFrame.NONE,
+    frameStyle: QRCodeFrame.CIRCULAR,
     frameColor: 'blue',
     frameText: 'HEY QR',
     logoMargin: 20,
     logoScale: 0.25,
     margin: 80,
-    typeNumber: 5,
-    size: 1024,
-    isVCard: false,
-    useCanvas: false,
-    useOpacity: true,
+
+
 };
 
 describe('QR code tests', () => {
