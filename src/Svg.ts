@@ -201,7 +201,6 @@ export class SVGDrawing {
                 return mainCanvas.svg();
             });
     }
-
     private setupCanvasForGradient(ctx: CanvasRenderingContext2D, size: number) {
 
         let gradient: string | CanvasGradient | CanvasPattern = this.config.colorDark ? this.config.colorDark : '#000000';
