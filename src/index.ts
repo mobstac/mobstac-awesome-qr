@@ -59,7 +59,6 @@ export class QRCodeBuilder {
             this.config.logoMargin = (this.config.logoMargin > 5) ? 5 : this.config.logoMargin;
         }
 
-
         const qrCode: QRCode = new QRCode(-1, this.config);
 
         // uncomment these for node
