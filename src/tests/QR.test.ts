@@ -251,6 +251,7 @@ const config9 = {
 };
 const config10 = {
     canvasType: CanvasType.SVG,
+    logoImage: 'https://www.tutorialspoint.com/videotutorials/images/coding_ground_home.jpg',  
     backgroundColor:'white',
     colorDark: "blue",
     colorLight: "green",
@@ -317,6 +318,40 @@ const config13 = {
    // imageServerURL: "https://beaconstacqa.mobstac.com/api/2.0/validate_url/",
 
     text: "https://google.com",
+};
+const config14 = {
+    logoImage: 'https://www.tutorialspoint.com/videotutorials/images/coding_ground_home.jpg',  
+    logoBackground: false,
+    canvasType: CanvasType.SVG,
+    colorDark: "red",
+    colorLight: "green",
+    dataPattern: DataPattern.SQUARE,
+    dotScale: 1,
+    eyeBallShape: EyeBallShape.CIRCLE,
+    // eyeFrameColor: "",
+    eyeFrameShape: EyeFrameShape.CIRCLE,
+    frameStyle: QRCodeFrame.CIRCULAR,
+    frameColor: "blue",
+    frameText: "Scan QR",
+    gradientType: GradientType.VERTICAL,
+   // imageServerURL: "https://beaconstacqa.mobstac.com/api/2.0/validate_url/",
+
+    text: "https://google.com",
+};
+const config15 = {
+    text: sampleUrl,
+    logoImage: 'https://www.tutorialspoint.com/videotutorials/images/coding_ground_home.jpg',  
+    logoBackground: false,
+    canvasType: CanvasType.PNG,
+    dataPattern: DataPattern.SQUARE,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    dotScale: 1,
+    margin: 80,
+    size: 1024,
+    isVCard: false,
+    useOpacity: true,
+    correctLevel: QRErrorCorrectLevel.H
 };
 function prepareImageBuffer(qrCode: QRCode, name: string) {
     const dataUrl = qrCode.canvas.toDataURL('image/png');
@@ -476,6 +511,28 @@ describe('Output QR code tests', () => {
         const qrCodeGenerator = new QRCodeBuilder(config13);
         qrCodeGenerator.build(CanvasType.PNG).then(qrCode => {
             const bufferObject = prepareImageBuffer(qrCode, 'circular-sqaure');
+            fs.writeFileSync(__dirname + bufferObject.name, bufferObject.buffer);
+            done();
+        }).catch(err => {
+            console.error(err);
+            done();
+        });
+    });
+    it('QR test PNG: circular-No-logobackground', done => {
+        const qrCodeGenerator = new QRCodeBuilder(config14);
+        qrCodeGenerator.build(CanvasType.PNG).then(qrCode => {
+            const bufferObject = prepareImageBuffer(qrCode, 'circular-nologo');
+            fs.writeFileSync(__dirname + bufferObject.name, bufferObject.buffer);
+            done();
+        }).catch(err => {
+            console.error(err);
+            done();
+        });
+    });
+    it('QR test PNG: default_no_logobackground', done => {
+        const qrCodeGenerator = new QRCodeBuilder(config15);
+        qrCodeGenerator.build(CanvasType.PNG).then(qrCode => {
+            const bufferObject = prepareImageBuffer(qrCode, 'default_no_logobackground');
             fs.writeFileSync(__dirname + bufferObject.name, bufferObject.buffer);
             done();
         }).catch(err => {
