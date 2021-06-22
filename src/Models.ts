@@ -614,7 +614,6 @@ export class Drawing {
         return false;
     }
     private inShape(x: number, y: number,pt: number,side: number): boolean {
-        
         const bottomX = pt ;
         const bottomY = pt  ;
         const topX = pt+side;
@@ -1548,6 +1547,7 @@ export class Drawing {
         const moduleCount = this.moduleCount;
         const xyOffset = (1 - this.config.dotScale) * 0.5; 
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+        
 
         for (let row = 0; row < moduleCount; row++) {
             for (let col = 0; col < moduleCount; col++) {
@@ -1571,6 +1571,29 @@ export class Drawing {
 
                 const nLeft = col * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
                 const nTop = row * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
+
+                if (this.config.logoImage) {
+                    let logoScale = this.config.logoScale;
+                    let logoMargin = this.config.logoMargin;
+                    let logoCornerRadius = this.config.logoCornerRadius;
+                    if (logoScale <= 0 || logoScale >= 1.0) {
+                        logoScale = 0.2;
+                    }
+                    if (logoMargin < 0) {
+                        logoMargin = 0;
+                    }
+                    if (logoCornerRadius < 0) {
+                        logoCornerRadius = 0;
+                    }
+                    const logoSize = this.config.viewportSize * logoScale + 2*logoMargin;
+                    const mainMargin = this.config.margin;
+                    const coordinate = 0.5 * (this.config.size - logoSize);
+                    const centreCoordinate = coordinate - logoMargin - mainMargin;
+                    const moduleSize = (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize;
+                    if(!this.inShape(nLeft + moduleSize,nTop,centreCoordinate,logoSize) || !this.inShape(nLeft,nTop  + moduleSize,centreCoordinate,logoSize) || !this.inShape(nLeft + moduleSize,nTop  + moduleSize,centreCoordinate,logoSize) || !this.inShape(nLeft - moduleSize,nTop  - moduleSize,centreCoordinate,logoSize) || !this.inShape(nLeft - moduleSize,nTop,centreCoordinate,logoSize) || !this.inShape(nLeft,nTop - moduleSize,centreCoordinate,logoSize)) {
+                        continue;
+                    }
+                }
                 if (patternPosition.length === 0) {
                     // if align pattern list is empty, then it means that we don't need to leave room for the align patterns
                     if (!bProtected) {
