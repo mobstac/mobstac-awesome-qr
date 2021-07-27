@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     name: Publish beta version
-    runs-on: macos-11
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2-beta
