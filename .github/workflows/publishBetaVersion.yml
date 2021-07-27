@@ -6,12 +6,12 @@ on:
 jobs:
   test:
     name: Publish beta version
-    runs-on: ubuntu-latest
+    runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '10'
+          node-version: '14'
       - name: Install dependencies
         run: npm install
       - name: Run unit tests
