@@ -572,7 +572,7 @@ export class Drawing {
                 return this.drawAlignPatterns(mainContext, gradient);
             })
             .then(() => {
-                return this.drawPositionProtectors(mainContext);
+               return this.drawPositionProtectors(mainContext);
             })
             .then(() => {
                 return this.drawAlignProtectors(mainContext);
@@ -613,11 +613,16 @@ export class Drawing {
         }
         return false;
     }
-    private inShape(x: number, y: number,pt: number,side: number): boolean {
-        const bottomX = pt ;
-        const bottomY = pt  ;
-        const topX = pt+side;
-        const topY = pt+side;
+    private inShape(x: number, y: number,pt: number,side: number,pty: number = 0,height :number = 0, square: boolean = true): boolean {
+        let bottomX = pt ;
+        let bottomY = pt  ;
+        let topX = pt+side;
+        let topY = pt+side;
+        if(!square){
+            bottomY = pty;
+            topY = pty + height;
+        }
+
         let inX = false,inY = false;
         if (x>bottomX && x<topX) {
             inX = true;
@@ -1079,15 +1084,17 @@ export class Drawing {
         }
         context.restore();
 
-        const logoSize = this.config.viewportSize * logoScale;
-
+        const logoWidth = this.config.widthScale*this.config.viewportSize * logoScale;
+        const logoHeight = this.config.heightScale*this.config.viewportSize * logoScale;
         const mainMargin = this.config.margin;
-        const coordinate = 0.5 * (this.config.size - logoSize);
-        const centreCoordinate = coordinate - logoMargin - mainMargin;
+        const coordinateX = 0.5 * (this.config.size - logoWidth);
+        const coordinateY = 0.5 * (this.config.size - logoHeight);
+        const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+        const centreCoordinateY = coordinateY - logoMargin - mainMargin;
         if(this.config.logoBackground !== false) {
             context.fillStyle = '#ffffff';
             context.save();
-            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinate, centreCoordinate, logoSize + 2 * logoMargin, logoSize + 2 * logoMargin, logoCornerRadius);
+            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinateX, centreCoordinateY, logoWidth + 2 * logoMargin, logoHeight + 2 * logoMargin, logoCornerRadius);
             context.clip();
             context.fill();
             context.restore();
@@ -1095,9 +1102,9 @@ export class Drawing {
         context.save();
 
         return loadImage(this.config.logoImage!, this.config.imageServerURL, this.config.imageServerRequestHeaders).then((image: any) => {
-            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinate + logoMargin, centreCoordinate + logoMargin, logoSize, logoSize, logoCornerRadius);
+            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinateX + logoMargin, centreCoordinateY + logoMargin, logoWidth, logoHeight, logoCornerRadius);
             context.clip();
-            context.drawImage(image, centreCoordinate + logoMargin, centreCoordinate + logoMargin, logoSize, logoSize);
+            context.drawImage(image, centreCoordinateX + logoMargin, centreCoordinateY + logoMargin, logoWidth, logoHeight);
             context.restore();
         });
     }
@@ -1585,17 +1592,27 @@ export class Drawing {
                     if (logoCornerRadius < 0) {
                         logoCornerRadius = 0;
                     }
-                    const logoSize = this.config.viewportSize * logoScale + 2*logoMargin;
-                    const mainMargin = this.config.margin;
-                    const coordinate = 0.5 * (this.config.size - logoSize);
-                    const centreCoordinate = coordinate - logoMargin - mainMargin;
+
+        const logoWidth = this.config.widthScale*this.config.viewportSize * logoScale ;
+        const logoHeight = this.config.heightScale*this.config.viewportSize * logoScale ;
+        const mainMargin = this.config.margin;
+        const coordinateX = 0.5 * (this.config.size - logoWidth);
+        const coordinateY = 0.5 * (this.config.size - logoHeight);
+        const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+        const centreCoordinateY = coordinateY - logoMargin - mainMargin;
+
+                 //   const logoSize = this.config.viewportSize * logoScale + 2*logoMargin;
+                 //   const mainMargin = this.config.margin;
+                   // const coordinate = 0.5 * (this.config.size - logoSize);
+                   // const centreCoordinate = coordinate - logoMargin - mainMargin;
+                   
                     const moduleSize = (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize;
-                    if(this.config.logoBackground && (!this.inShape(nLeft + moduleSize,nTop,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft,nTop  + moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft + moduleSize,nTop  + moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft - moduleSize,nTop  - moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft - moduleSize,nTop,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft,nTop - moduleSize,centreCoordinate,logoSize))) {
+                    if(this.config.logoBackground && (!this.inShape(nLeft + moduleSize,nTop,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft,nTop  + moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft + moduleSize,nTop  + moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft - moduleSize,nTop  - moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft - moduleSize,nTop,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft,nTop - moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false))) {
                             continue;
                     }
                 }
