@@ -26,8 +26,9 @@ export class QRCodeBuilder {
             logoMargin: 800/12/4, // 1/4 of margin
             logoCornerRadius: 8,
             dotScale: 0.35,
-            widthScale: 1,
-            heightScale: 1,
+            widthSize: 0,
+            heightSize: 0,
+            rectangular: false,
             logoBackground: true,
             text: '',
             maskedDots: false,
