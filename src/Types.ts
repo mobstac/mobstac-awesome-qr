@@ -13,9 +13,9 @@ export interface QRCodeConfig {
     backgroundDimming: string;
     logoImage?: string;
     logoScale: number;
-    rectangular: boolean;
-    widthSize: number;
-    heightSize: number;
+    rectangular?: boolean;
+    widthSize?: number;
+    heightSize?: number;
     logoMargin: number;
     logoCornerRadius: number;
     logoBackground?: boolean;
@@ -61,9 +61,9 @@ export interface QRDrawingConfig {
     colorLight: string;
     logoImage?: string;
     logoScale: number;
-    rectangular: boolean;
-    widthSize: number;
-    heightSize: number;
+    rectangular?: boolean;
+    widthSize?: number;
+    heightSize?: number;
     logoMargin: number;
     logoCornerRadius: number;
     logoBackground?: boolean;

@@ -1087,17 +1087,19 @@ export class Drawing {
         let logoHeight = this.config.viewportSize ;
         const maxWH = 2 * this.config.viewportSize;
         if(this.config.rectangular){
-            if(this.config.widthSize <= maxWH && this.config.heightSize <= maxWH) {
-                logoWidth  = this.config.widthSize;
-                logoHeight = this.config.heightSize;
-            }else{
-                const ratio = this.config.heightSize  / this.config.widthSize;
-                if(ratio>1){
-                    logoHeight = maxWH;
-                    logoWidth = logoHeight / ratio; 
+            if(this.config.widthSize && this.config.heightSize) {
+                if(this.config.widthSize <= maxWH && this.config.heightSize <= maxWH) {
+                    logoWidth  = this.config.widthSize;
+                    logoHeight = this.config.heightSize;
                 }else{
-                    logoWidth = maxWH;
-                    logoHeight = logoWidth * ratio;
+                    const ratio = this.config.heightSize  / this.config.widthSize;
+                    if(ratio>1){
+                        logoHeight = maxWH;
+                        logoWidth = logoHeight / ratio; 
+                    }else{
+                        logoWidth = maxWH;
+                        logoHeight = logoWidth * ratio;
+                    }
                 }
             }
         }
@@ -1614,17 +1616,19 @@ export class Drawing {
                     let logoHeight = this.config.viewportSize ;
                     const maxWH = 2 * this.config.viewportSize;
                     if(this.config.rectangular){
-                        if(this.config.widthSize <= maxWH && this.config.heightSize <= maxWH) {
-                            logoWidth  = this.config.widthSize;
-                            logoHeight = this.config.heightSize;
-                        }else{
-                            const ratio = this.config.heightSize  / this.config.widthSize;
-                            if(ratio>1){
-                                logoHeight = maxWH;
-                                logoWidth = logoHeight / ratio; 
+                        if(this.config.widthSize && this.config.heightSize) {
+                            if(this.config.widthSize <= maxWH && this.config.heightSize <= maxWH) {
+                                logoWidth  = this.config.widthSize;
+                                logoHeight = this.config.heightSize;
                             }else{
-                                logoWidth = maxWH;
-                                logoHeight = logoWidth * ratio;
+                                const ratio = this.config.heightSize  / this.config.widthSize;
+                                if(ratio>1){
+                                    logoHeight = maxWH;
+                                    logoWidth = logoHeight / ratio; 
+                                }else{
+                                    logoWidth = maxWH;
+                                    logoHeight = logoWidth * ratio;
+                                }
                             }
                         }
                     }
