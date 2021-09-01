@@ -24,12 +24,15 @@ const config = {
    // backgroundImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
  // backgroundImage:'https://www.fnordware.com/superpng/pnggrad16rgb.png',
  // backgroundImage:'https://png.pngtree.com/png-clipart/20200721/original/pngtree-design-scene-prototype-renderings-logo-sample-material-png-image_4913697.jpg',
- logoImage:'https://www.tutorialspoint.com/videotutorials/images/coding_ground_home.jpg',  
+ logoImage:'https://content.internetretailing.net/AcuCustom/Sitename/DAM/027/HSS-Hire-logo-3D2-1024x369.jpg',  
  backgroundColor: 'white',
     canvasType: CanvasType.SVG,
-    eyeFrameShape: EyeFrameShape.CIRCLE,
-    eyeBallShape: EyeBallShape.CIRCLE,
-    dataPattern: DataPattern.KITE,
+    eyeFrameShape: EyeFrameShape.SQUARE,
+    eyeBallShape: EyeBallShape.SQUARE,
+    // dataPattern: DataPattern.KITE,
+    rectangular: true,
+    logoWidth: 5000,
+    logoHeight: 2500,
     dotScale: 1,
     colorDark: '#256871',
      gradientType: GradientType.NONE,
@@ -39,7 +42,8 @@ const config = {
     logoMargin: 20,
     logoScale: 0.25,
     margin: 80,
-
+    widthScale: 2,
+    heightScale: 1,
 
 };
 
