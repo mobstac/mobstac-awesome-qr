@@ -1083,9 +1083,9 @@ export class Drawing {
             logoCornerRadius = 0;
         }
         context.restore();
-        let logoWidth =  this.config.viewportSize ;
-        let logoHeight = this.config.viewportSize ;
-        const maxWH = 2 * this.config.viewportSize;
+        let logoWidth =  this.config.viewportSize;
+        let logoHeight = this.config.viewportSize;
+        const maxWH = 1.5 * this.config.viewportSize;
         if(this.config.rectangular){
             if(this.config.logoWidth && this.config.logoHeight) {
                 if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
@@ -1612,9 +1612,9 @@ export class Drawing {
                         logoCornerRadius = 0;
                     }
 
-                    let logoWidth =  this.config.viewportSize ;
-                    let logoHeight = this.config.viewportSize ;
-                    const maxWH = 2 * this.config.viewportSize;
+                    let logoWidth =  this.config.viewportSize;
+                    let logoHeight = this.config.viewportSize;
+                    const maxWH = 1.5 * this.config.viewportSize;
                     if(this.config.rectangular){
                         if(this.config.logoWidth && this.config.logoHeight) {
                             if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
