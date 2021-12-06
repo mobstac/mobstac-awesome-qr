@@ -1,7 +1,10 @@
-import { expect } from 'chai';
 import 'mocha';
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
 import { QRCodeBuilder } from '../index';
+import { QRCode } from '../Models';
+
+// tslint:disable-next-line:no-var-requires
+const fs =  require('fs');
 
 const vCardSampleData = `BEGIN:VCARD
 VERSION:3.0
@@ -12,82 +15,64 @@ TITLE:fdgdfg
 TEL;TYPE=work:213213
 TEL;TYPE=mobile:523355
 TEL;TYPE=home:342524
-EMAIL:souro.com@gmail.com
+EMAIL:demo@mobstac.com
 ADR;TYPE=WORK:;;eafe, thgsh;Bangalore;KA;560008;India
-URL:souro.comf
+URL:mobstac.com
 REV:2008-04-24T19:52:43Z
 END:VCARD`;
 
 const config = {
-    text: 'https://www.google.com',
-   // logoImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
-   // backgroundImage: 'https://i.pinimg.com/474x/d4/48/2b/d4482ba4e7ebdbff7b8ba73e7d39aceb.jpg',
- // backgroundImage:'https://www.fnordware.com/superpng/pnggrad16rgb.png',
- // backgroundImage:'https://png.pngtree.com/png-clipart/20200721/original/pngtree-design-scene-prototype-renderings-logo-sample-material-png-image_4913697.jpg',
- logoImage:'https://content.internetretailing.net/AcuCustom/Sitename/DAM/027/HSS-Hire-logo-3D2-1024x369.jpg',  
- backgroundColor: 'white',
+    // text: vCardSampleData,
+    text: "www.beaconstac.com",
+    backgroundColor:'white',
+    logoBackground: true,
     canvasType: CanvasType.SVG,
-    eyeFrameShape: EyeFrameShape.SQUARE,
-    eyeBallShape: EyeBallShape.SQUARE,
-    // dataPattern: DataPattern.KITE,
-    rectangular: true,
-    logoWidth: 5000,
-    logoHeight: 2500,
+    dataPattern: DataPattern.KITE,
     dotScale: 1,
-    colorDark: '#256871',
-     gradientType: GradientType.NONE,
-    frameStyle: QRCodeFrame.BALLOON_BOTTOM,
-    frameColor: 'blue',
-    frameText: 'HEY QR',
-    logoMargin: 20,
-    logoScale: 0.25,
+    colorDark: "#290a5e",
+    eyeBallShape: EyeBallShape.LEFT_DIAMOND,
+    eyeFrameShape: EyeFrameShape.CIRCLE,
+    frameStyle: QRCodeFrame.BOX_BOTTOM,
+    frameText: "Abcdefghijklmnopqrstuvwxyz1234",
+    frameColor: "#290a5e",
+    frameTextColor: "#b89fe3",
+    gradientType: GradientType.NONE,
+    logoScale: 1,
+    size:1024,
     margin: 80,
-    widthScale: 2,
-    heightScale: 1,
+    // isVCard: true
 
 };
 
-describe('QR code tests', () => {
-    // it('Main test SVG', done => {
-    //     const qrCodeGenerator = new QRCodeBuilder(config);
-    //
-    //     qrCodeGenerator.build(CanvasType.SVG).then(qrCode => {
-    //         const fs = require('fs');
-    //         fs.writeFileSync(__dirname + '/test.' + CanvasType.SVG.toLowerCase(), qrCode.toBuffer());
-    //         done();
-    //     }).catch(err => {
-    //         console.error(err);
-    //         done();
-    //     });
-    // });
+function prepareImageBuffer(qrCode: QRCode, name: string) {
+    const dataUrl = qrCode.canvas.toDataURL('image/png');
+    const matches: any = dataUrl.match(
+        /^data:([A-Za-z-+\/]+);base64,(.+)$/
+        ),
+        response: any  ={};
+    response.type = matches[1];
+    response.data = Buffer.from(matches[2], "base64");
+    const decodedImg = response;
+    const imageBuffer = decodedImg.data;
+    const extension ='png';
+    const fileName = `/${name}` + "." + extension;
 
-    it('Main test QR 1', done => {
+    return {
+        name: fileName,
+        buffer: imageBuffer
+    };
+
+}
+
+describe('QR code main test', () => {
+    it('QR main test PNG', done => {
         const qrCodeGenerator = new QRCodeBuilder(config);
-
         qrCodeGenerator.build(CanvasType.PNG).then(qrCode => {
-            
-            const fs = require('fs');
-            const dataUrl = qrCode.canvas.toDataURL('image/png');
-            const matches: any = dataUrl.match(
-                    /^data:([A-Za-z-+\/]+);base64,(.+)$/
-                  ),
-                response: any  ={};
-            response.type = matches[1];
-            response.data = Buffer.from(matches[2], "base64");
-            const decodedImg = response;
-            const imageBuffer = decodedImg.data;
-            const extension ='png';
-            const fileName = '/test' + "." + extension;
-            fs.writeFileSync(__dirname+fileName, imageBuffer);
-            // console.log(dataUrl.substr(0,200));
-            // fs.writeFileSync(__dirname + '/test.' + CanvasType.SVG.toLowerCase(), qrCode.toBuffer());
+            const bufferObject = prepareImageBuffer(qrCode, 'test');
+            fs.writeFileSync(__dirname + bufferObject.name, bufferObject.buffer);
             done();
-            
-            
-            // const fs = require('fs');
-            // fs.writeFileSync(__dirname + '/test.' + CanvasType.SVG.toLowerCase(), qrCode.toBuffer());
-            // done();
         }).catch(err => {
+            console.error(err);
             done();
         });
     });

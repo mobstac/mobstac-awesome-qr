@@ -792,10 +792,11 @@ export class Drawing {
         }
 
         const color = frameColor ? frameColor : '#000000';
+        const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
         const rawSize = this.config.rawSize;
         const size = rawSize + moduleSize * 2;
-        const text = frameText ? frameText.toUpperCase() : 'SCAN ME';
+        const text = frameText || 'SCAN ME';
         let canvasWidth: number = size + moduleSize,
             canvasHeight: number = 1.265 * size,
             borderX: number = 0,
@@ -981,17 +982,17 @@ export class Drawing {
                 return canvas;
         }
 
-        finalContext.fillStyle = '#ffffff';
-        finalContext.strokeStyle = '#ffffff';
+        finalContext.fillStyle = textColor || '#ffffff';
+        finalContext.strokeStyle = textColor || '#ffffff';
 
         finalContext.lineWidth = cornerRadius;
         finalContext.textAlign = 'center';
-        const fontSize = this.config.size / 10;
+        const fontSize = text.length > 15 ? this.config.size / 15 : this.config.size / 10;
         finalContext.font = `${fontSize}px "Roboto"`;
 
-        textX = finalCanvas.width/2 + 1.1 * moduleSize;
+        textX = finalCanvas.width/2;
         if (this.config.isVCard) {
-            textX = textX + moduleSize * 3;
+            textX = textX;
             textY = textY + moduleSize;
             logoX = logoX - moduleSize * 2;
             logoY = logoY + moduleSize * 2;
@@ -999,50 +1000,46 @@ export class Drawing {
 
         finalContext.fillText(text, textX, textY);
         finalContext.drawImage(canvas, qrX, qrY, rawSize, rawSize);
-        return loadImage('https://static.beaconstac.com/assets/img/mobstac-awesome-qr/cellphone.svg').then(image => {
-
-            if (this.config.isVCard) {
-                logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/13);
-                logoY = logoY + (this.config.size * 0.01)
+        
+        if (this.config.isVCard) {
+            logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/13);
+            logoY = logoY + (this.config.size * 0.01)
+        } else {
+            logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/12);
+        }
+        // finalContext.drawImage(image, logoX, logoY, size / 10, size / 10);
+        finalContext.fillStyle = frameColor ? frameColor : '#000000';
+        if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
+            if (!this.config.isVCard) {
+                finalContext.moveTo(padX + 5 + size / 2, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 2.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padY + 2);
+                finalContext.fill();
             } else {
-                logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/12);
+                finalContext.moveTo(padX + 5 + size / 2, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 4.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padY + 2);
+                finalContext.fill();
             }
-            finalContext.drawImage(image, logoX, logoY, size / 10, size / 10);
-            finalContext.fillStyle = frameColor ? frameColor : '#000000';
-            if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
-                if (!this.config.isVCard) {
-                    finalContext.moveTo(padX + 5 + size / 2, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 2.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padY + 2);
-                    finalContext.fill();
-                } else {
-                    finalContext.moveTo(padX + 5 + size / 2, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 4.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padY + 2);
-                    finalContext.fill();
-                }
+        }
+        if (frameStyle === QRCodeFrame.BALLOON_TOP) {
+            if (!this.config.isVCard) {
+                finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 2.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padHeight - 2);
+                finalContext.fill();
+            } else {
+                finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 4.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padHeight - 2);
+                finalContext.fill();
             }
-            if (frameStyle === QRCodeFrame.BALLOON_TOP) {
-                if (!this.config.isVCard) {
-                    finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 2.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padHeight - 2);
-                    finalContext.fill();
-                } else {
-                    finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 4.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padHeight - 2);
-                    finalContext.fill();
-                }
-            }
-            return finalCanvas;
-        }, err => {
-            return finalCanvas;
-        });
+        }
+        return finalCanvas;
     }
 
     private async scaleFinalImage(canvas: Canvas): Promise<Canvas> {
