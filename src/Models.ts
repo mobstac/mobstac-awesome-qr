@@ -13,7 +13,7 @@ import {
     QRMode,
 } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
-import { isNode, loadImage } from './Util';
+import { isNode, loadImage, getFrameTextSize } from './Util';
 
 import { SVGDrawing } from './Svg';
 
@@ -987,7 +987,7 @@ export class Drawing {
 
         finalContext.lineWidth = cornerRadius;
         finalContext.textAlign = 'center';
-        const fontSize = text.length > 15 ? this.config.size / 15 : this.config.size / 10;
+        const fontSize = getFrameTextSize(this.config.size, text.length);
         finalContext.font = `${fontSize}px "Roboto"`;
 
         textX = finalCanvas.width/2;
