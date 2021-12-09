@@ -3,7 +3,7 @@ import { Canvas, CanvasGradient, CanvasPattern, CanvasRenderingContext2D, create
 import { CanvasUtil } from './Common';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
-import { isNode, loadImage } from './Util';
+import { isNode, loadImage, getFrameTextSize } from './Util';
 
 
 export class SVGDrawing {
@@ -1173,7 +1173,7 @@ export class SVGDrawing {
             textX = canvas.width()/2;
         }
 
-        const fontSize = text.length > 15 ? this.config.size / 15 : this.config.size / 10;
+        const fontSize = getFrameTextSize(this.config.size, text.length);
 
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
