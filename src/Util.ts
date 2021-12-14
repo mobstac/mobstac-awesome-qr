@@ -153,11 +153,11 @@ export const getFrameTextSize = (configSize: number, textLength: number) => {
     } else if (textLength <= 20) {
         factor = 16;
     } else if (textLength <= 24) {
-        factor = 17;
+        factor = 18;
     }  else if (textLength <= 27) {
-        factor = 19;
-    } else if (textLength <= 30) {
         factor = 20;
+    } else if (textLength <= 30) {
+        factor = 22;
     } else {
         throw new Error('Frame text should be between 0 to 30 characters')
     }
