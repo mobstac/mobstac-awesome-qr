@@ -1046,6 +1046,12 @@ export class Drawing {
         finalContext.lineWidth = cornerRadius;
         finalContext.textAlign = 'center';
         const fontSize = getFrameTextSize(this.config.size, text.length);
+
+        if (frameStyle === QRCodeFrame.BALLOON_BOTTOM || frameStyle === QRCodeFrame.BOX_BOTTOM
+            || frameStyle === QRCodeFrame.BANNER_BOTTOM || frameStyle === QRCodeFrame.BANNER_TOP || frameStyle === QRCodeFrame.BOX_TOP
+            || frameStyle === QRCodeFrame.BALLOON_TOP) {
+            textY = textY - (text.length - 12);
+        }
         finalContext.font = `${fontSize}px "Roboto"`;
 
         textX = finalCanvas.width/2;
