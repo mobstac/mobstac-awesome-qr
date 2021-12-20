@@ -159,7 +159,7 @@ function prepareImageBuffer(qrCode: QRCode, name: string) {
 
 }
 
-describe('QR Logo code main test', () => {
+describe('QR code Logo main test', () => {
     // logo tests for size: 1024
     it('Logo test PNG rectangular 1024', done => {
         const qrCodeGenerator = new QRCodeBuilder(rect1024);

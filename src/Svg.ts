@@ -3,7 +3,7 @@ import { Canvas, CanvasGradient, CanvasPattern, CanvasRenderingContext2D, create
 import { CanvasUtil } from './Common';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
-import { isNode, loadImage } from './Util';
+import { isNode, loadImage, getFrameTextSize } from './Util';
 
 
 export class SVGDrawing {
@@ -1028,10 +1028,11 @@ export class SVGDrawing {
         }
 
         const color = frameColor ? frameColor : '#000000';
+        const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
         const rawSize = this.config.rawSize;
         const size = rawSize + moduleSize * 2;
-        const text = frameText ? frameText.toUpperCase() : 'SCAN ME';
+        const text = frameText || 'SCAN ME';
 
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
@@ -1165,15 +1166,18 @@ export class SVGDrawing {
         // canvas.fontface('Roboto', `url(https://beaconstacqa.mobstac.com/static/fonts/Roboto-Regular.ttf)`);
         if (this.config.isVCard) {
             // @ts-ignore
-            textX = canvas.width()/2 + 5.1 * moduleSize;
+            textX = canvas.width()/2;
             textY = textY + (moduleSize * 2.5)
         } else {
             // @ts-ignore
-            textX = canvas.width()/2 + 1.5 * moduleSize;
+            textX = canvas.width()/2;
         }
+
+        const fontSize = getFrameTextSize(this.config.size, text.length);
+
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
-            .font({ fill: '#fff', family: 'Roboto', size: this.config.size / 10, leading: 0, anchor: 'middle'}).attr({y: textY});
+            .font({ fill: textColor, family: 'Roboto', size: this.config.size / 10, leading: 0, anchor: 'middle'}).attr({y: textY});
 
         if (this.config.isVCard) {
             // @ts-ignore
@@ -1185,25 +1189,7 @@ export class SVGDrawing {
             logoY = logoY + (moduleSize * 0.3)
         }
 
-        return loadImage('https://static.beaconstac.com/assets/img/mobstac-awesome-qr/cellphone.svg').then(image => {
-
-            // @ts-ignore
-            const cn = createCanvas(image.naturalHeight, image.naturalWidth);
-            const ct = cn.getContext('2d');
-            ct.drawImage(image, 0, 0);
-            ct.save();
-
-            // @ts-ignore
-            canvas.image('').size(size / 10, size / 10).move(logoX, logoY).attr({ 'xlink:href': cn.toDataURL() });
-
-            // TODO: Use SVG embed
-            // const cellphone = cellPhoneSVGPath.replace('<<x-axis>>', logoX)
-            //     .replace('<<y-axis>>', logoY)
-            //     .replace('<<width>>', size / 10)
-            //     .replace('<<height>>', size / 10);
-            // // @ts-ignore
-            // return canvas.svg(cellphone);
-        });
+        return canvas;
     }
 
 }
