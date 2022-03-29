@@ -4,7 +4,7 @@ import { Canvas, CanvasGradient, CanvasPattern, CanvasRenderingContext2D, create
 import { CanvasUtil } from './Common';
 import { CanvasType,DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
-import { cellPhoneSVGPath, isNode, isSvgFile, loadImage } from './Util';
+import { cellPhoneSVGPath, isNode, isSvgFile, loadImage, getFrameTextSize } from './Util';
 const fetch = require("node-fetch");
 
 export class SVGDrawing {
@@ -147,6 +147,14 @@ export class SVGDrawing {
                     this.shiftX = 1.5 * this.config.moduleSize;
                     this.shiftY = 2.5 * this.config.moduleSize + size / 5;
                     break;
+                case QRCodeFrame.TEXT_ONLY:
+                    this.shiftX = 1.5 * this.config.moduleSize;
+                    this.shiftY = 1.5 * this.config.moduleSize;
+                    break;
+                case QRCodeFrame.FOCUS:
+                    this.shiftX = 1.5 * this.config.moduleSize;
+                    this.shiftY = 1.5 * this.config.moduleSize;
+                    break;
                 default:
                     break;
             }
@@ -201,12 +209,17 @@ export class SVGDrawing {
         }
         return false;
     }
-    private inShape(x: number, y: number,pt: number,side: number): boolean {
+    
+    private inShape(x: number, y: number,pt: number,side: number,pty: number = 0,height :number = 0, square: boolean = true): boolean {
+        let bottomX = pt ;
+        let bottomY = pt  ;
+        let topX = pt+side;
+        let topY = pt+side;
+        if(!square){
+            bottomY = pty;
+            topY = pty + height;
+        }
 
-        const bottomX = pt ;
-        const bottomY = pt  ;
-        const topX = pt+side;
-        const topY = pt+side;
         let inX = false,inY = false;
         if (x>bottomX && x<topX) {
             inX = true;
@@ -452,6 +465,7 @@ export class SVGDrawing {
     }
 
     private async drawLogoImage(context: object) {
+        
         if (!this.config.logoImage) {
             return;
         }
@@ -494,10 +508,37 @@ export class SVGDrawing {
                 return fetch(this.config.logoImage)
                     .then((r: { text: () => void; }) => r.text())
                     .then((text: any) => {
+                        let logoWidth =  this.config.viewportSize;
+                        let logoHeight = this.config.viewportSize;
+                        const maxWH = 1.5 * this.config.viewportSize;
+
+                        if(this.config.rectangular){
+                            if(this.config.logoWidth && this.config.logoHeight) {
+                                if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
+                                    logoWidth  = this.config.logoWidth;
+                                    logoHeight = this.config.logoHeight;
+                                }else{
+                                    const ratio = this.config.logoHeight  / this.config.logoWidth;
+                                    if(ratio>1){
+                                        logoHeight = maxWH;
+                                        logoWidth = logoHeight / ratio; 
+                                    }else{
+                                        logoWidth = maxWH;
+                                        logoHeight = logoWidth * ratio;
+                                    }
+                                }
+                            }
+                        }
+                        logoWidth = logoWidth * logoScale;
+                        logoHeight = logoHeight * logoScale;
+                        const coordinateX = 0.5 * (this.config.size - logoWidth);
+                        const coordinateY =  0.5 * (this.config.size - logoHeight);
+                        const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+                        const centreCoordinateY = coordinateY - logoMargin - mainMargin;
                         const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
                         if(this.config.logoBackground !== false) {
                             // @ts-ignore
-                            context.rect(logoSize + logoMargin, logoSize + logoMargin).fill(color).move(centreCoordinate + this.config.margin + this.shiftX, centreCoordinate + this.config.margin + this.shiftY).radius(logoCornerRadius);
+                            context.rect(logoWidth + 2 * logoMargin, logoHeight + 2 * logoMargin).fill(color).move(centreCoordinateX + this.config.margin + this.shiftX, centreCoordinateY + this.config.margin + this.shiftY).radius(logoCornerRadius);
                         }
                         text = text.substring(text.indexOf('<svg'));
                         text = text.substring(0, text.indexOf('</svg>') + 6);
@@ -537,7 +578,7 @@ export class SVGDrawing {
                         try {
                             // @ts-ignore
                             context.svg(text
-                                .replace('<svg', `<svg fill='#000'` + extraText + ` x="${centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftX}" y="${centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftY}" width="${logoSize}" height="${logoSize}"`));
+                                .replace('<svg', `<svg fill='#000'` + extraText + ` x="${centreCoordinateX + logoMargin / 2 + this.config.margin + this.shiftX}" y="${centreCoordinateY + logoMargin / 2 + this.config.margin + this.shiftY}" width="${logoWidth}" height="${logoHeight}"`));
                         } catch (e) {
                             console.log(e);
                             // console.log('here')
@@ -559,11 +600,41 @@ export class SVGDrawing {
             // const ct = cn.getContext('2d');
             // ct.drawImage(image, 0, 0);
             // ct.save();
+            const logoScale = this.config.logoScale;
+            let logoWidth =  this.config.viewportSize;
+            let logoHeight = this.config.viewportSize;
+            const maxWH = 1.5 * this.config.viewportSize;
+            
+            if(this.config.rectangular){
+                if(this.config.logoWidth && this.config.logoHeight) {
+                    if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
+                        logoWidth  = this.config.logoWidth;
+                        logoHeight = this.config.logoHeight;
+                    }else{
+                        const ratio = this.config.logoHeight  / this.config.logoWidth;
+                        if(ratio>1){
+                            logoHeight = maxWH;
+                            logoWidth = logoHeight / ratio; 
+                        }else{
+                            logoWidth = maxWH;
+                            logoHeight = logoWidth * ratio;
+                        }
+                    }
+                }
+            }
 
-            const cn = createCanvas(logoSize, logoSize);
+            logoWidth = logoWidth * logoScale;
+            logoHeight = logoHeight * logoScale;
+            const cn = createCanvas(logoWidth, logoHeight);
             const ct = cn.getContext('2d');
-            ct.drawImage(image, 0, 0, logoSize, logoSize);
+            ct.drawImage(image, 0, 0, logoWidth, logoHeight);
             ct.save();
+
+            const mainMargin = this.config.margin;
+            const coordinateX = 0.5 * (this.config.size - logoWidth);
+            const coordinateY =  0.5 * (this.config.size - logoHeight);
+            const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+            const centreCoordinateY = coordinateY - logoMargin - mainMargin;
 
             // const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
             //
@@ -578,12 +649,12 @@ export class SVGDrawing {
             const colorNew = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
             // @ts-ignore
             if(this.config.logoBackground !== false) {
-                context.rect(logoSize + logoMargin, logoSize + logoMargin).fill(colorNew).move(centreCoordinate + this.config.margin + this.shiftX, centreCoordinate + this.config.margin + this.shiftY).radius(logoCornerRadius);
+                context.rect(logoWidth + 2 * logoMargin, logoHeight + 2 * logoMargin).fill(colorNew).move(centreCoordinateX + this.config.margin + this.shiftX, centreCoordinateY + this.config.margin + this.shiftY).radius(logoCornerRadius);
             }
             // @ts-ignore
-            context.image('').size(logoSize, logoSize)
+            context.image('').size(logoWidth, logoHeight)
                 .attr({ 'xlink:href': cn.toDataURL() })
-                .move(centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftX, centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftY);
+                .move(centreCoordinateX + logoMargin / 2 + this.config.margin + this.shiftX, centreCoordinateY + logoMargin / 2 + this.config.margin + this.shiftY);
         });
     }
 
@@ -701,17 +772,40 @@ export class SVGDrawing {
                     if (logoCornerRadius < 0) {
                         logoCornerRadius = 0;
                     }
-                    const logoSize = this.config.viewportSize * logoScale + 2*logoMargin;
-                    const mainMargin = this.config.margin;
-                    const coordinate = 0.5 * (this.config.size - logoSize);
-                    const centreCoordinate = coordinate - logoMargin - mainMargin;
+                    let logoWidth =  this.config.viewportSize;
+                    let logoHeight = this.config.viewportSize;
+                    const maxWH = 1.5 * this.config.viewportSize;
+                    if(this.config.rectangular){
+                        if(this.config.logoWidth && this.config.logoHeight) {
+                            if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
+                                logoWidth  = this.config.logoWidth;
+                                logoHeight = this.config.logoHeight;
+                            }else{
+                                const ratio = this.config.logoHeight  / this.config.logoWidth;
+                                if(ratio>1){
+                                    logoHeight = maxWH;
+                                    logoWidth = logoHeight / ratio;
+                                }else{
+                                    logoWidth = maxWH;
+                                    logoHeight = logoWidth * ratio;
+                                }
+                            }
+                        }
+                    }
+                    logoWidth = logoWidth  * logoScale;
+                    logoHeight = logoHeight * logoScale;
                     const moduleSize = (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize;
-                    if(this.config.logoBackground && (!this.inShape(nLeft + moduleSize,nTop,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft,nTop  + moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft + moduleSize,nTop  + moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft - moduleSize,nTop  - moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft - moduleSize,nTop,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft,nTop - moduleSize,centreCoordinate,logoSize))) {
+                    const mainMargin = this.config.margin;
+                    const coordinateX = 0.5 * (this.config.size - logoWidth);
+                    const coordinateY =  0.5 * (this.config.size - logoHeight);
+                    const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+                    const centreCoordinateY = coordinateY - logoMargin - mainMargin;
+                    if(this.config.logoBackground && (!this.inShape(nLeft + moduleSize,nTop,centreCoordinateX, logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft,nTop  + moduleSize, centreCoordinateX, logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft + moduleSize,nTop  + moduleSize, centreCoordinateX, logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft - moduleSize,nTop  - moduleSize, centreCoordinateX, logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft - moduleSize,nTop, centreCoordinateX, logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft,nTop - moduleSize, centreCoordinateX, logoWidth, centreCoordinateY, logoHeight, false))) {
                         continue;
                     }
                 }
@@ -1464,6 +1558,38 @@ export class SVGDrawing {
 
     }
 
+    private async drawFocus(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+        const moduleSize = this.config.moduleSize;
+        const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+        const radius = moduleSize;
+        // @ts-ignore
+        canvas.rect(width, height).fill(gradient ? gradient : '#000000').radius(radius).move(startX, startY);
+        // @ts-ignore
+        canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
+        // @ts-ignore
+        canvas.line(0, 0, width/3, 0).move(startX + width/3, startY + moduleSize/2)
+        .stroke({ color: backgroundColor, width: 1.1*moduleSize, linecap: 'none' })
+        // @ts-ignore
+        canvas.line(0, 0, 0, width/3).move(startX + width - moduleSize/2, startY + height/3)
+        .stroke({ color: backgroundColor, width: 1.1*moduleSize, linecap: 'none' })
+        // @ts-ignore
+        canvas.line(0, 0, width/3, 0).move(startX + width/3, startY - moduleSize/2 + height)
+        .stroke({ color: backgroundColor, width: 1.1*moduleSize, linecap: 'none' })
+        // @ts-ignore
+        canvas.line(0, 0, 0, width/3).move(startX + moduleSize/2, startY + height/3)
+        .stroke({ color: backgroundColor, width: 1.1*moduleSize, linecap: 'none' })
+    }
+
+    private async drawTextOnlyBackground(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+        const moduleSize = this.config.moduleSize;
+        const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+        const radius = moduleSize;
+        // @ts-ignore
+        canvas.rect(width, height).fill(backgroundColor).radius(radius).move(startX, startY);
+        // @ts-ignore
+        canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
+    }
+
     private async drawSquareFrame(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
         const moduleSize = this.config.moduleSize;
         const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
@@ -1480,10 +1606,11 @@ export class SVGDrawing {
         }
 
         const color = frameColor ? frameColor : '#000000';
+        const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
         const rawSize = this.config.rawSize;
         const size = rawSize + moduleSize * 2;
-        const text = frameText ? frameText.toUpperCase() : 'SCAN ME';
+        const text = frameText || 'SCAN ME';
 
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
@@ -1566,12 +1693,41 @@ export class SVGDrawing {
                 logoX = size / 3 - size / 9;
                 logoY = this.config.isVCard ? moduleSize * 3 : moduleSize * 2;
                 break;
+            case QRCodeFrame.TEXT_ONLY:
+                borderX = moduleSize / 2;
+                borderY = moduleSize / 2;
+                bannerX = moduleSize / 2;
+                bannerY = size + moduleSize * 1.5;
+                textX = size / 3;
+                textY = size + moduleSize * 2 + size / 10;
+                logoX = size / 3 - size / 9;
+                logoY = size + moduleSize * 3;
+                break;
+            case QRCodeFrame.FOCUS:
+                borderX = moduleSize / 2;
+                borderY = moduleSize / 2;
+                bannerX = moduleSize / 2;
+                bannerY = size + moduleSize * 1.5;
+                textX = size / 3;
+                textY = size + moduleSize * 2 + size / 10;
+                logoX = size / 3 - size / 9;
+                logoY = size + moduleSize * 3;
+                break;
             default:
                 break;
         }
 
-        if (frameStyle !== QRCodeFrame.BALLOON_TOP && frameStyle !== QRCodeFrame.BALLOON_BOTTOM) {
+        if (frameStyle !== QRCodeFrame.BALLOON_TOP && frameStyle !== QRCodeFrame.BALLOON_BOTTOM
+            && frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
             this.drawSquareFrame(borderX, borderY, canvas, color, size, size);
+        }
+
+        if (frameStyle === QRCodeFrame.TEXT_ONLY) {
+            this.drawTextOnlyBackground(borderX, borderY, canvas, color, size, size)
+        }
+
+        if (frameStyle === QRCodeFrame.FOCUS) {
+            this.drawFocus(borderX, borderY, canvas, color, size, size)
         }
 
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
@@ -1586,9 +1742,11 @@ export class SVGDrawing {
         }
 
         // Banner for frame text
-        // @ts-ignore
-        canvas.rect(size, size / 5).fill(color).radius(moduleSize)
+        if (frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
+            // @ts-ignore
+            canvas.rect(size, size / 5).fill(color).radius(moduleSize)
             .move(bannerX, bannerY);
+        }
 
         if (frameStyle === QRCodeFrame.BANNER_BOTTOM) {
             // @ts-ignore
@@ -1615,15 +1773,24 @@ export class SVGDrawing {
         // canvas.fontface('Roboto', `url(https://beaconstacqa.mobstac.com/static/fonts/Roboto-Regular.ttf)`);
         if (this.config.isVCard) {
             // @ts-ignore
-            textX = canvas.width()/2 + 5.1 * moduleSize;
+            textX = canvas.width()/2;
             textY = textY + (moduleSize * 2.5)
         } else {
             // @ts-ignore
-            textX = canvas.width()/2 + 1.5 * moduleSize;
+            textX = canvas.width()/2;
         }
+
+        const fontSize = getFrameTextSize(this.config.size, text.length);
+
+        if (frameStyle === QRCodeFrame.BALLOON_BOTTOM || frameStyle === QRCodeFrame.BOX_BOTTOM
+            || frameStyle === QRCodeFrame.BANNER_BOTTOM || frameStyle === QRCodeFrame.BANNER_TOP || frameStyle === QRCodeFrame.BOX_TOP
+            || frameStyle === QRCodeFrame.BALLOON_TOP) {
+            textY = textY - (text.length - 12);
+        }
+
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
-            .font({ fill: '#fff', family: 'Roboto', size: this.config.size / 10, leading: 0, anchor: 'middle'}).attr({y: textY});
+            .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'}).attr({y: textY});
 
         if (this.config.isVCard) {
             // @ts-ignore
@@ -1635,12 +1802,14 @@ export class SVGDrawing {
             logoY = logoY + (moduleSize * 0.3)
         }
 
-        const cellphone = cellPhoneSVGPath.replace('<<x-axis>>', String(logoX))
-            .replace('<<y-axis>>', String(logoY))
-            .replace('<<width>>', String(size / 10))
-            .replace('<<height>>', String(size / 10));
-        // @ts-ignore
-        return canvas.svg(cellphone);
+        return canvas;
+
+        // const cellphone = cellPhoneSVGPath.replace('<<x-axis>>', String(logoX))
+        //     .replace('<<y-axis>>', String(logoY))
+        //     .replace('<<width>>', String(size / 10))
+        //     .replace('<<height>>', String(size / 10));
+        // // @ts-ignore
+        // return canvas.svg(cellphone);
 
         // return loadImage('https://static.beaconstac.com/assets/img/mobstac-awesome-qr/cellphone.svg').then(image => {
         //

@@ -18,6 +18,9 @@ export interface QRCodeConfig {
     logoBackground?: boolean;
     whiteMargin?: boolean;
     dotScale: number;
+    rectangular?: boolean;
+    logoWidth?: number;
+    logoHeight?: number;
     autoColor?: boolean;
     text: string;
     maskedDots: boolean;
@@ -32,6 +35,7 @@ export interface QRCodeConfig {
     frameStyle?: QRCodeFrame;
     frameColor?: string;
     frameText?: string;
+    frameTextColor?: string;
     isVCard?: boolean;
     useCanvas?: boolean;
     useOpacity?: boolean;
@@ -51,6 +55,9 @@ export interface QRDrawingConfig {
     whiteMargin?: boolean;
     autoColor?: boolean;
     dotScale: number;
+    rectangular?: boolean;
+    logoWidth?: number;
+    logoHeight?: number;
     moduleSize: number;
     backgroundDimming: string;
     backgroundImage?: string;
@@ -73,6 +80,7 @@ export interface QRDrawingConfig {
     frameStyle?: QRCodeFrame;
     frameColor?: string;
     frameText?: string;
+    frameTextColor?: string;
     isVCard?: boolean;
     useCanvas?: boolean;
     useOpacity?: boolean;

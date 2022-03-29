@@ -20,6 +20,9 @@ export class QRCodeBuilder {
             logoScale: 0.15,
             logoMargin: 800/12/4, // 1/4 of margin
             logoCornerRadius: 8,
+            rectangular: false,
+            logoWidth: 0,
+            logoHeight: 0,
             dotScale: 0.35,
             text: '',
             maskedDots: false,
@@ -35,7 +38,7 @@ export class QRCodeBuilder {
         if (!this.config.text) {
             return Promise.reject('Setting text is necessary to generate the QRCode');
         }
-        if (this.config.frameText && this.config.frameText.length > 12) {
+        if (this.config.frameText && this.config.frameText.length > 30) {
             return Promise.reject('Frame text length exceeded');
         }
         // Limit logo margin and size based on overall size

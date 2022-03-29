@@ -13,7 +13,7 @@ import {
     QRMode,
 } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
-import { isNode, loadImage } from './Util';
+import { isNode, loadImage, getFrameTextSize } from './Util';
 
 import { SVGDrawing } from './Svg';
 
@@ -572,7 +572,7 @@ export class Drawing {
                 return this.drawAlignPatterns(mainContext, gradient);
             })
             .then(() => {
-                return this.drawPositionProtectors(mainContext);
+               return this.drawPositionProtectors(mainContext);
             })
             .then(() => {
                 return this.drawAlignProtectors(mainContext);
@@ -613,12 +613,16 @@ export class Drawing {
         }
         return false;
     }
-    private inShape(x: number, y: number,pt: number,side: number): boolean {
+    private inShape(x: number, y: number,pt: number,side: number,pty: number = 0,height :number = 0, square: boolean = true): boolean {
+        let bottomX = pt ;
+        let bottomY = pt  ;
+        let topX = pt+side;
+        let topY = pt+side;
+        if(!square){
+            bottomY = pty;
+            topY = pty + height;
+        }
 
-        const bottomX = pt ;
-        const bottomY = pt  ;
-        const topX = pt+side;
-        const topY = pt+side;
         let inX = false,inY = false;
         if (x>bottomX && x<topX) {
             inX = true;
@@ -788,10 +792,11 @@ export class Drawing {
         }
 
         const color = frameColor ? frameColor : '#000000';
+        const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
         const rawSize = this.config.rawSize;
         const size = rawSize + moduleSize * 2;
-        const text = frameText ? frameText.toUpperCase() : 'SCAN ME';
+        const text = frameText || 'SCAN ME';
         let canvasWidth: number = size + moduleSize,
             canvasHeight: number = 1.265 * size,
             borderX: number = 0,
@@ -973,21 +978,69 @@ export class Drawing {
                 this.drawSquare(padX + cornerRadius / 2, padY + cornerRadius / 2, finalContext, size - cornerRadius + moduleSize, padHeight - cornerRadius, true);
                 cornerRadius = moduleSize;
                 break;
+            case QRCodeFrame.TEXT_ONLY:
+                cornerRadius = moduleSize;
+                finalContext.lineJoin = 'round';
+                finalContext.lineWidth = cornerRadius;
+                borderX = cornerRadius / 2;
+                borderY = cornerRadius / 2;
+                padX = 0;
+                padY = 1.05 * size + cornerRadius / 2;
+                padHeight = size / 5;
+                textX = size / 2 + moduleSize;
+                textY = size * 1.17 + cornerRadius / 2 - moduleSize;
+                qrX = moduleSize + cornerRadius / 2;
+                qrY = moduleSize + cornerRadius / 2;
+                finalContext.fillStyle = this.config.backgroundImage ? '#ffffff' : this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+                finalContext.fillRect(borderX + cornerRadius / 6, borderY + cornerRadius / 6, canvasWidth - 1.5 * cornerRadius, canvasWidth - 1.5 * cornerRadius);
+                finalContext.fillStyle = color;
+                finalContext.strokeStyle = color;
+                cornerRadius = moduleSize;
+                finalContext.lineWidth = cornerRadius;
+                cornerRadius = moduleSize;
+                break;
+            case QRCodeFrame.FOCUS:
+                cornerRadius = moduleSize;
+                finalContext.lineJoin = 'round';
+                finalContext.lineWidth = cornerRadius;
+                borderX = cornerRadius / 2;
+                borderY = cornerRadius / 2;
+                padX = 0;
+                padY = 1.05 * size + cornerRadius / 2;
+                padHeight = size / 5;
+                textX = size / 2 + moduleSize;
+                textY = size * 1.17 + cornerRadius / 2 - moduleSize;
+                qrX = moduleSize + cornerRadius / 2;
+                qrY = moduleSize + cornerRadius / 2;
+                finalContext.fillStyle = this.config.backgroundImage ? '#ffffff' : this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+                finalContext.fillRect(borderX + cornerRadius / 6, borderY + cornerRadius / 6, canvasWidth - 1.5 * cornerRadius, canvasWidth - 1.5 * cornerRadius);
+                finalContext.fillStyle = color;
+                finalContext.strokeStyle = color;
+                this.drawFocus(borderX, borderY, finalContext, size, size, false);
+                cornerRadius = moduleSize;
+                finalContext.lineWidth = cornerRadius;
+                cornerRadius = moduleSize;
+                break;
             default:
                 return canvas;
         }
 
-        finalContext.fillStyle = '#ffffff';
-        finalContext.strokeStyle = '#ffffff';
+        finalContext.fillStyle = textColor || '#ffffff';
+        finalContext.strokeStyle = textColor || '#ffffff';
 
         finalContext.lineWidth = cornerRadius;
         finalContext.textAlign = 'center';
-        const fontSize = this.config.size / 10;
+        const fontSize = getFrameTextSize(this.config.size, text.length);
+        if (frameStyle === QRCodeFrame.BALLOON_BOTTOM || frameStyle === QRCodeFrame.BOX_BOTTOM
+            || frameStyle === QRCodeFrame.BANNER_BOTTOM || frameStyle === QRCodeFrame.BANNER_TOP || frameStyle === QRCodeFrame.BOX_TOP
+            || frameStyle === QRCodeFrame.BALLOON_TOP) {
+            textY = textY - (text.length - 12);
+        }
         finalContext.font = `${fontSize}px "Roboto"`;
 
-        textX = finalCanvas.width/2 + 1.1 * moduleSize;
+        textX = finalCanvas.width/2;
         if (this.config.isVCard) {
-            textX = textX + moduleSize * 3;
+            textX = textX;
             textY = textY + moduleSize;
             logoX = logoX - moduleSize * 2;
             logoY = logoY + moduleSize * 2;
@@ -995,50 +1048,45 @@ export class Drawing {
 
         finalContext.fillText(text, textX, textY);
         finalContext.drawImage(canvas, qrX, qrY, rawSize, rawSize);
-        return loadImage('https://static.beaconstac.com/assets/img/mobstac-awesome-qr/cellphone.svg').then(image => {
 
-            if (this.config.isVCard) {
-                logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/13);
-                logoY = logoY + (this.config.size * 0.01)
+        if (this.config.isVCard) {
+            logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/13);
+            logoY = logoY + (this.config.size * 0.01)
+        } else {
+            logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/12);
+        }
+        finalContext.fillStyle = frameColor ? frameColor : '#000000';
+        if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
+            if (!this.config.isVCard) {
+                finalContext.moveTo(padX + 5 + size / 2, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 2.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padY + 2);
+                finalContext.fill();
             } else {
-                logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/12);
+                finalContext.moveTo(padX + 5 + size / 2, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padY + 2);
+                finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 4.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padY + 2);
+                finalContext.fill();
             }
-            finalContext.drawImage(image, logoX, logoY, size / 10, size / 10);
-            finalContext.fillStyle = frameColor ? frameColor : '#000000';
-            if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
-                if (!this.config.isVCard) {
-                    finalContext.moveTo(padX + 5 + size / 2, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 2.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padY + 2);
-                    finalContext.fill();
-                } else {
-                    finalContext.moveTo(padX + 5 + size / 2, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padY + 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padY + 2 - moduleSize * 4.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padY + 2);
-                    finalContext.fill();
-                }
+        }
+        if (frameStyle === QRCodeFrame.BALLOON_TOP) {
+            if (!this.config.isVCard) {
+                finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 2.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padHeight - 2);
+                finalContext.fill();
+            } else {
+                finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padHeight - 2);
+                finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 4.5);
+                finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padHeight - 2);
+                finalContext.fill();
             }
-            if (frameStyle === QRCodeFrame.BALLOON_TOP) {
-                if (!this.config.isVCard) {
-                    finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 2, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 2.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 2, padHeight - 2);
-                    finalContext.fill();
-                } else {
-                    finalContext.moveTo(padX + 5 + size / 2, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2 + moduleSize * 4, padHeight - 2);
-                    finalContext.lineTo(padX + 5 + size / 2, padHeight - 2 + moduleSize * 4.5);
-                    finalContext.lineTo(padX + 5 + size / 2 - moduleSize * 4, padHeight - 2);
-                    finalContext.fill();
-                }
-            }
-            return finalCanvas;
-        }, err => {
-            return finalCanvas;
-        });
+        }
+        return finalCanvas;
     }
 
     private async scaleFinalImage(canvas: Canvas): Promise<Canvas> {
@@ -1079,16 +1127,37 @@ export class Drawing {
             logoCornerRadius = 0;
         }
         context.restore();
-
-        const logoSize = this.config.viewportSize * logoScale;
-
+        let logoWidth =  this.config.viewportSize;
+        let logoHeight = this.config.viewportSize;
+        const maxWH = 1.5 * this.config.viewportSize;
+        if(this.config.rectangular){
+            if(this.config.logoWidth && this.config.logoHeight) {
+                if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
+                    logoWidth  = this.config.logoWidth;
+                    logoHeight = this.config.logoHeight;
+                }else{
+                    const ratio = this.config.logoHeight  / this.config.logoWidth;
+                    if(ratio>1){
+                        logoHeight = maxWH;
+                        logoWidth = logoHeight / ratio; 
+                    }else{
+                        logoWidth = maxWH;
+                        logoHeight = logoWidth * ratio;
+                    }
+                }
+            }
+        }
+        logoWidth = logoWidth  * logoScale;
+        logoHeight = logoHeight * logoScale;
         const mainMargin = this.config.margin;
-        const coordinate = 0.5 * (this.config.size - logoSize);
-        const centreCoordinate = coordinate - logoMargin - mainMargin;
-        if (this.config.logoBackground !== false) {
-            context.fillStyle = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+        const coordinateX = 0.5 * (this.config.size - logoWidth);
+        const coordinateY = 0.5 * (this.config.size - logoHeight);
+        const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+        const centreCoordinateY = coordinateY - logoMargin - mainMargin;
+        if(this.config.logoBackground !== false) {
+            context.fillStyle = '#ffffff';
             context.save();
-            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinate, centreCoordinate, logoSize + 2 * logoMargin, logoSize + 2 * logoMargin, logoCornerRadius);
+            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinateX, centreCoordinateY, logoWidth + 2 * logoMargin, logoHeight + 2 * logoMargin, logoCornerRadius);
             context.clip();
             context.fill();
             context.restore();
@@ -1096,9 +1165,9 @@ export class Drawing {
         context.save();
 
         return loadImage(this.config.logoImage!, this.config.imageServerURL, this.config.imageServerRequestHeaders).then((image: any) => {
-            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinate + logoMargin, centreCoordinate + logoMargin, logoSize, logoSize, logoCornerRadius);
+            CanvasUtil.prepareRoundedCornerClip(context, centreCoordinateX + logoMargin, centreCoordinateY + logoMargin, logoWidth, logoHeight, logoCornerRadius);
             context.clip();
-            context.drawImage(image, centreCoordinate + logoMargin, centreCoordinate + logoMargin, logoSize, logoSize);
+            context.drawImage(image, centreCoordinateX + logoMargin, centreCoordinateY + logoMargin, logoWidth, logoHeight);
             context.restore();
         });
     }
@@ -1220,6 +1289,33 @@ export class Drawing {
         context.fillRect(startX, startY, width, height);
         context.clearRect(startX + 1 * moduleSize, startY + 1 * moduleSize, width - 2 * moduleSize, height - 2 * moduleSize);
 
+    }
+
+    private drawFocus(startX: number, startY: number, context: CanvasRenderingContext2D, width: number, height: number, isRound: boolean) {
+        const moduleSize = this.config.moduleSize;
+        const r = startX + width;
+        const radius = moduleSize / 2;
+        const b = startY + height;
+        context.beginPath();
+        context.lineWidth = moduleSize / 1.5;
+        context.moveTo(startX + radius, startY);
+        context.lineTo((r - radius) / 3, startY);
+        context.moveTo(2 * (r - radius) / 3, startY);
+        context.lineTo(r - radius, startY);
+        context.quadraticCurveTo(r, startY, r, startY + radius);
+        context.lineTo(r, startY + (height - radius) / 3);
+        context.moveTo(r, startY + 2 * (height - radius) / 3);
+        context.lineTo(r, startY + height - radius);
+        context.quadraticCurveTo(r, b, r - radius, b);
+        context.lineTo(2 * (r - radius) / 3, b);
+        context.moveTo((r - radius) / 3, b);
+        context.lineTo(startX + radius, b);
+        context.quadraticCurveTo(startX, b, startX, b - radius);
+        context.lineTo(startX, startY + 2 * (height - radius) / 3);
+        context.moveTo(startX, startY + (height - radius) / 3);
+        context.lineTo(startX, startY + radius);
+        context.quadraticCurveTo(startX, startY, startX + radius, startY);
+        context.stroke();
     }
 
     private drawSquareFrame(startX: number, startY: number, context: CanvasRenderingContext2D, width: number, height: number, isRound: boolean) {
@@ -1549,6 +1645,7 @@ export class Drawing {
         const xyOffset = (1 - this.config.dotScale) * 0.5;
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
 
+
         for (let row = 0; row < moduleCount; row++) {
             for (let col = 0; col < moduleCount; col++) {
                 const bIsDark = this.isDark.bind(this)(row, col) || false;
@@ -1571,6 +1668,7 @@ export class Drawing {
 
                 const nLeft = col * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
                 const nTop = row * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
+
                 if (this.config.logoImage) {
                     let logoScale = this.config.logoScale;
                     let logoMargin = this.config.logoMargin;
@@ -1584,20 +1682,51 @@ export class Drawing {
                     if (logoCornerRadius < 0) {
                         logoCornerRadius = 0;
                     }
-                    const logoSize = this.config.viewportSize * logoScale + 2*logoMargin;
+
+                    let logoWidth =  this.config.viewportSize;
+                    let logoHeight = this.config.viewportSize;
+                    const maxWH = 1.5 * this.config.viewportSize;
+                    if(this.config.rectangular){
+                        if(this.config.logoWidth && this.config.logoHeight) {
+                            if(this.config.logoWidth <= maxWH && this.config.logoHeight <= maxWH) {
+                                logoWidth  = this.config.logoWidth;
+                                logoHeight = this.config.logoHeight;
+                            }else{
+                                const ratio = this.config.logoHeight  / this.config.logoWidth;
+                                if(ratio>1){
+                                    logoHeight = maxWH;
+                                    logoWidth = logoHeight / ratio;
+                                }else{
+                                    logoWidth = maxWH;
+                                    logoHeight = logoWidth * ratio;
+                                }
+                            }
+                        }
+                    }
+                    logoWidth = logoWidth  * logoScale;
+                    logoHeight = logoHeight * logoScale;
                     const mainMargin = this.config.margin;
-                    const coordinate = 0.5 * (this.config.size - logoSize);
-                    const centreCoordinate = coordinate - logoMargin - mainMargin;
+                    const coordinateX = 0.5 * (this.config.size - logoWidth);
+                    const coordinateY = 0.5 * (this.config.size - logoHeight);
+                    const centreCoordinateX = coordinateX - logoMargin - mainMargin;
+                    const centreCoordinateY = coordinateY - logoMargin - mainMargin;
+
+                 //   const logoSize = this.config.viewportSize * logoScale + 2*logoMargin;
+                 //   const mainMargin = this.config.margin;
+                   // const coordinate = 0.5 * (this.config.size - logoSize);
+                   // const centreCoordinate = coordinate - logoMargin - mainMargin;
+
                     const moduleSize = (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize;
-                    if(this.config.logoBackground && (!this.inShape(nLeft + moduleSize,nTop,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft,nTop  + moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft + moduleSize,nTop  + moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft - moduleSize,nTop  - moduleSize,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft - moduleSize,nTop,centreCoordinate,logoSize) ||
-                        !this.inShape(nLeft,nTop - moduleSize,centreCoordinate,logoSize))) {
-                        continue;
+                    if(this.config.logoBackground && (!this.inShape(nLeft + moduleSize,nTop,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft,nTop  + moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft + moduleSize,nTop  + moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft - moduleSize,nTop  - moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft - moduleSize,nTop,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false) ||
+                        !this.inShape(nLeft,nTop - moduleSize,centreCoordinateX,logoWidth, centreCoordinateY, logoHeight, false))) {
+                            continue;
                     }
                 }
+
                 if (patternPosition.length === 0) {
                     // if align pattern list is empty, then it means that we don't need to leave room for the align patterns
                     if (!bProtected) {
