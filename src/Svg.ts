@@ -7,6 +7,8 @@ import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { cellPhoneSVGPath, isNode, isSvgFile, loadImage, getFrameTextSize } from './Util';
 const fetch = require("node-fetch");
 
+import { optimize } from 'svgo';
+
 export class SVGDrawing {
 
     private static generateDrawingConfig(config: QRCodeConfig, qrModuleCount: number): QRDrawingConfig {
@@ -590,8 +592,10 @@ export class SVGDrawing {
                             text = text.replace(/height\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
                         }
                         try {
+                            const result = optimize(text, { multipass: true, });
+                            const optimizedSvgString = result.data;
                             // @ts-ignore
-                            context.svg(text
+                            context.svg(optimizedSvgString
                                 .replace('<svg', `<svg fill='#000'` + extraText + ` x="${centreCoordinateX + logoMargin / 2 + this.config.margin + this.shiftX}" y="${centreCoordinateY + logoMargin / 2 + this.config.margin + this.shiftY}" width="${logoWidth}" height="${logoHeight}"`));
                         } catch (e) {
                             console.log(e);
