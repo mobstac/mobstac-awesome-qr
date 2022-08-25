@@ -1,5 +1,5 @@
 /* tslint:disable:no-var-requires */
-import { Canvas, CanvasRenderingContext2D, createCanvas, JPEGStream, PDFStream, PNGStream, registerFont } from 'canvas';
+import { Canvas, CanvasRenderingContext2D, createCanvas, JPEGStream, PDFStream, PNGStream } from 'canvas';
 import { BCH, CanvasUtil, QRMath, Util } from './Common';
 import * as constants from './Constants';
 import {
@@ -22,7 +22,6 @@ if (isNode) {
 
     const path = require('path');
     const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto/Roboto-Regular.ttf');
-    registerFont(fontPath, { family: 'Roboto' });
 }
 
 
