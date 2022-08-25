@@ -569,19 +569,19 @@ export class Drawing {
 
         return this.addBackground(backgroundContext, this.config.size, this.config.backgroundImage, this.config.backgroundColor)
             .then(() => {
-                return this.drawAlignPatterns(mainContext, gradient);
+                // return this.drawAlignPatterns(mainContext, gradient);
             })
             .then(() => {
-               return this.drawPositionProtectors(mainContext);
+               // return this.drawPositionProtectors(mainContext);
             })
             .then(() => {
-                return this.drawAlignProtectors(mainContext);
+                // return this.drawAlignProtectors(mainContext);
             })
             .then(() => {
-                return this.drawPositionPatterns(mainContext, gradient);
+                // return this.drawPositionPatterns(mainContext, gradient);
             })
             .then(() => {
-                return this.fillMargin(mainContext);
+                // return this.fillMargin(mainContext);
             })
             .then(() => {
                 return this.drawLogoImage(mainContext);
