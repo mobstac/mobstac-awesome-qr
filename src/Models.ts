@@ -615,7 +615,7 @@ export class Drawing {
                 return this.addDesign(canvas,gradient);
             })
             .then((canvas: Canvas) => {
-                return this.drawFrame(canvas, this.config.frameStyle, this.config.frameColor, this.config.frameText);
+                return this.drawFrame(canvas, this.config.frameStyle, this.config.frameColor, this.config.frameText , this.config.secondaryText);
             })
             .then((canvas: Canvas) => {
                 this.isPainted = true;
@@ -801,7 +801,7 @@ export class Drawing {
         }
         return this.addDesignHelper(finalCanvas,canvas,gradient);
     }
-    private async drawFrame(canvas: Canvas, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined): Promise<Canvas> {
+    private async drawFrame(canvas: Canvas, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined , _secondaryText : string | undefined ): Promise<Canvas> {
         if (!frameStyle || frameStyle === QRCodeFrame.NONE) {
             return canvas;
         }
@@ -812,6 +812,9 @@ export class Drawing {
         const rawSize = this.config.rawSize;
         const size = rawSize + moduleSize * 2;
         const text = frameText || 'SCAN ME';
+        const secondaryText = _secondaryText;
+        let secondaryTextX : number = 0;
+        let secondaryTextY : number = 0;
         let canvasWidth: number = size + moduleSize,
             canvasHeight: number = 1.265 * size,
             borderX: number = 0,
@@ -833,6 +836,9 @@ export class Drawing {
         }
         if (frameStyle === QRCodeFrame.BOX_TOP || frameStyle === QRCodeFrame.BOX_BOTTOM) {
             canvasHeight = 1.27 * size;
+        }
+        if( frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length){
+            canvasHeight += 250;
         }
         const finalCanvas: Canvas = createCanvas(canvasWidth, canvasHeight, this.canvasType);
         const finalContext = finalCanvas.getContext('2d');
@@ -1036,6 +1042,44 @@ export class Drawing {
                 finalContext.lineWidth = cornerRadius;
                 cornerRadius = moduleSize;
                 break;
+            case QRCodeFrame.CIRCULAR_FRAME:
+                console.log(frameStyle,frameColor,frameText);
+                break;
+            case QRCodeFrame.TEXT_AND_BANNER:
+                cornerRadius = moduleSize;
+                finalContext.lineJoin = 'round';
+                finalContext.lineWidth = cornerRadius;
+                borderX = cornerRadius / 2 ;
+                borderY = cornerRadius / 2 ;
+                padX = 0;
+                padY = size + cornerRadius / 2;
+                padHeight = size / 5;
+                textX = 0;
+                textY = size * 1.11 + cornerRadius / 2 + moduleSize / 2 ;
+                secondaryTextX = size / 2 + moduleSize;
+                secondaryTextY = size * 0.105 + cornerRadius / 2 + moduleSize / 2 ;
+                logoX = padX + size / 4.2;
+                logoY = padY + cornerRadius * 1.2;
+                qrX = moduleSize + cornerRadius / 2;
+                qrY = moduleSize + cornerRadius / 2;
+                finalContext.fillStyle = this.config.backgroundImage ? '#ffffff' : this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+                finalContext.fillRect(borderX + cornerRadius / 6, borderY + cornerRadius / 6, canvasWidth - 1.5 * cornerRadius, canvasWidth - 1.5 * cornerRadius);
+                finalContext.fillStyle = color;
+                finalContext.strokeStyle = color;
+                if(frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length ){
+                    borderY += 250;
+                    padY += 250;
+                }
+                this.drawSquareFrame(borderX, borderY , finalContext, size, size, false);
+                this.drawSquare(padX + cornerRadius / 2, padY + cornerRadius / 2 , finalContext, size, padHeight - cornerRadius, true);
+                finalContext.moveTo(cornerRadius / 2, padY + cornerRadius / 2);
+                finalContext.lineTo(cornerRadius / 2, size - cornerRadius);
+                finalContext.lineTo(cornerRadius / 2, padY);
+                finalContext.moveTo(size + cornerRadius / 2, padY + cornerRadius / 2);
+                finalContext.lineTo(size + cornerRadius / 2, size - cornerRadius);
+                finalContext.lineTo(size + cornerRadius / 2, padY + cornerRadius);
+                finalContext.stroke();
+                break;
             default:
                 return canvas;
         }
@@ -1062,7 +1106,13 @@ export class Drawing {
             logoY = logoY + moduleSize * 2;
         }
 
-        finalContext.fillText(text, textX, textY);
+        if(frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length){
+            textY += 250;
+        }
+        finalContext.fillText(text, textX, textY );
+        if(frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length){
+            qrY += 250;
+        }
         finalContext.drawImage(canvas, qrX, qrY, rawSize, rawSize);
         
         if (this.config.isVCard) {
@@ -1072,6 +1122,12 @@ export class Drawing {
             logoX = (finalCanvas.width/2 - finalContext.measureText(text).width/2) - (this.config.size/12);
         }
         // finalContext.drawImage(image, logoX, logoY, size / 10, size / 10);
+        if(frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length){
+            var SecondaryFontSize =  getFrameTextSize(this.config.size, secondaryText.length);
+            finalContext.font = SecondaryFontSize + "px \"Roboto\"";
+            finalContext.fillStyle = frameColor || '#000';
+            finalContext.fillText(secondaryText ,secondaryTextX , secondaryTextY  )
+          }
         finalContext.fillStyle = frameColor ? frameColor : '#000000';
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
             if (!this.config.isVCard) {

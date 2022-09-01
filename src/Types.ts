@@ -85,5 +85,6 @@ export interface QRDrawingConfig {
     useCanvas?: boolean;
     useOpacity?: boolean;
     imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerRequestHeaders?: object,
+    secondaryText? : string
 }

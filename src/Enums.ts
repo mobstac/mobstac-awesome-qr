@@ -74,6 +74,8 @@ export enum QRCodeFrame {
     BALLOON_TOP = 'balloon-top',
     CIRCULAR = 'circular',
     TEXT_ONLY = 'text-only',
-    FOCUS = 'focus'
+    FOCUS = 'focus',
+    TEXT_AND_BANNER = 'text-and-banner',
+    CIRCULAR_FRAME = 'circular-frame'
     // BOX_LIGHT = 'box-light',
 }
