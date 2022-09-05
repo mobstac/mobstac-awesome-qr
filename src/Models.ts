@@ -1048,10 +1048,14 @@ export class Drawing {
                 qrX = moduleSize + cornerRadius / 2;
                 qrY = moduleSize + cornerRadius / 2;
                 finalContext.fillStyle = this.config.backgroundImage ? '#ffffff' : this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
-                finalContext.fillRect(borderX + cornerRadius / 6, borderY + cornerRadius / 6, canvasWidth - 1.5 * cornerRadius, canvasWidth - 1.5 * cornerRadius);
+                if( secondaryText && secondaryText.length ){
+                    finalContext.fillRect(borderX + cornerRadius / 6, borderY + cornerRadius / 6 + 250, canvasWidth - 1.5 * cornerRadius, canvasWidth - 1.5 * cornerRadius);
+                } else {
+                    finalContext.fillRect(borderX + cornerRadius / 6, borderY + cornerRadius / 6, canvasWidth - 1.5 * cornerRadius, canvasWidth - 1.5 * cornerRadius);
+                }
                 finalContext.fillStyle = color;
                 finalContext.strokeStyle = color;
-                if(frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length ){
+                if( secondaryText && secondaryText.length ){
                     borderY += 250;
                     padY += 250;
                 }
