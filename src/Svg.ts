@@ -1782,7 +1782,7 @@ export class SVGDrawing {
             .move(bannerX, bannerY);
         }
 
-        if (frameStyle === QRCodeFrame.BANNER_BOTTOM) {
+        if (frameStyle === QRCodeFrame.BANNER_BOTTOM || frameStyle === QRCodeFrame.TEXT_AND_BANNER) {
             // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 2).fill(color)
                 .move(bannerX, bannerY - moduleSize);
@@ -1818,13 +1818,20 @@ export class SVGDrawing {
 
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM || frameStyle === QRCodeFrame.BOX_BOTTOM
             || frameStyle === QRCodeFrame.BANNER_BOTTOM || frameStyle === QRCodeFrame.BANNER_TOP || frameStyle === QRCodeFrame.BOX_TOP
-            || frameStyle === QRCodeFrame.BALLOON_TOP) {
+            || frameStyle === QRCodeFrame.BALLOON_TOP || frameStyle === QRCodeFrame.TEXT_AND_BANNER) {
             textY = textY - (text.length - 12);
         }
 
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
             .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'}).attr({y: textY});
+
+        if(frameStyle === QRCodeFrame.TEXT_AND_BANNER && secondaryText && secondaryText.length){
+            const secondaryfontSize = getFrameTextSize(this.config.size, secondaryText.length);
+            // @ts-ignore
+            canvas.plain(secondaryText).move(secondaryTextX, secondaryTextY)
+            .font({ fill: frameColor, family: 'Roboto', size: secondaryfontSize, leading: 0, anchor: 'middle'}).attr({y: secondaryTextY});
+        }
 
         if (this.config.isVCard) {
             // @ts-ignore
