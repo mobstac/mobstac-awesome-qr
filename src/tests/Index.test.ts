@@ -32,7 +32,7 @@ const config = {
     colorDark: "#13544A",
     eyeBallShape: EyeBallShape.LEFT_DIAMOND,
     eyeFrameShape: EyeFrameShape.CIRCLE,
-    frameStyle: QRCodeFrame.FOCUS,
+    frameStyle: QRCodeFrame.BANNER_BOTTOM,
     frameText: "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ",
     frameColor: "#0E9E88",
     frameTextColor: "#0E9E88",
@@ -44,38 +44,7 @@ const config = {
 
 };
 
-function prepareImageBuffer(qrCode: QRCode, name: string) {
-    const dataUrl = qrCode.canvas.toDataURL('image/png');
-    const matches: any = dataUrl.match(
-        /^data:([A-Za-z-+\/]+);base64,(.+)$/
-        ),
-        response: any  ={};
-    response.type = matches[1];
-    response.data = Buffer.from(matches[2], "base64");
-    const decodedImg = response;
-    const imageBuffer = decodedImg.data;
-    const extension ='png';
-    const fileName = `/${name}` + "." + extension;
-
-    return {
-        name: fileName,
-        buffer: imageBuffer
-    };
-
-}
-
 describe('QR code main tests', () => {
-    it('QR main test PNG', done => {
-        const qrCodeGenerator = new QRCodeBuilder(config);
-        qrCodeGenerator.build(CanvasType.PNG).then(qrCode => {
-            const bufferObject = prepareImageBuffer(qrCode, 'test');
-            fs.writeFileSync(__dirname + bufferObject.name, bufferObject.buffer);
-            done();
-        }).catch(err => {
-            console.error(err);
-            done();
-        });
-    });
     it('QR main test SVG', done => {
         const qrCodeGenerator = new QRCodeBuilder(config);
 

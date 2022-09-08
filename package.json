@@ -67,9 +67,9 @@
     "dependencies": {
         "@svgdotjs/svg.js": "3.0.16",
         "@types/node": "11.13.0",
-        "canvas": "2.9.3",
-        "node-fetch": "^2.6.1",
+        "node-fetch": "^2.6.7",
         "svgdom": "^0.1.8",
-        "xmlhttprequest": "^1.8.0"
+        "xmlhttprequest": "^1.8.0",
+        "sharp": "^0.31.0"
     }
 }

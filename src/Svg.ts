@@ -1,6 +1,5 @@
 /* tslint:disable:no-var-requires */
-import { Circle, find, Gradient } from '@svgdotjs/svg.js';
-import { Canvas, CanvasGradient, CanvasPattern, CanvasRenderingContext2D, createCanvas } from 'canvas';
+import {Circle, find, Gradient, SVG} from '@svgdotjs/svg.js';
 import { CanvasUtil } from './Common';
 import { CanvasType,DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
@@ -79,15 +78,26 @@ export class SVGDrawing {
 
         this.setupCanvasForGradient(ctx, config.size);
 
-
-
-        const { createSVGWindow } = require('svgdom');
-        const svgWindow = createSVGWindow();
-        const svgDocument = svgWindow.document;
         const { SVG, registerWindow } = require('@svgdotjs/svg.js');
 
-        registerWindow(svgWindow, svgDocument);
-        this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
+        if (isNode) {
+            const { createSVGWindow } = eval('require')('svgdom');
+            const svgWindow = createSVGWindow();
+            const svgDocument = svgWindow.document;
+
+            registerWindow(svgWindow, svgDocument);
+            // @ts-ignore
+            this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
+        } else {
+            this.canvas = SVG().size(config.size, config.size);
+        }
+        // const { createSVGWindow } = require('svgdom');
+        // const svgWindow = createSVGWindow();
+        // const svgDocument = svgWindow.document;
+        // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+        //
+        // registerWindow(svgWindow, svgDocument);
+        // this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
     }
 
     public async drawSVG(): Promise<any> {
@@ -97,11 +107,18 @@ export class SVGDrawing {
         let canvasHeight: number;
         let canvasWidth: number;
 
-        const { createSVGWindow } = require('svgdom');
-        const svgWindow = createSVGWindow();
-        const svgDocument = svgWindow.document;
+        // const { createSVGWindow } = require('svgdom');
+        // const svgWindow = createSVGWindow();
+        // const svgDocument = svgWindow.document;
+        // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+
         const { SVG, registerWindow } = require('@svgdotjs/svg.js');
 
+        if (isNode) {
+            const { createSVGWindow } = eval('require')('svgdom');
+            const svgWindow = createSVGWindow();
+            const svgDocument = svgWindow.document;
+        }
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
             const moduleSize = this.config.moduleSize;
@@ -124,11 +141,13 @@ export class SVGDrawing {
                     this.widthSVG = 38;
                     this.widthView = 38;
                 }
-                mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth+this.widthSVG, canvasHeight);
+                // @ts-ignore
+                mainCanvas = isNode ? SVG(svgDocument.documentElement).size(canvasWidth+this.widthSVG, canvasHeight) : SVG().size(canvasWidth+this.widthSVG, canvasHeight);
                 // @ts-ignore
                 mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
             } else {
-                mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
+                // @ts-ignore
+                mainCanvas = isNode ? SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight) : SVG().size(canvasWidth+this.widthSVG, canvasHeight);
                 // @ts-ignore
                 mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
             }
@@ -176,7 +195,8 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
+            // @ts-ignore
+            mainCanvas = isNode ? SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight) : SVG().size(canvasWidth+this.widthSVG, canvasHeight);
 
             // @ts-ignore
             mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
