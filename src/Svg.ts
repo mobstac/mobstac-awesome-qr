@@ -1628,6 +1628,7 @@ export class SVGDrawing {
             return;
         }
 
+        console.log(this.config)
         const color = frameColor ? frameColor : '#000000';
         const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
@@ -1740,7 +1741,7 @@ export class SVGDrawing {
             case QRCodeFrame.TEXT_AND_BANNER:
                 cornerRadius = moduleSize;
                 borderX = moduleSize / 2;
-                borderY = secondaryText && secondaryText.length ?  moduleSize / 2 + size / 5 - 1 : moduleSize / 2 ;
+                borderY = moduleSize / 2;
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize / 2 - 1;
                 textX = size / 3;
