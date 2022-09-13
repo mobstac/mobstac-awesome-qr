@@ -1627,8 +1627,6 @@ export class SVGDrawing {
         if (!frameStyle || frameStyle === QRCodeFrame.NONE || frameStyle === QRCodeFrame.CIRCULAR) {
             return;
         }
-
-        console.log(this.config)
         const color = frameColor ? frameColor : '#000000';
         const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
@@ -1748,6 +1746,16 @@ export class SVGDrawing {
                 textY = size + 1.5 * moduleSize + size / 10;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 1.5;
+                if(secondaryText && secondaryText.length){
+                    console.log(size , moduleSize)
+                    borderY = moduleSize / 2 + size / 5 - 1;
+                    bannerY = size + moduleSize / 2 + size /5 - 1;
+                    textY =  size + 1.5 * moduleSize + size / 10 + size / 5 -1 ;
+                    logoY = size + moduleSize * 1.5 + size / 5;
+                    // @ts-ignore
+                    secondaryTextX = canvas.width() / 2
+                    secondaryTextY = size / 6 - moduleSize;
+                }
             default:
                 break;
         }
