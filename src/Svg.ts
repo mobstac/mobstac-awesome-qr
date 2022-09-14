@@ -50,8 +50,9 @@ export class SVGDrawing {
     public canvas: any;
     public context: any;
 
-    public maskCanvas?: Canvas;
-    public maskContext?: CanvasRenderingContext2D;
+    // public maskCanvas?: Canvas;
+    public maskCanvas: any;
+    // public maskContext?: CanvasRenderingContext2D;
 
     private patternPosition: number[];
     private moduleCount: number;
@@ -63,7 +64,7 @@ export class SVGDrawing {
     private widthSVG = 0;
     private widthView = 0;
 
-    private canvasQR: Canvas;
+    // private canvasQR: Canvas;
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
         this.moduleCount = moduleCount;
@@ -73,10 +74,10 @@ export class SVGDrawing {
         this.config = SVGDrawing.generateDrawingConfig(config, moduleCount);
         this.isPainted = false;
 
-        this.canvasQR = createCanvas(config.size, config.size);
-        const ctx = this.canvasQR.getContext('2d');
+        // this.canvasQR = createCanvas(config.size, config.size);
+        // const ctx = this.canvasQR.getContext('2d');
 
-        this.setupCanvasForGradient(ctx, config.size);
+        // this.setupCanvasForGradient(ctx, config.size);
 
         const { SVG, registerWindow } = require('@svgdotjs/svg.js');
 
@@ -445,51 +446,51 @@ export class SVGDrawing {
         }
 
     }
-    private setupCanvasForGradient(ctx: CanvasRenderingContext2D, size: number) {
+    // private setupCanvasForGradient(ctx: CanvasRenderingContext2D, size: number) {
+    //
+    //     let gradient: string | CanvasGradient | CanvasPattern = this.config.colorDark ? this.config.colorDark : '#000000';
+    //
+    //     if (this.config.gradientType) {
+    //         switch (this.config.gradientType) {
+    //             case GradientType.LINEAR:
+    //             case GradientType.HORIZONTAL:
+    //                 gradient = ctx.createLinearGradient(0, 0, this.config.moduleSize * this.moduleCount, 0);
+    //                 gradient.addColorStop(0, this.config.colorDark);
+    //                 gradient.addColorStop(1, this.config.colorLight);
+    //                 break;
+    //             case GradientType.VERTICAL:
+    //                 gradient = ctx.createLinearGradient(0, 0, 0, this.config.moduleSize * this.moduleCount);
+    //                 gradient.addColorStop(0, this.config.colorDark);
+    //                 gradient.addColorStop(1, this.config.colorLight);
+    //                 break;
+    //             case GradientType.RADIAL:
+    //                 gradient = ctx.createRadialGradient(
+    //                     (this.config.moduleSize * this.moduleCount) / 2,
+    //                     (this.config.moduleSize * this.moduleCount) / 2,
+    //                     (this.config.moduleSize * this.moduleCount) / 6,
+    //                     (this.config.moduleSize * this.moduleCount) / 2,
+    //                     (this.config.moduleSize * this.moduleCount) / 2,
+    //                     (this.config.moduleSize * this.moduleCount) / 2,
+    //                 );
+    //                 gradient.addColorStop(0, this.config.colorLight);
+    //                 gradient.addColorStop(1, this.config.colorDark);
+    //                 break;
+    //             default:
+    //                 break;
+    //         }
+    //     }
+    //
+    //     ctx.fillStyle = gradient;
+    //     ctx.fillRect(0, 0, size, size);
+    // }
 
-        let gradient: string | CanvasGradient | CanvasPattern = this.config.colorDark ? this.config.colorDark : '#000000';
-
-        if (this.config.gradientType) {
-            switch (this.config.gradientType) {
-                case GradientType.LINEAR:
-                case GradientType.HORIZONTAL:
-                    gradient = ctx.createLinearGradient(0, 0, this.config.moduleSize * this.moduleCount, 0);
-                    gradient.addColorStop(0, this.config.colorDark);
-                    gradient.addColorStop(1, this.config.colorLight);
-                    break;
-                case GradientType.VERTICAL:
-                    gradient = ctx.createLinearGradient(0, 0, 0, this.config.moduleSize * this.moduleCount);
-                    gradient.addColorStop(0, this.config.colorDark);
-                    gradient.addColorStop(1, this.config.colorLight);
-                    break;
-                case GradientType.RADIAL:
-                    gradient = ctx.createRadialGradient(
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 6,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                    );
-                    gradient.addColorStop(0, this.config.colorLight);
-                    gradient.addColorStop(1, this.config.colorDark);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, size, size);
-    }
-
-    private async getColorFromCanvas(canvas: Canvas, x: number, y: number) {
-        const context = canvas.getContext('2d');
-
-        const p = await context.getImageData(x, y, 1, 1).data;
-        const hex = '#' + ('000000' + this.rgbToHex(p[0], p[1], p[2])).slice(-6);
-        return hex;
-    }
+    // private async getColorFromCanvas(canvas: Canvas, x: number, y: number) {
+    //     const context = canvas.getContext('2d');
+    //
+    //     const p = await context.getImageData(x, y, 1, 1).data;
+    //     const hex = '#' + ('000000' + this.rgbToHex(p[0], p[1], p[2])).slice(-6);
+    //     return hex;
+    // }
 
     private rgbToHex(r: number, g: number, b: number) {
         if (r > 255 || g > 255 || b > 255) {
@@ -659,10 +660,10 @@ export class SVGDrawing {
 
             logoWidth = logoWidth * logoScale;
             logoHeight = logoHeight * logoScale;
-            const cn = createCanvas(logoWidth, logoHeight);
-            const ct = cn.getContext('2d');
-            ct.drawImage(image, 0, 0, logoWidth, logoHeight);
-            ct.save();
+            // const cn = createCanvas(logoWidth, logoHeight);
+            // const ct = cn.getContext('2d');
+            // ct.drawImage(image, 0, 0, logoWidth, logoHeight);
+            // ct.save();
 
             const mainMargin = this.config.margin;
             const coordinateX = 0.5 * (this.config.size - logoWidth);
@@ -686,9 +687,9 @@ export class SVGDrawing {
                 context.rect(logoWidth + 2 * logoMargin, logoHeight + 2 * logoMargin).fill(colorNew).move(centreCoordinateX + this.config.margin + this.shiftX, centreCoordinateY + this.config.margin + this.shiftY).radius(logoCornerRadius);
             }
             // @ts-ignore
-            context.image('').size(logoWidth, logoHeight)
-                .attr({ 'xlink:href': cn.toDataURL() })
-                .move(centreCoordinateX + logoMargin / 2 + this.config.margin + this.shiftX, centreCoordinateY + logoMargin / 2 + this.config.margin + this.shiftY);
+            // context.image('').size(logoWidth, logoHeight)
+            //     .attr({ 'xlink:href': cn.toDataURL() })
+            //     .move(centreCoordinateX + logoMargin / 2 + this.config.margin + this.shiftX, centreCoordinateY + logoMargin / 2 + this.config.margin + this.shiftY);
         });
     }
 
@@ -877,10 +878,11 @@ export class SVGDrawing {
 
     private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern) {
 
-        // if (!bIsDark) {
-        //     return;
-        // }
-        const gradient = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        if (!bIsDark) {
+            return;
+        }
+        // const gradient = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        const gradient = this.config.colorDark;
 
         if (!this.maskCanvas) {
             const color = bIsDark ? gradient : this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
@@ -922,7 +924,8 @@ export class SVGDrawing {
         const patternPosition = this.patternPosition;
         const moduleSize = this.config.moduleSize;
         const margin = this.config.margin;
-        const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        const color = '#0E9E88';
+        // const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
         const edgeCenter = patternPosition[patternPosition.length - 1];
         for (let i = 0; i < patternPosition.length; i++) {
             for (let j = 0; j < patternPosition.length; j++) {
@@ -940,7 +943,8 @@ export class SVGDrawing {
     }
 
     private drawPositionProtectors(context: object) {
-        const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        // const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        const color = '#0E9E88';
         const size = this.config.moduleSize;
         const moduleCount = this.moduleCount;
 
@@ -1003,33 +1007,33 @@ export class SVGDrawing {
             switch (dataPattern) {
                 case DataPattern.CIRCLE:
                     const radius = moduleSize / 2;
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize + radius, 6 * moduleSize + radius);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize + radius, 6 * moduleSize + radius);
                     this.drawCircle((8 + i) * moduleSize + radius, 6 * moduleSize + radius, context, gradient, radius, radius, false);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize + radius, (8 + i) * moduleSize + radius);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize + radius, (8 + i) * moduleSize + radius);
                     this.drawCircle(6 * moduleSize + radius, (8 + i) * moduleSize + radius, context, gradient, radius, radius, false);
                     break;
                 case DataPattern.KITE:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawKite((8 + i) * moduleSize, 6 * moduleSize, context, gradient, moduleSize, moduleSize, false);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawKite(6 * moduleSize, (8 + i) * moduleSize, context, gradient, moduleSize, moduleSize, false);
                     break;
                 case DataPattern.LEFT_DIAMOND:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawDiamond((8 + i) * moduleSize, 6 * moduleSize, context, gradient, moduleSize, moduleSize, false);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawDiamond(6 * moduleSize, (8 + i) * moduleSize, context, gradient, moduleSize, moduleSize, false);
                     break;
                 case DataPattern.RIGHT_DIAMOND:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawDiamond((8 + i) * moduleSize, 6 * moduleSize, context, gradient, moduleSize, moduleSize, true);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawDiamond(6 * moduleSize, (8 + i) * moduleSize, context, gradient, moduleSize, moduleSize, true);
                     break;
                 default:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawSquare((8 + i) * moduleSize, 6 * moduleSize, context, moduleSize, moduleSize, false, gradient);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    // gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawSquare(6 * moduleSize, (8 + i) * moduleSize, context, moduleSize, moduleSize, false, gradient);
 
             }
@@ -1084,7 +1088,9 @@ export class SVGDrawing {
         let y = shape === DataPattern.CIRCLE ? (centerY - 2) * nHeight + nHeight / 2 : (centerY - 2) * nHeight;
         const height = shape === DataPattern.CIRCLE ? nHeight / 2 : nHeight;
         const width = shape === DataPattern.CIRCLE ? nWidth / 2 : nWidth;
-        let gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+
+        let gr = this.config.colorDark;
+        // let gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
             if (shape === DataPattern.SQUARE) {
@@ -1101,7 +1107,7 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? (centerX + 2) * nWidth + nWidth / 2 : (centerX + 2) * nWidth;
         y = shape === DataPattern.CIRCLE ? (centerY - 2 + 1) * nHeight + nHeight / 2 : (centerY - 2 + 1) * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        // gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
             if (shape === DataPattern.SQUARE) {
@@ -1118,7 +1124,7 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? (centerX - 2 + 1) * nWidth + nWidth / 2 : (centerX - 2 + 1) * nWidth;
         y = shape === DataPattern.CIRCLE ? (centerY - 2) * nHeight + nHeight / 2 : (centerY - 2) * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        // gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
             if (shape === DataPattern.SQUARE) {
@@ -1134,7 +1140,7 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? (centerX - 2) * nWidth + nWidth / 2 : (centerX - 2) * nWidth;
         y = shape === DataPattern.CIRCLE ? (centerY + 2) * nHeight + nHeight / 2 : (centerY + 2) * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        // gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
             if (shape === DataPattern.SQUARE) {
@@ -1150,7 +1156,7 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? centerX * nWidth + nWidth / 2 : centerX * nWidth;
         y = shape === DataPattern.CIRCLE ? centerY * nHeight + nHeight / 2 : centerY * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        // gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         if (shape === DataPattern.SQUARE) {
             // @ts-ignore
@@ -1528,25 +1534,25 @@ export class SVGDrawing {
 
     private async getGradientFromCanvas(canvas: object, startX: number, startY: number, width: number, height: number) {
         let gradient = this.config.colorDark ? this.config.colorDark : '#000';
-        if (this.config.gradientType === GradientType.HORIZONTAL || this.config.gradientType === GradientType.LINEAR) {
-            const col1 = await this.getColorFromCanvas(this.canvasQR, startX, startY);
-            const col2 = await this.getColorFromCanvas(this.canvasQR, startX + width, startY);
-            // @ts-ignore
-            gradient = canvas.gradient('linear', (add) => {
-                add.stop(0, col1)
-                add.stop(1, col2)
-            });
-        } else if (this.config.gradientType === GradientType.VERTICAL) {
-            const col1 = await this.getColorFromCanvas(this.canvasQR, startX, startY);
-            const col2 = await this.getColorFromCanvas(this.canvasQR, startX, startY + height);
-            // @ts-ignore
-            gradient = canvas.gradient('linear', (add) => {
-                add.stop(0, col1)
-                add.stop(1, col2)
-            }).from(0, 0).to(0, 1);
-        } else if (this.config.gradientType === GradientType.RADIAL) {
-
-        }
+        // if (this.config.gradientType === GradientType.HORIZONTAL || this.config.gradientType === GradientType.LINEAR) {
+        //     const col1 = await this.getColorFromCanvas(this.canvasQR, startX, startY);
+        //     const col2 = await this.getColorFromCanvas(this.canvasQR, startX + width, startY);
+        //     // @ts-ignore
+        //     gradient = canvas.gradient('linear', (add) => {
+        //         add.stop(0, col1)
+        //         add.stop(1, col2)
+        //     });
+        // } else if (this.config.gradientType === GradientType.VERTICAL) {
+        //     const col1 = await this.getColorFromCanvas(this.canvasQR, startX, startY);
+        //     const col2 = await this.getColorFromCanvas(this.canvasQR, startX, startY + height);
+        //     // @ts-ignore
+        //     gradient = canvas.gradient('linear', (add) => {
+        //         add.stop(0, col1)
+        //         add.stop(1, col2)
+        //     }).from(0, 0).to(0, 1);
+        // } else if (this.config.gradientType === GradientType.RADIAL) {
+        //
+        // }
 
         return gradient;
     }

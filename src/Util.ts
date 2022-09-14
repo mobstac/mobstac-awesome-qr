@@ -1,6 +1,6 @@
 /* global document */
 
-import { Image as ImageCanvas } from 'canvas';
+// import { Image as ImageCanvas } from 'canvas';
 
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 
@@ -26,11 +26,14 @@ export const loadImage = (src: string, imageServerURL?: string | undefined, imag
                 //     reject(error);
                 // });
             } else {
+                // @ts-ignore
                 const xhttp = new XMLHttpRequest();
                 xhttp.responseType = 'blob';
                 xhttp.onreadystatechange = function() {
                     if (this.readyState === 4 && (this.status >= 200 && this.status < 300)) {
+                        // @ts-ignore
                         const imageURL = window.URL.createObjectURL(xhttp.response);
+                        // @ts-ignore
                         const img = document.createElement('img');
                         img.crossOrigin = 'anonymous';
 
@@ -59,8 +62,9 @@ export const loadImage = (src: string, imageServerURL?: string | undefined, imag
     }
     let image: any;
     if (isNode) {
-        image = new ImageCanvas();
+        // image = new ImageCanvas();
     } else {
+        // @ts-ignore
         image = document.createElement('img');
         image.crossOrigin = 'anonymous';
     }
