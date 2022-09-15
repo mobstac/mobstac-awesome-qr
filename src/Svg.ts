@@ -924,8 +924,8 @@ export class SVGDrawing {
         const patternPosition = this.patternPosition;
         const moduleSize = this.config.moduleSize;
         const margin = this.config.margin;
-        const color = '#0E9E88';
-        // const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        // const color = '#0E9E88';
+        const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
         const edgeCenter = patternPosition[patternPosition.length - 1];
         for (let i = 0; i < patternPosition.length; i++) {
             for (let j = 0; j < patternPosition.length; j++) {
@@ -943,8 +943,8 @@ export class SVGDrawing {
     }
 
     private drawPositionProtectors(context: object) {
-        // const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
-        const color = '#0E9E88';
+        const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        // const color = '#0E9E88';
         const size = this.config.moduleSize;
         const moduleCount = this.moduleCount;
 
@@ -953,14 +953,16 @@ export class SVGDrawing {
         // h-${width - moduleSize}
         // v-${height - moduleSize}`)
 
-        if (!this.config.backgroundImage) {
-            return ;
-        }
+        // if (!this.config.backgroundImage) {
+        //     console.log("return because of bkgImg")
+        //     return ;
+        // }
         let opacityD = 0.6;
         if (this.config.backgroundImage && this.config.frameStyle === QRCodeFrame.CIRCULAR) {
             opacityD = 0.0;
         }
         if (this.config.useOpacity) {
+            console.log("useOpacity")
             // @ts-ignore
             context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY).attr({opacity: opacityD});
             // @ts-ignore
@@ -972,6 +974,7 @@ export class SVGDrawing {
             // @ts-ignore
             context.rect(size, (moduleCount - 8 - 8) * size).fill(color).move(6 * size + this.config.margin + this.shiftX, 8 * size + this.config.margin + this.shiftY).attr({opacity: opacityD});
         } else {
+            console.log("dont useOpacity")
             // @ts-ignore
             context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY);
             // @ts-ignore
@@ -1374,22 +1377,24 @@ export class SVGDrawing {
             return;
         }
         if (this.config.useOpacity) {
+            // TODO: Move back to path based implementation
             // @ts-ignore
-            canvas.path(`M0 0
-            h${width}
-            v${height}
-            h-${width}
-            v-${height} Z`)
-            // canvas.rect(height, width)
+            // canvas.path(`M0 0
+            // h${width}
+            // v${height}
+            // h-${width}
+            // v-${height} Z`)
+            canvas.rect(height, width)
                 .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
         } else {
+            // TODO: Move back to path based implementation
             // @ts-ignore
-            canvas.path(`M0 0
-            h${width}
-            v${height}
-            h-${width}
-            v-${height} Z`)
-            // canvas.rect(height, width)
+            // canvas.path(`M0 0
+            // h${width}
+            // v${height}
+            // h-${width}
+            // v-${height} Z`)
+            canvas.rect(height, width)
                 .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
         }
     }
@@ -1581,19 +1586,20 @@ export class SVGDrawing {
             // // @ts-ignore
             // canvas.rect(height - 1.5 * moduleSize, width - 1.5 * moduleSize).radius(radius).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize * 0.75 + this.config.margin + this.shiftX, startY + moduleSize * 0.75 + this.config.margin + this.shiftY);
         } else {
+            // TODO: move back to path based implementation
             // @ts-ignore
-            canvas.path(`M0 0
-            h${width - moduleSize}
-            v${height - moduleSize}
-            h-${width - moduleSize}
-            v-${height - moduleSize} z`)
-                .fill('none')
-                .move(startX + this.config.margin + this.shiftX + moduleSize / 2, startY + this.config.margin + this.shiftY + moduleSize / 2)
-                .stroke({ color: gradient, width: this.config.moduleSize });
-            // // @ts-ignore
-            // canvas.rect(height, width).fill(this.config.eyeFrameColor ? this.config.eyeFrameColor : gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-            // // @ts-ignore
-            // canvas.rect(height - 2 * moduleSize, width - 2 * moduleSize).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize + this.config.margin + this.shiftX, startY + moduleSize + this.config.margin + this.shiftY);
+            // canvas.path(`M0 0
+            // h${width - moduleSize}
+            // v${height - moduleSize}
+            // h-${width - moduleSize}
+            // v-${height - moduleSize} z`)
+            //     .fill('none')
+            //     .move(startX + this.config.margin + this.shiftX + moduleSize / 2, startY + this.config.margin + this.shiftY + moduleSize / 2)
+            //     .stroke({ color: gradient, width: this.config.moduleSize });
+            // @ts-ignore
+            canvas.rect(height, width).fill(this.config.eyeFrameColor ? this.config.eyeFrameColor : gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            // @ts-ignore
+            canvas.rect(height - 2 * moduleSize, width - 2 * moduleSize).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize + this.config.margin + this.shiftX, startY + moduleSize + this.config.margin + this.shiftY);
         }
 
     }
