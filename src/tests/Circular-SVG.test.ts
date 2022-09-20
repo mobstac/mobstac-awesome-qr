@@ -22,6 +22,36 @@ URL:mobstac.com
 REV:2008-04-24T19:52:43Z
 END:VCARD`;
 
+const CircularFrameTextConfig = {
+    backgroundColor: "#ffffff",
+    backgroundImage: "",
+    colorDark: "#000",
+    colorLight: "#ffffff",
+    correctLevel: 1,
+    dataPattern: DataPattern.SQUARE,
+    dotScale: 1,
+    eyeBallShape: EyeBallShape.SQUARE,
+    eyeFrameShape: EyeFrameShape.SQUARE,
+    eyeBallColor : '#999',
+    eyeFrameColor : '#444',
+    frameColor: "#999",
+    frameStyle: QRCodeFrame.CIRCULAR_FRAME,
+    frameText: "ABCDEFGHIJKLMNOPQRSTUVWXYZABCD",
+    frameTextColor: "#ffffff",
+    gradientType: GradientType.NONE,
+    isVCard: false,
+    logoBackground: true,
+    logoHeight: 0,
+    logoImage: "https://dashboard.beaconstac.com/assets/img/frames/box-bottom.svg",
+    logoMargin:10,
+    logoScale: 0.15,
+    logoWidth: 0,
+    margin: 80,
+    rectangular: true,
+    size: 1024,
+    secondaryText : "ABCDEFGHIJKLMNOPQRSTUVWXYZABCD",
+    text: "https://www.lcbo.com/content/lcbo/en/homepage/summer-hot-list.html?utm_medium=print&utm_source=qr_instore_signage&utm_campaign=20220522_p3_tad_summerhotlist_en&utm_content=vertical_transparencyasiufkasbfkasbfkbaskfbajsbfkaskfbalsouasugayirghasbfasiyfbhaksfiyafbabfljbashfasfiasbkfhbaskfhasgfyiasfbasihfasvfhiasbfhiasfhabfifaihfbahifbhafhafyiashfhkasvfhiasfhivashfvhiasbfhabfabfbasjfbasfsbfhbfkabfaf" 
+}
 
 const config_circle = [
     {
@@ -35,7 +65,7 @@ const config_circle = [
         eyeBallShape: EyeBallShape.SQUARE,
         eyeFrameShape: EyeFrameShape.SQUARE,
         frameColor: "#000000",
-        frameStyle: QRCodeFrame.CIRCULAR,
+        frameStyle: QRCodeFrame.CIRCULAR_FRAME,
         frameText: "Circular_QR",
         frameTextColor: "#ffffff",
         gradientType: GradientType.NONE,
@@ -375,3 +405,18 @@ describe('Circular QR code tests', () => {
         });
     }
 });
+
+describe('Circular Text Frame test' , () => {
+    it('QR test SVG', done => {
+        const qrCodeGenerator = new QRCodeBuilder(CircularFrameTextConfig);
+
+        qrCodeGenerator.build(CanvasType.SVG).then(qrCode => {
+            let test = '/test.';
+            fs.writeFileSync(__dirname + '/CircularFrameTextTest' + test + CanvasType.SVG.toLowerCase(), qrCode.toBuffer());
+            done();
+        }).catch(err => {
+            console.error(err);
+            done();
+        });
+    });
+})

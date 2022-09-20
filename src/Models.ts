@@ -477,7 +477,7 @@ export class Drawing {
         const viewportSize = nSize * qrModuleCount;
         const size = viewportSize + 2 * margin;
         let qrmargin = config.margin;
-        if (config.frameStyle === QRCodeFrame.CIRCULAR) {
+        if (config.frameStyle === QRCodeFrame.CIRCULAR || config.frameStyle === QRCodeFrame.CIRCULAR_FRAME) {
             qrmargin = 0;
         }
         const drawingConfig: Partial<QRDrawingConfig> = {

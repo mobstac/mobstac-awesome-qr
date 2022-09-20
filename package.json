@@ -18,7 +18,8 @@
         "prepublishOnly": "npm test",
         "version": "npm run format && git add -A src",
         "postversion": "git push && git push --tags",
-        "testCircular": "nyc mocha -g 'Circular QR code tests'"
+        "testCircular": "nyc mocha -g 'Circular QR code tests'",
+        "testCircularFrameText": "nyc mocha -g 'Circular Text Frame test'"
     },
     "nyc": {
         "include": [
