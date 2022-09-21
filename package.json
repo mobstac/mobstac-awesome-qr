@@ -67,7 +67,7 @@
         "src/assets/**/*"
     ],
     "dependencies": {
-        "@svgdotjs/svg.js": "^3.0.16",
+        "@svgdotjs/svg.js": "3.0.16",
         "@types/node": "11.13.0",
         "node-fetch": "^2.6.7",
         "svgdom": "^0.1.10",
