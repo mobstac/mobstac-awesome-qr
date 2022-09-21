@@ -446,9 +446,13 @@ export class SVGDrawing {
         }
 
 
+
+        //Frame Text Calculations
         let frameTextPath = '';
         const fontSize = (size / 6) * ( 3 / 5 );
-        const newRadius = radius - width / 2;
+
+
+        const newRadius = radius - width /2 ;
         //@ts-ignore
         var text = finalCanvas.text(this.config.frameText).font({ size : fontSize , family : 'Roboto'});
         let arcLength = text.length();
@@ -456,12 +460,9 @@ export class SVGDrawing {
         let angleInradians = arcLength / newRadius;
         let chordLength = 2 * newRadius * Math.sin(angleInradians/2);
         const textLength = chordLength;
-
-        //@ts-ignore
         
         const startX = Math.floor(pos - textLength / 2) ;
         const startY = Math.floor(pos + Math.sqrt( newRadius * newRadius - (textLength * textLength )/ 4 )) ;
-        console.log(startX , startY)
 
         frameTextPath = 'M' + startX + ' ' + startY;
 
@@ -477,27 +478,23 @@ export class SVGDrawing {
 
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME && this.config.secondaryText && this.config.secondaryText.length){
 
-            const newRadius = radius + width / 2;
-            var text = finalCanvas.text(this.config.secondaryText).font({ size : fontSize , family : 'Roboto'});
-            let arcLength = text.length();
+            const newRadius = radius + width / 2 ;
+            var text = finalCanvas.text(this.config.secondaryText).font({  size : fontSize , family : 'Roboto'});
+            let arcLength = text.length() + 16 * ( this.config.secondaryText.length - 1 ) * ( this.config.size / 1024 );
             text.remove();
             
-            let angleInradians = arcLength / newRadius;
-            let chordLength = 2 * newRadius * Math.sin(angleInradians/2);
-
+            let angleInradians = arcLength / newRadius ;
+            let chordLength = 2 * newRadius * Math.sin(angleInradians/2) ;
             const textLength = chordLength;
  
             const startX = Math.floor(pos - textLength / 2) ;
             const startY = Math.floor(pos - Math.sqrt( newRadius * newRadius - (textLength * textLength )/ 4 )) ;
-            console.log(startX , startY)
 
             secondaryTextpath = 'M' + startX + ' ' + startY;
 
 
             const endX = Math.floor(pos + textLength / 2) ;
             const endY = Math.floor(pos - Math.sqrt( newRadius * newRadius - (textLength * textLength )/ 4 ));
-
-            
 
             const tempRadius = Math.ceil(newRadius);
             //draw arc
@@ -517,10 +514,11 @@ export class SVGDrawing {
             finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width': this.config.moduleSize + 1}).radius(radius - width/2 + this.config.moduleSize/2).fill(this.config.backgroundColor);
             finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this.config.frameTextColor)
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME && this.config.secondaryText && this.config.secondaryText.length){
-                finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor)
+                finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
             }
             return this.addDesignHelper(finalCanvas, canvas, gradient);
         }
+        
     }
     private setupCanvasForGradient(ctx: CanvasRenderingContext2D, size: number) {
 
