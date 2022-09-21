@@ -205,18 +205,19 @@ export class QRCode {
     }
 
     public toBuffer(): Buffer {
-        if (this.config.canvasType === CanvasType.SVG && !this.config.useCanvas) {
-            return this.svg;
-        }
-        let drawing = this.svg.toBuffer();
-        switch (this.config.canvasType) {
-            case CanvasType.SVG:
-                drawing = this.svg.toBuffer();
-                break;
-            default:
-                throw { error: `Cannot convert to buffer for ${this.config.canvasType}` };
-        }
-        return drawing;
+        return this.svg;
+        // if (this.config.canvasType === CanvasType.SVG && !this.config.useCanvas) {
+        //     return this.svg;
+        // }
+        // let drawing = this.svg.toBuffer();
+        // switch (this.config.canvasType) {
+        //     case CanvasType.SVG:
+        //         drawing = this.svg.toBuffer();
+        //         break;
+        //     default:
+        //         throw { error: `Cannot convert to buffer for ${this.config.canvasType}` };
+        // }
+        // return drawing;
     }
 
     // public createStream(config?: object): PNGStream | JPEGStream | PDFStream {
