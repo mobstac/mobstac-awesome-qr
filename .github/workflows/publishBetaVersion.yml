@@ -1,4 +1,4 @@
-name: Publish beta version to npm
+name: Publish beta version to npm.
 
 on:
   workflow_dispatch:
