@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
-import { QRErrorCorrectLevel } from '../Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+import { QRCodeBuilder } from '../index';
 import { QRCode } from '../Models';
 import { QRCodeConfig } from '../Types';
 

@@ -1,5 +1,6 @@
 /* tslint:disable:no-var-requires */
-import { Canvas, CanvasGradient, CanvasPattern, CanvasRenderingContext2D, createCanvas } from 'canvas';
+// @ts-ignore
+import { Gradient, SVG} from '@svgdotjs/svg.js';
 import { CanvasUtil } from './Common';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
@@ -27,13 +28,16 @@ export class SVGDrawing {
         const nSize = Math.ceil(rawViewportSize / qrModuleCount);
         const viewportSize = nSize * qrModuleCount;
         const size = viewportSize + 2 * margin;
-
+        let qrmargin  = config.margin;
+        if (config.frameStyle === QRCodeFrame.CIRCULAR) {
+            qrmargin = 0;
+        }
         const drawingConfig: Partial<QRDrawingConfig> = {
             size,
             nSize,
             rawSize: config.size,
             viewportSize,
-            margin,
+            margin: qrmargin,
             dotScale,
             moduleSize: nSize,
         };
@@ -47,8 +51,7 @@ export class SVGDrawing {
     public canvas: any;
     public context: any;
 
-    public maskCanvas?: Canvas;
-    public maskContext?: CanvasRenderingContext2D;
+    public maskCanvas: any;
 
     private patternPosition: number[];
     private moduleCount: number;
@@ -57,8 +60,9 @@ export class SVGDrawing {
     private modules: Array<Array<boolean | null>>;
     private shiftX = 0;
     private shiftY = 0;
+    private widthSVG = 0;
+    private widthView = 0;
 
-    private canvasQR: Canvas;
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
         this.moduleCount = moduleCount;
@@ -68,24 +72,7 @@ export class SVGDrawing {
         this.config = SVGDrawing.generateDrawingConfig(config, moduleCount);
         this.isPainted = false;
 
-        this.canvasQR = createCanvas(config.size, config.size);
-        const ctx = this.canvasQR.getContext('2d');
-
-        this.setupCanvasForGradient(ctx, config.size);
-
-
-
-        // uncomment these for node
-
-        // const { createSVGWindow } = require('svgdom');
-        // const svgWindow = createSVGWindow();
-        // const svgWindow = null;
-        // @ts-ignore
-        // const svgDocument = svgWindow.document;
-        // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
-
-        // registerWindow(svgWindow, svgDocument);
-        // this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
+        this.canvas = SVG().size(config.size, config.size);
     }
 
     public async drawSVG(): Promise<any> {
@@ -95,19 +82,9 @@ export class SVGDrawing {
         let canvasHeight: number;
         let canvasWidth: number;
 
-        // uncomment these for node
-
-        // const { createSVGWindow } = require('svgdom');
-        // const svgWindow = createSVGWindow();
-        const svgWindow = null;
-        // @ts-ignore
-        const svgDocument = svgWindow.document;
-        // const { SVG, registerWindow } = require('@svgdotjs/svg.js');
-
-
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
             const moduleSize = this.config.moduleSize;
-            const rawSize = this.config.rawSize;
+            const rawSize = this.config.size;
             const size = rawSize + moduleSize * 2;
             canvasHeight = 1.27 * size;
             canvasWidth = size + moduleSize;
@@ -118,14 +95,25 @@ export class SVGDrawing {
                 canvasHeight = 1.25 * size;
             }
 
-            // uncomment these for node
-
-            // mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
-            // @ts-ignore
-            mainCanvas = null;
-
-            // @ts-ignore
-            mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
+            if (frameStyle === QRCodeFrame.CIRCULAR) {
+                if(this.config.size >= 1024) {
+                    this.widthSVG = 12;
+                    this.widthView = 15;
+                } else {
+                    this.widthSVG = 38;
+                    this.widthView = 38;
+                }
+                // @ts-ignore
+                mainCanvas = SVG().size(canvasWidth+this.widthSVG, canvasHeight);
+                // @ts-ignore
+                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
+            } else {
+                // @ts-ignore
+                mainCanvas = SVG().size(canvasWidth+this.widthSVG, canvasHeight);
+                // @ts-ignore
+                mainCanvas.viewbox(0, 0, canvasWidth , canvasHeight ).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
+                
+            }
 
             switch (frameStyle) {
                 case QRCodeFrame.BALLOON_BOTTOM:
@@ -155,6 +143,14 @@ export class SVGDrawing {
                     this.shiftX = 1.5 * this.config.moduleSize;
                     this.shiftY = 2.5 * this.config.moduleSize + size / 5;
                     break;
+                case QRCodeFrame.TEXT_ONLY:
+                    this.shiftX = 1.5 * this.config.moduleSize;
+                    this.shiftY = 1.5 * this.config.moduleSize;
+                    break;
+                case QRCodeFrame.FOCUS:
+                    this.shiftX = 1.5 *  this.config.moduleSize;
+                    this.shiftY = 1.5 * this.config.moduleSize; 
+                    break;
                 default:
                     break;
             }
@@ -162,9 +158,8 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            // uncomment these for node
-
-            // mainCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight);
+            // @ts-ignore
+            mainCanvas = SVG().size(canvasWidth+this.widthSVG, canvasHeight);
 
             // @ts-ignore
             mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
@@ -172,14 +167,16 @@ export class SVGDrawing {
 
         const gradient: string = this.config.colorDark;
 
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR ){
+            this.config.size = this.config.viewportSize;
+        }
 
-        // @ts-ignore
         return this.drawFrame(mainCanvas, this.config.frameStyle, this.config.frameColor, this.config.frameText)
             .then(() => {
                 return this.addBackground(mainCanvas, this.config.size, this.config.backgroundImage, this.config.backgroundColor);
             })
             .then(() => {
-                return this.drawAlignPatterns(mainCanvas, gradient);
+                return this.drawAlignPatterns(mainCanvas, gradient); 
             })
             .then(() => {
                 return this.drawPositionProtectors(mainCanvas);
@@ -196,136 +193,519 @@ export class SVGDrawing {
             .then(() => {
                 return this.drawLogoImage(mainCanvas);
             })
-            .then(() => {
+            .then(()=>{
                 // @ts-ignore
-                return mainCanvas.svg();
+                return this.addDesign(mainCanvas,gradient);
+            })
+            .then((canvas: object) => {
+                if(!isNode){
+                    // @ts-ignore
+                    canvas.width(null);
+                    // @ts-ignore
+                    canvas.height(null);
+                    if(frameStyle === QRCodeFrame.CIRCULAR){
+                        //@ts-ignore
+                        canvas.viewbox(0, 0, canvasWidth + 190, canvasWidth + 190)
+                    }
+                }
+                // @ts-ignore
+                return canvas.svg();
             });
     }
-    private setupCanvasForGradient(ctx: CanvasRenderingContext2D, size: number) {
 
-        let gradient: string | CanvasGradient | CanvasPattern = this.config.colorDark ? this.config.colorDark : '#000000';
+    private checkCircle(x: number, y: number, r: number , cx: number) {
+        if((x-cx)*(x-cx) + (y-cx) * (y-cx) <= r*r) {
+            return true;
+        }
+        return false;
+    }
+    
 
-        if (this.config.gradientType) {
-            switch (this.config.gradientType) {
-                case GradientType.LINEAR:
-                case GradientType.HORIZONTAL:
-                    gradient = ctx.createLinearGradient(0, 0, this.config.moduleSize * this.moduleCount, 0);
-                    gradient.addColorStop(0, this.config.colorDark);
-                    gradient.addColorStop(1, this.config.colorLight);
-                    break;
-                case GradientType.VERTICAL:
-                    gradient = ctx.createLinearGradient(0, 0, 0, this.config.moduleSize * this.moduleCount);
-                    gradient.addColorStop(0, this.config.colorDark);
-                    gradient.addColorStop(1, this.config.colorLight);
-                    break;
-                case GradientType.RADIAL:
-                    gradient = ctx.createRadialGradient(
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 6,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                        (this.config.moduleSize * this.moduleCount) / 2,
-                    );
-                    gradient.addColorStop(0, this.config.colorLight);
-                    gradient.addColorStop(1, this.config.colorDark);
-                    break;
-                default:
-                    break;
+    private middleSquare(seed: number) {
+        let result = (seed * seed).toString();
+        const str = this.config.text;
+        const len = str.length;
+        if(result === 'NaN') {
+            result  = (str.charCodeAt(0) + str.charCodeAt(len-1)).toString();;
+        }
+        while(result.length<4){
+            result  = '0' + result;
+        }
+        result = result.slice(1, 3);
+        let randomNumber = parseInt(result, 10);
+        if(randomNumber ===  0){
+            randomNumber = str.charCodeAt(0) + str.charCodeAt(len-1);
+        }
+        return randomNumber;
+    }
+
+    private async addDesignHelper(finalCanvas: object, canvas: object, gradient: string) {
+        const size = this.config.size;
+        const color = this.config.backgroundColor?this.config.backgroundColor:'none' ;
+        const width = this.config.moduleSize;
+        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
+        const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
+        // @ts-ignore
+        if(this.config.backgroundImage) {
+            console.log("TODO")
+        }
+
+        const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+        const moduleSize = this.config.dotScale*this.config.moduleSize;
+        const increment  = this.config.nSize + (1-this.config.dotScale)*0.5*this.config.nSize;
+        const shift = (Math.sqrt(2)*size + 2*this.config.moduleSize-size) / 2 ;
+        const limit  = Math.sqrt(2)*size + 2*this.config.moduleSize;
+        const str = this.config.text;
+        const len = str.length;
+        let num = str.charCodeAt(0) + str.charCodeAt(len-1);
+        const randomArray: any = [];
+        const margin = 0.3*moduleSize;
+        //Left Side Dots 
+        for(let r = shift - moduleSize - margin; r >=0 ; r -= increment) {
+            for(let c = 0 ; c < limit  ; c += increment) {
+                const i  = r ;
+                const j  = c ;
+                num = this.middleSquare(num*i+j);
+                if((num%2) === 0 && this.checkCircle(i,j,radius,pos) && this.checkCircle(i+moduleSize , j+moduleSize, radius, pos)) {
+                  randomArray.push({"i": i,"j": j});
+                }
+            }
+        }
+        num = str.charCodeAt(0) + str.charCodeAt(len-1);
+        //Right Side Dots
+        for(let r = shift+ size + margin; r < limit ; r += increment) {
+            for(let c = 0 ; c < limit  ; c += increment) {
+                const i  = r ;
+                const j  = c ;
+                num = this.middleSquare(num*i+j);
+                if((num%2) === 0 && this.checkCircle(i,j,radius,pos) && this.checkCircle(i+moduleSize , j+moduleSize, radius, pos)) {
+                  randomArray.push({"i": i,"j": j});
+                }
+            }
+        }
+        //Down Side Dots
+        num = str.charCodeAt(0) + str.charCodeAt(len-1);
+        for(let r = 0; r < limit ; r += increment) {
+            for(let c = shift + size + margin ; c < limit  ; c += increment) {
+                const i  = r ;
+                const j  = c ;
+                num = this.middleSquare(num*i+j);
+                if((num%2) === 0 && this.checkCircle(i,j,radius,pos) && this.checkCircle(i+moduleSize , j+moduleSize, radius, pos)) {
+                  randomArray.push({"i": i,"j": j});
+                }
+            }
+        }
+        //Up side Dots
+        num = str.charCodeAt(0) + str.charCodeAt(len-1);
+        for(let r = 0; r < limit ; r += increment) {
+            for(let c = shift - moduleSize - margin; c >= 0  ; c -= increment) {
+                const i  = r;
+                const j  = c ;
+                num = this.middleSquare(num*i+j);
+                if((num%2 === 1) && this.checkCircle(i,j,radius,pos) && this.checkCircle(i+moduleSize , j+moduleSize, radius, pos)) {
+                  randomArray.push({"i": i,"j": j});
+                }
             }
         }
 
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, size, size);
+        for(const values of Object.values(randomArray)) {
+            // @ts-ignore
+            const i  = values["i"];
+            // @ts-ignore
+            const j  = values["j"];
+            let grad = this.getColorFromQrSvg(i , j , true);
+            if(this.config.gradientType === GradientType.RADIAL) {
+                grad = this.config.colorDark;
+            }
+            switch (dataPattern) {
+                case DataPattern.CIRCLE:
+                    // @ts-ignore
+                this.drawCircle(i+moduleSize/2, j+moduleSize/2, finalCanvas, grad, moduleSize / 2, moduleSize / 2, false);
+                break;
+                case DataPattern.KITE:
+                    // @ts-ignore
+                    this.drawKite(i, j, finalCanvas, grad, moduleSize, moduleSize);
+                    break;
+                case DataPattern.LEFT_DIAMOND:
+                    // @ts-ignore
+                    this.drawDiamond(i, j, finalCanvas, grad, moduleSize, moduleSize, false);
+                    break;
+                case DataPattern.RIGHT_DIAMOND:
+                    // @ts-ignore
+                    this.drawDiamond(i, j, finalCanvas, grad, moduleSize, moduleSize, true);
+                    break;
+                default:
+                    // @ts-ignore
+                    this.drawSquare(i, j, finalCanvas, moduleSize, moduleSize, false, grad);
+                    break;
+            }
+        }
+        // @ts-ignore
+        finalCanvas.add(canvas.move(shift,shift));
+        return finalCanvas;
     }
 
-    private async getColorFromCanvas(canvas: Canvas, x: number, y: number) {
-        const context = canvas.getContext('2d');
+    private async addDesign(canvas: object,gradient: string): Promise<object> {
+        if (this.config.frameStyle !== QRCodeFrame.CIRCULAR) {
+            return canvas;
+        }
 
-        const p = await context.getImageData(x, y, 1, 1).data;
-        const hex = '#' + ('000000' + this.rgbToHex(p[0], p[1], p[2])).slice(-6);
-        return hex;
+        const size = this.config.size;
+        const finalCanvas = SVG().size(Math.sqrt(2)*size + 2*this.config.moduleSize, Math.sqrt(2)*size + 2*this.config.moduleSize);
+        const color = this.config.backgroundColor?this.config.backgroundColor:'none' ;
+        const width = this.config.moduleSize;
+
+        // @ts-ignore
+        let grad : any;
+        const col1 = this.config.colorDark;
+        const col2 = this.config.colorLight;
+        switch (this.config.gradientType) {
+            case GradientType.HORIZONTAL:
+                // @ts-ignore
+                grad = finalCanvas.gradient('linear', function(add) {
+                    add.stop(0, col1 )
+                    add.stop(1, col2 )
+                    });
+                    break;
+            case GradientType.VERTICAL:
+                // @ts-ignore
+                grad = finalCanvas.gradient('linear', function(add) {
+                    add.stop(0, col1 )
+                    add.stop(1, col2 )
+                    }).from(0, 0).to(0, 1);
+                break;
+            case GradientType.LINEAR:
+                // @ts-ignore
+                grad = finalCanvas.gradient('linear', function(add) {
+                    add.stop(0, col1 )
+                    add.stop(1, col2 )
+                    });
+                    break;
+            default:
+                grad =gradient;
+        }
+        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
+        const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
+        if (this.config.backgroundImage) {
+            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
+                this.addDesignHelper(finalCanvas, canvas, gradient);
+                finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
+                return finalCanvas;
+            });
+        }else{
+            finalCanvas.circle(size- this.config.moduleSize).attr({cx: pos,cy: pos}).radius(radius).fill(color);
+            this.addDesignHelper(finalCanvas, canvas, gradient);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
+            return finalCanvas;
+        }
+
+    }
+
+
+    private getColorFromQrSvg(x : number , y : number , circularFrame = false ){
+
+        let colorDark  = this.config.colorDark ;
+        let colorLight  = this.config.colorLight ? this.config.colorLight : colorDark;
+        /*
+            `direction` stores the X or Y cordinate of the dot based on the gradient
+            Eg : For a dot with cordinates (100 , 200) and horizontal gradient
+            `direction` will store 100.
+
+            `direction` is used to calculate how far the point is from starting point (0,0) horizontally or vertically 
+            The distance calculated is used for calculating effect of color ( `weight` )
+        */
+        let direction  =  x;
+        let lengthForGradient = circularFrame ? ((this.config.size)/Math.sqrt(2) + this.config.moduleSize/2)*2 : this.config.viewportSize ;
+
+        switch ( this.config.gradientType){
+            case GradientType.NONE : {
+                colorLight = colorDark;
+                break;
+            }
+            case GradientType.HORIZONTAL :  {
+                direction = x ;
+                break;
+            }
+
+            case GradientType.VERTICAL : {
+                direction = y ;
+                break ;
+            }
+        }
+
+        if(this.config.gradientType && this.config.gradientType !== GradientType.NONE && this.config.gradientType !== GradientType.RADIAL){
+            let color2 : number[] = this.hexToRgb(colorDark)
+            let color1 : number[] = this.hexToRgb(colorLight);
+            let weightOfColorOne = direction / lengthForGradient;
+            // `weight` sometime crosses the limit of [0 - 1]
+            if( weightOfColorOne >= 1 ){
+                weightOfColorOne = 0.999;
+            }
+            if( weightOfColorOne <= 0 ){
+                weightOfColorOne = 0.001;
+            }
+
+            const colorOneInRGB = this.getGradientColor( color1 , color2 , weightOfColorOne);
+            let colorOneInHex = '#' + this.rgbToHex(colorOneInRGB[0] , colorOneInRGB[1] , colorOneInRGB[2]) ;
+            if( colorOneInHex === '#0'){
+                colorOneInHex = '#000000'
+            }
+            if(colorOneInHex[0] === '-'){
+                colorOneInHex = '#FFFFFF'
+            }
+            if(colorOneInHex.length === 6){
+                colorOneInHex = colorOneInHex[0] + '0' + colorOneInHex.slice(1)
+            } 
+
+
+            let weightOfColorTwo = (direction + this.config.moduleSize) / lengthForGradient;
+            if( weightOfColorTwo > 1 ){
+                weightOfColorTwo = 0.999;
+            }
+            if( weightOfColorTwo < 0 ){
+                weightOfColorTwo = 0.001;
+            }
+
+
+            const colorTwoInRGB = this.getGradientColor( color1 , color2 , weightOfColorTwo);
+            let colorTwoInHex = '#' + this.rgbToHex(colorTwoInRGB[0] , colorTwoInRGB[1] , colorTwoInRGB[2]) ;
+            if( colorTwoInHex === '#0'){
+                colorTwoInHex = '#000000'
+            }
+            if(colorTwoInHex[0] === '-'){
+                colorTwoInHex = '#ffffff'
+            }
+            if(colorTwoInHex.length === 6){
+                colorTwoInHex = colorTwoInHex[0] + '0' + colorTwoInHex.slice(1)
+            }
+             
+
+            return colorOneInHex + ' ' + colorTwoInHex;
+
+        } else if(this.config.gradientType === GradientType.RADIAL){
+            let color1 : number[] = this.hexToRgb(colorDark)
+            let color2 : number[] = this.hexToRgb(colorLight);
+            const xFromCenter = Math.abs(x - lengthForGradient/2);
+            const yFromCenter = Math.abs(y - lengthForGradient/2);
+            /* 
+                `direction` is used to calculate how far the point is from starting point (0,0) 
+                The distance calculated is used for calculating effect of color ( `weight` ) 
+            */
+            direction = Math.sqrt ( xFromCenter * xFromCenter + yFromCenter * yFromCenter) - 50;
+            let weightOfColorOne = direction / ( lengthForGradient / 2) <= 1 ? direction / ( lengthForGradient / 2) : 1;
+            if(weightOfColorOne > 1 ){
+                weightOfColorOne = 0.999;
+            }
+            if(weightOfColorOne < 0 ){
+                weightOfColorOne = 0.001;
+            }
+
+            const colorOneInRGB = this.getGradientColor( color1 , color2 , weightOfColorOne);
+            
+            let colorOneInHex = '#' + this.rgbToHex(colorOneInRGB[0] , colorOneInRGB[1] , colorOneInRGB[2]) ;
+            
+            if( colorOneInHex === '#0'){
+                colorOneInHex = '#000000'
+            }
+            if(colorOneInHex.length === 6){
+                colorOneInHex = colorOneInHex[0] + '0' + colorOneInHex.slice(1)
+            } 
+
+            let weightOfColorTwo = direction / ( lengthForGradient / 2) <= 1 ? direction / ( lengthForGradient / 2) : 1;
+            if(weightOfColorTwo > 1 ){
+                weightOfColorTwo = 0.999;
+            }
+            if(weightOfColorTwo < 0 ){
+                weightOfColorTwo = 0.001;
+            }
+
+            const colorTwoInRGB = this.getGradientColor( color1 , color2 , weightOfColorTwo);
+            let colorTwoInHex = '#' + this.rgbToHex(colorTwoInRGB[0] , colorTwoInRGB[1] , colorTwoInRGB[2]) ;
+           
+            if( colorTwoInHex === '#0'){
+                colorTwoInHex = '#000000'
+            }
+            if(colorTwoInHex.length === 6){
+                colorTwoInHex = colorTwoInHex[0] + '0' + colorTwoInHex.slice(1)
+            } 
+             
+
+            return colorOneInHex + ' ' + colorTwoInHex;
+        }
+          
+        return colorDark;
+
     }
 
     private rgbToHex(r: number, g: number, b: number) {
-        if (r > 255 || g > 255 || b > 255) {
+        if (r > 255 || g > 255 || b > 255 || r < 0 || g < 0 || b < 0) {
             console.error('Invalid color component');
         }
-        return ((r << 16) | (g << 8) | b).toString(16);
+        let _r = r.toString(16);
+        let _g = g.toString(16);
+        let _b = b.toString(16);
+        if( _r.length < 2){
+            _r = "0" + _r;
+        }
+        if( _g.length < 2){
+            _g = "0" + _g;
+        }
+        if( _b.length < 2){
+            _b = "0" + _b;
+        }
+        return _r + _g + _b;
     }
 
     private async drawLogoImage(context: object) {
         if (!this.config.logoImage) {
             return;
         }
+        await this.loadLogo( context)
 
+        // ----------------------------------- Local testing ----------------------------------------
+
+        // const fs = require('fs');
+        //
+        // try {
+        //     const data = fs.readFileSync(__dirname + '/tests/phone-receiver.' + CanvasType.SVG.toLowerCase(), 'utf8');
+        //     // console.log(data);
+        //     // @ts-ignore
+        //     context.svg(data.replace(/x="[a-z0-9_-]{1,15}"/, ``).replace(/y="[a-z0-9_-]{1,15}"/, ``).replace('<svg', `<svg width="${logoSize}" height="${logoSize}" x="${centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftX}" y="${centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftY}"`));
+        //     // console.log(data);
+        // } catch(e) {
+        //     console.log('Error:', e.stack);
+        // }
+    }
+
+    private async loadLogo( context: any) {
+        if(this.config.logoImage && (!this.config.logoHeight || !this.config.logoWidth)){
+            await this.setLogoDimensions();
+        }
         let logoScale = this.config.logoScale;
-        let logoMargin = this.config.logoMargin;
-        let logoCornerRadius = this.config.logoCornerRadius;
-        if (logoScale <= 0 || logoScale >= 1.0) {
+        let logoMargin = this.config.logoMargin ;
+        let logoWidth =  this.config.size;
+        let logoHeight = this.config.size;
+        
+        if (logoScale <= 0 || logoScale >= 1) {
             logoScale = 0.2;
         }
         if (logoMargin < 0) {
             logoMargin = 0;
         }
-        if (logoCornerRadius < 0) {
-            logoCornerRadius = 0;
+        if(this.config.rectangular){
+            let maxLogoSide = 0.24 * 1024 ; 
+            if(this.config.logoHeight && this.config.logoWidth){
+                logoHeight = this.config.logoHeight ;
+                logoWidth = this.config.logoWidth ;
+                if(this.config.logoHeight > maxLogoSide || this.config.logoWidth > maxLogoSide){
+                    if(this.config.logoHeight > this.config.logoWidth){ 
+                        let ratio = this.config.logoWidth / this.config.logoHeight;
+                        logoHeight = maxLogoSide;
+                        logoWidth = ratio * logoHeight;
+                    } else {
+                        let ratio = this.config.logoHeight / this.config.logoWidth;
+                        logoWidth = maxLogoSide;
+                        logoHeight = ratio * logoWidth;
+                    }
+                    logoHeight = logoHeight * ( logoScale / 0.24);
+                    logoWidth = logoWidth * ( logoScale / 0.24);
+                } else {
+                    logoWidth = logoWidth * ( logoScale / 0.24);
+                    logoHeight = logoHeight * ( logoScale / 0.24);
+                }
+            } else {
+                logoWidth = logoWidth * logoScale ;
+                logoHeight = logoHeight * logoScale ;
+            }
+        } else {
+            let maxLength : any = 0;
+            if(this.config.logoHeight || this.config.logoWidth){
+                const logoSideLength : number | undefined= this.config.logoHeight ? this.config.logoHeight : this.config.logoWidth ;
+                if(logoSideLength && logoSideLength > 0.24 * this.config.size){
+                    maxLength = 0.24 * this.config.size;
+                } else {
+                    maxLength = logoSideLength ;
+                }
+            }
+            logoWidth = maxLength * (logoScale / 0.24);
+            logoHeight = maxLength * ( logoScale / 0.24);
         }
+        const coordinateX = this.shiftX +  0.5 * (this.config.size - logoWidth);
+        const coordinateY = this.shiftY + 0.5 * (this.config.size - logoHeight);
+        if(this.config.logoBackground) {
+            //@ts-ignore
+            context.rect( logoWidth + logoMargin , logoHeight + logoMargin ).fill('#ffffff').attr({ x: coordinateX - 5 , y: coordinateY - 5 })
+        }
+        if(this.config.logoImage){
+            await this.getImageBase64Data(this.config.logoImage).then( result =>{
+                let image = context.image(result);
+                image.size(logoWidth , logoHeight).move(coordinateX , coordinateY)
+            });
+        }
+        return ;
+    }
 
-        const logoSize = this.config.viewportSize * logoScale;
 
-        const mainMargin = this.config.margin;
-        const coordinate = 0.5 * (this.config.size - logoSize);
-        const centreCoordinate = coordinate - logoMargin - mainMargin;
-
-        return loadImage(this.config.logoImage!, this.config.imageServerURL, this.config.imageServerRequestHeaders).then((image: any) => {
-
-            // const cn = createCanvas(image.naturalHeight, image.naturalWidth);
-            // const ct = cn.getContext('2d');
-            // ct.drawImage(image, 0, 0);
-            // ct.save();
-
-            const cn = createCanvas(logoSize, logoSize);
-            const ct = cn.getContext('2d');
-            ct.drawImage(image, 0, 0, logoSize, logoSize);
-            ct.save();
-
-            // @ts-ignore
-            context.rect(logoSize + logoMargin, logoSize + logoMargin).fill('#ffffff').move(centreCoordinate + this.config.margin + this.shiftX, centreCoordinate + this.config.margin + this.shiftY).radius(logoCornerRadius);
-
-            // @ts-ignore
-            context.image('').size(logoSize, logoSize)
-                .attr({ 'xlink:href': cn.toDataURL() })
-                .move(centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftX, centreCoordinate + logoMargin / 2 + this.config.margin + this.shiftY);
+    private async getImageBase64Data(imgSrc: string) {
+        const data = await loadImage(imgSrc ,this.config.imageServerURL , this.config.imageServerRequestHeaders )
+        const blob = await data.blob();
+        return new Promise<string | ArrayBuffer | null>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob); 
+            reader.onload = () => {
+                const base64data = reader.result;   
+                resolve(base64data);
+            } 
+            reader.onerror = () =>{
+                reject;
+            }
         });
     }
 
     private async addBackground(context: object, size: number, backgroundImage?: string, backgroundColor?: string) {
         if (!backgroundImage) {
-            const color = backgroundColor ? backgroundColor : '#ffffff';
-            // @ts-ignore
-            context.rect(size, size).fill(color).move(this.shiftX, this.shiftY).radius(this.config.moduleSize);
+            if(backgroundColor) {
+                let color = backgroundColor ? backgroundColor : '#ffffff';
+                if(backgroundColor === 'rgba(255,255,255,0)' || backgroundColor.includes('rgba')){
+                    color = '#ffffff00'
+                }
+                // @ts-ignore
+                context.rect(size,size).fill(color).move(this.shiftX,this.shiftY)
+            }
             return;
         }
         this.config.backgroundColor = '';
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR ) {
+            return;
+        }
         return this.addBackgroundImage(context, size, backgroundImage!);
     }
 
     private async addBackgroundImage(context: object, size: number, backgroundImage: string) {
-        return loadImage(backgroundImage, this.config.imageServerURL, this.config.imageServerRequestHeaders).then(image => {
-
+        const _this = this;
+        await this.getImageBase64Data(backgroundImage).then( result =>{
             // @ts-ignore
-            const cn = createCanvas(this.config.size, this.config.size);
-            const ct = cn.getContext('2d');
-            // @ts-ignore
-            ct.drawImage(image, 0, 0, image.width, image.height, 0, 0, this.config.size, this.config.size);
-            ct.save();
+            let image = context.image(result);
+            image.attr( { preserveAspectRatio :  'none' , opacity : 0.6})
+            image.size(size , size).move(_this.shiftX , _this.shiftY);
+        });   
+    }
 
-            // @ts-ignore
-            context.image('').size(this.config.size, this.config.size).move(this.shiftX, this.shiftY)
-                .attr({ 'xlink:href': cn.toDataURL()});
+    private async addCircularBackgroundImage(context: object, size: number, backgroundImage: string, pos: number, grad: string, width: number, radius: number) {
+        // @ts-ignore
+        context.circle(size).fill('#ffffff')
+        let imageBase64 = await this.getImageBase64Data(backgroundImage);
 
-        });
+        //@ts-ignore
+        let image = context.image(imageBase64);
+        image.attr( { preserveAspectRatio :  'none' , opacity : 0.6});
+        image.size(size , size).move(this.shiftX , this.shiftY)
+
+        //@ts-ignore
+        let circle = context.circle(size)
+
+        image.clipWith(circle)
+         return ;
     }
 
     private fillMargin(context: object) {
@@ -378,6 +758,7 @@ export class SVGDrawing {
 
                 const nLeft = col * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
                 const nTop = row * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
+
                 if (patternPosition.length === 0) {
                     // if align pattern list is empty, then it means that we don't need to leave room for the align patterns
                     if (!bProtected) {
@@ -409,15 +790,19 @@ export class SVGDrawing {
         }
     }
 
-    private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern) {
 
-        // if (!bIsDark) {
-        //     return;
-        // }
-        const gradient = await (this.getColorFromCanvas(this.canvasQR, x, y));
-
+    //Function to create data dots in QR.
+    private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern) {        
+        if (!bIsDark) {
+            return;
+        }
+        let gradient = this.getColorFromQrSvg(x , y ) ;
         if (!this.maskCanvas) {
-            const color = bIsDark ? gradient : this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+            const color = bIsDark ? gradient : this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff';
+
+            if (!this.config.backgroundImage && !bIsDark) {
+                return ;
+            }
 
             switch (shape) {
                 case DataPattern.CIRCLE:
@@ -440,15 +825,22 @@ export class SVGDrawing {
         } else {
             // TODO: mask canvas
             // canvas.drawImage(this.maskCanvas, x, y, w, h, x, y, w, h);
-            const color = bIsDark ? gradient : this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+            const color = bIsDark ? gradient : this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff';
             this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
         }
     }
 
-    private drawAlignProtectors(context: object) {
+    private drawAlignProtectors(context: object , disable : boolean = true) {
+        if(disable){
+            return ;
+        }
+        if (!this.config.backgroundImage && !this.config.backgroundColor) {
+            return;
+        }
         const patternPosition = this.patternPosition;
         const moduleSize = this.config.moduleSize;
         const margin = this.config.margin;
+        // const color = '#0E9E88';
         const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
         const edgeCenter = patternPosition[patternPosition.length - 1];
         for (let i = 0; i < patternPosition.length; i++) {
@@ -467,21 +859,36 @@ export class SVGDrawing {
     }
 
     private drawPositionProtectors(context: object) {
-        const color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        return ;
+        let color = this.config.backgroundColor ? this.config.backgroundColor : this.config.useOpacity ? '#ffffff' : '#ffffff99';
+        // const color = '#0E9E88';
         const size = this.config.moduleSize;
         const moduleCount = this.moduleCount;
 
+        // h${width - moduleSize}
+        // v${height - moduleSize}
+        // h-${width - moduleSize}
+        // v-${height - moduleSize}`)
+
+        // if (!this.config.backgroundImage) {
+        //     console.log("return because of bkgImg")
+        //     return ;
+        // }
+        let opacityD = 0.6;
+        if (this.config.backgroundImage && this.config.frameStyle === QRCodeFrame.CIRCULAR) {
+            opacityD = 0.0;
+        }
         if (this.config.useOpacity) {
             // @ts-ignore
-            context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY).attr({opacity: 0.6});
+            context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY).attr({opacity: opacityD});
             // @ts-ignore
-            context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, (moduleCount - 8) * size + this.config.margin + this.shiftY).attr({opacity: 0.6});
+            context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, (moduleCount - 8) * size + this.config.margin + this.shiftY).attr({opacity: opacityD});
             // @ts-ignore
-            context.rect(8 * size, 8 * size).fill(color).move((moduleCount - 8) * size + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY).attr({opacity: 0.6});
+            context.rect(8 * size, 8 * size).fill(color).move((moduleCount - 8) * size + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY).attr({opacity: opacityD});
             // @ts-ignore
-            context.rect((moduleCount - 8 - 8) * size, size).fill(color).move(8 * size + this.config.margin + this.shiftX, 6 * size + this.config.margin + this.shiftY).attr({opacity: 0.6});
+            context.rect((moduleCount - 8 - 8) * size, size).fill(color).move(8 * size + this.config.margin + this.shiftX, 6 * size + this.config.margin + this.shiftY).attr({opacity: opacityD});
             // @ts-ignore
-            context.rect(size, (moduleCount - 8 - 8) * size).fill(color).move(6 * size + this.config.margin + this.shiftX, 8 * size + this.config.margin + this.shiftY).attr({opacity: 0.6});
+            context.rect(size, (moduleCount - 8 - 8) * size).fill(color).move(6 * size + this.config.margin + this.shiftX, 8 * size + this.config.margin + this.shiftY).attr({opacity: opacityD});
         } else {
             // @ts-ignore
             context.rect(8 * size, 8 * size).fill(color).move(0 + this.config.margin + this.shiftX, 0 + this.config.margin + this.shiftY);
@@ -496,8 +903,7 @@ export class SVGDrawing {
         }
     }
 
-    private async drawPositionPatterns(context: object, gradient: string) {
-        const color = gradient;
+    private async drawPositionPatterns(context: object, gradient: string ) {
 
         const moduleSize = this.config.moduleSize;
         const moduleCount = this.moduleCount;
@@ -518,33 +924,33 @@ export class SVGDrawing {
             switch (dataPattern) {
                 case DataPattern.CIRCLE:
                     const radius = moduleSize / 2;
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize + radius, 6 * moduleSize + radius);
+                    gradient = this.getColorFromQrSvg((8 + i) * moduleSize + radius, 6 * moduleSize + radius);
                     this.drawCircle((8 + i) * moduleSize + radius, 6 * moduleSize + radius, context, gradient, radius, radius, false);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize + radius, (8 + i) * moduleSize + radius);
+                    gradient = this.getColorFromQrSvg( 6 * moduleSize + radius, (8 + i) * moduleSize + radius);
                     this.drawCircle(6 * moduleSize + radius, (8 + i) * moduleSize + radius, context, gradient, radius, radius, false);
                     break;
                 case DataPattern.KITE:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    gradient = this.getColorFromQrSvg((8 + i) * moduleSize, 6 * moduleSize);
                     this.drawKite((8 + i) * moduleSize, 6 * moduleSize, context, gradient, moduleSize, moduleSize, false);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    gradient = this.getColorFromQrSvg( 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawKite(6 * moduleSize, (8 + i) * moduleSize, context, gradient, moduleSize, moduleSize, false);
                     break;
                 case DataPattern.LEFT_DIAMOND:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    gradient = this.getColorFromQrSvg( (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawDiamond((8 + i) * moduleSize, 6 * moduleSize, context, gradient, moduleSize, moduleSize, false);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    gradient = this.getColorFromQrSvg( 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawDiamond(6 * moduleSize, (8 + i) * moduleSize, context, gradient, moduleSize, moduleSize, false);
                     break;
                 case DataPattern.RIGHT_DIAMOND:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    gradient = this.getColorFromQrSvg( (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawDiamond((8 + i) * moduleSize, 6 * moduleSize, context, gradient, moduleSize, moduleSize, true);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    gradient = this.getColorFromQrSvg( 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawDiamond(6 * moduleSize, (8 + i) * moduleSize, context, gradient, moduleSize, moduleSize, true);
                     break;
                 default:
-                    gradient = await this.getColorFromCanvas(this.canvasQR, (8 + i) * moduleSize, 6 * moduleSize);
+                    gradient = this.getColorFromQrSvg( (8 + i) * moduleSize, 6 * moduleSize);
                     this.drawSquare((8 + i) * moduleSize, 6 * moduleSize, context, moduleSize, moduleSize, false, gradient);
-                    gradient = await this.getColorFromCanvas(this.canvasQR, 6 * moduleSize, (8 + i) * moduleSize);
+                    gradient = this.getColorFromQrSvg( 6 * moduleSize, (8 + i) * moduleSize);
                     this.drawSquare(6 * moduleSize, (8 + i) * moduleSize, context, moduleSize, moduleSize, false, gradient);
 
             }
@@ -599,9 +1005,10 @@ export class SVGDrawing {
         let y = shape === DataPattern.CIRCLE ? (centerY - 2) * nHeight + nHeight / 2 : (centerY - 2) * nHeight;
         const height = shape === DataPattern.CIRCLE ? nHeight / 2 : nHeight;
         const width = shape === DataPattern.CIRCLE ? nWidth / 2 : nWidth;
-        let gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+
 
         for (let i = 0; i < 4; i++) {
+            let gr = this.getColorFromQrSvg( x, y);
             if (shape === DataPattern.SQUARE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
@@ -616,9 +1023,9 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? (centerX + 2) * nWidth + nWidth / 2 : (centerX + 2) * nWidth;
         y = shape === DataPattern.CIRCLE ? (centerY - 2 + 1) * nHeight + nHeight / 2 : (centerY - 2 + 1) * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
+            let gr = this.getColorFromQrSvg( x, y);
             if (shape === DataPattern.SQUARE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
@@ -633,9 +1040,9 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? (centerX - 2 + 1) * nWidth + nWidth / 2 : (centerX - 2 + 1) * nWidth;
         y = shape === DataPattern.CIRCLE ? (centerY - 2) * nHeight + nHeight / 2 : (centerY - 2) * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
+            let gr = this.getColorFromQrSvg( x, y);
             if (shape === DataPattern.SQUARE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
@@ -649,9 +1056,9 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? (centerX - 2) * nWidth + nWidth / 2 : (centerX - 2) * nWidth;
         y = shape === DataPattern.CIRCLE ? (centerY + 2) * nHeight + nHeight / 2 : (centerY + 2) * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
 
         for (let i = 0; i < 4; i++) {
+            let gr = this.getColorFromQrSvg( x , y );
             if (shape === DataPattern.SQUARE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
@@ -665,7 +1072,7 @@ export class SVGDrawing {
         x = shape === DataPattern.CIRCLE ? centerX * nWidth + nWidth / 2 : centerX * nWidth;
         y = shape === DataPattern.CIRCLE ? centerY * nHeight + nHeight / 2 : centerY * nHeight;
 
-        gr = await (this.getColorFromCanvas(this.canvasQR, x, y));
+        let gr = this.getColorFromQrSvg( x, y);
 
         if (shape === DataPattern.SQUARE) {
             // @ts-ignore
@@ -676,7 +1083,7 @@ export class SVGDrawing {
         }
     }
 
-    private async drawEyeFrames(context: object, shape: EyeFrameShape, color: string) {
+    private async drawEyeFrames(context: object, shape: EyeFrameShape, color: string | Gradient) {
         const moduleSize = this.config.moduleSize;
         const moduleCount = this.moduleCount;
 
@@ -847,46 +1254,133 @@ export class SVGDrawing {
 
     }
 
-    private drawSquare(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string, isMask?: boolean) {
-        const op = isMask ? 0.6 : 1;
+    private drawSquare(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean) {
+        let op = isMask ? 0.6 : 1;
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
+            op = 0.0;
+        }
+        
+        if(gradient.length > 7 ){
+            // @ts-ignore
+            gradient = canvas.gradient( 'linear',function(add){
+                add.stop(0 , gradient.split(" ")[0])
+                add.stop(1 , gradient.split(" ")[1])
+            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
+        } 
+        let rotate = 0;
         if (isRound) {
             if (this.config.useOpacity) {
                 // @ts-ignore
-                canvas.rect(height, width).radius(height / 4).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+                // canvas.path(`M0 0
+                //     h${width - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 ${height / 4},${height / 4}
+                //     v${height - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 -${height / 4},${height / 4}
+                //     h-${width - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 -${height / 4},-${height / 4}
+                //     v-${height - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 ${height / 4},-${height / 4}`)
+                canvas.rect(height, width).radius(height / 4)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
                 // @ts-ignore
-                canvas.rect(height, width).radius(height / 4).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+                // canvas.path(`M0 0
+                //     h${width - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 ${height / 4},${height / 4}
+                //     v${height - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 -${height / 4},${height / 4}
+                //     h-${width - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 -${height / 4},-${height / 4}
+                //     v-${height - height / 4 * 2.5}
+                //     a${height / 4},${height / 4} 0 0 1 ${height / 4},-${height / 4}`)
+                    canvas.rect(height, width).radius(height / 4)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
             return;
         }
         if (this.config.useOpacity) {
+            //@ts-ignore
+            //@ts-ignore
+            // console.log(gradient)
+            // TODO: Move back to path based implementation
             // @ts-ignore
-            canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+            // canvas.path(`M0 0
+            // h${width}
+            // v${height}
+            // h-${width}
+            // v-${height} Z`)
+            let rect = canvas.rect(height, width).
+            move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
+            attr({opacity: op }).
+            fill(gradient).
+            transform({ rotate : rotate})
+
+            
+
         } else {
+            // TODO: Move back to path based implementation
             // @ts-ignore
+            // canvas.path(`M0 0
+            // h${width}
+            // v${height}
+            // h-${width}
+            // v-${height} Z`)
             canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            
         }
     }
 
-    private drawCircle(centerX: number, centerY: number, canvas: object, gradient: string, radiusX: number, radiusY?: number, isMask?: boolean) {
+    private drawCircle(centerX: number, centerY: number, canvas: object, gradient: string , radiusX: number, radiusY?: number, isMask?: boolean) {
         const op = isMask ? 0.6 : 1;
-        if (this.config.useOpacity) {
+        if(gradient.length > 7 ){
             // @ts-ignore
-            canvas.circle().radius(radiusX).fill(gradient).move(centerX + this.config.margin - radiusX + this.shiftX, centerY + this.config.margin - radiusX + this.shiftY).attr({opacity: op});
+            gradient = canvas.gradient( 'linear',function(add){
+                add.stop(0 , gradient.split(" ")[0])
+                add.stop(1 , gradient.split(" ")[1])
+            })
+        } 
+        let rotate = 0;
+        if(this.config.gradientType === GradientType.VERTICAL){
+            rotate = 90;
+        }
+        if (this.config.useOpacity) {
+
+            // @ts-ignore
+            // canvas.path(`M 0, 0
+            // a ${radiusX},${radiusX} 0 1 1 ${radiusX * 2},0
+            // a ${radiusX},${radiusX} 0 1 1 -${radiusX * 2},0`)
+            canvas.circle().radius(radiusX)
+            .fill(gradient).move(centerX + this.config.margin - radiusX + this.shiftX, centerY + this.config.margin - radiusX + this.shiftY).attr({opacity: op});
         } else {
             // @ts-ignore
-            canvas.circle().radius(radiusX).fill(gradient).move(centerX + this.config.margin - radiusX + this.shiftX, centerY + this.config.margin - radiusX + this.shiftY);
+            // canvas.path(`M 0, 0
+            // a ${radiusX},${radiusX} 0 1 1 ${radiusX * 2},0
+            // a ${radiusX},${radiusX} 0 1 1 -${radiusX * 2},0`)
+            canvas.circle().radius(radiusX)
+            .fill(gradient).move(centerX + this.config.margin - radiusX + this.shiftX, centerY + this.config.margin - radiusX + this.shiftY);
         }
     }
 
     private drawKite(startX: number, startY: number, context: object, gradient: string, width: number, height: number, isRound?: boolean, isMask?: boolean) {
         const op = isMask ? 0.6 : 1;
+        if(gradient.length > 7 ){
+            // @ts-ignore
+            gradient = context.gradient( 'linear',function(add){
+                add.stop(0 , gradient.split(" ")[0])
+                add.stop(1 , gradient.split(" ")[1])
+            })
+        } 
+        let rotate = 0;
+        if(this.config.gradientType === GradientType.VERTICAL){
+            rotate = 90;
+        }
         const coordinates = [[startX + width / 2 + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
             [startX + width + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
             [startX + width / 2 + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
             [startX + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY]];
         // @ts-ignore
         const polygon = context.polygon(coordinates);
+        // M 50 0 100 100 50 200 0 100 Z
         if (this.config.useOpacity) {
             polygon.fill(gradient).attr({opacity: op});
         } else {
@@ -894,33 +1388,65 @@ export class SVGDrawing {
         }
     }
 
-    private drawDiamond(startX: number, startY: number, context: object, gradient: string, width: number, height: number, isRight?: boolean, isMask?: boolean) {
+    private drawDiamond(startX: number, startY: number, context: object, gradient: string , width: number, height: number, isRight?: boolean, isMask?: boolean) {
         const op = isMask ? 0.6 : 1;
-        const coordinates = isRight ? [
-            [startX + width / 2 + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
-            [startX + width + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
-            [startX + width + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
-            [startX + width / 2 + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
-            [startX + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
-            [startX + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
-        ] : [
-            [startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
-            [startX + width / 2 + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
-            [startX + width + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
-            [startX + width + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
-            [startX + width / 2 + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
-            [startX + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
-        ];
-        // @ts-ignore
-        const polygon = context.polygon(coordinates);
-        if (this.config.useOpacity) {
-            polygon.fill(gradient).attr({opacity: op});
+        if(gradient.length > 7 ){
+            // @ts-ignore
+            gradient = context.gradient( 'linear',function(add){
+                add.stop(0 , gradient.split(" ")[0])
+                add.stop(1 , gradient.split(" ")[1])
+            })
+        } 
+        let rotate = 0;
+        if(this.config.gradientType === GradientType.VERTICAL){
+            rotate = 90;
+        }
+        // const coordinates = isRight ? [
+        //     [startX + width / 2 + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
+        //     [startX + width + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
+        //     [startX + width + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
+        //     [startX + width / 2 + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
+        //     [startX + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
+        //     [startX + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
+        // ] : [
+        //     [startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
+        //     [startX + width / 2 + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY],
+        //     [startX + width + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
+        //     [startX + width + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
+        //     [startX + width / 2 + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
+        //     [startX + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
+        // ];
+        const d = width/2;
+        // const polygon = context.polygon(coordinates);
+        // if (this.config.useOpacity) {
+        //     polygon.fill(gradient).attr({opacity: op});
+        // } else {
+        //     polygon.fill(gradient);
+        // }
+        if (isRight) {
+            if (this.config.useOpacity) {
+                // @ts-ignore
+                context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+            } else {
+                // @ts-ignore
+                context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            }
         } else {
-            polygon.fill(gradient);
+            if (this.config.useOpacity) {
+                // @ts-ignore
+                context.path(`M0 0h${d}l${d} ${d}v${d}h-${d}l-${d}-${d}`)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+            } else {
+                // @ts-ignore
+                context.path(`M0 0h${d}l${d} ${d}v${d}h-${d}l-${d}-${d}`)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            }
         }
     }
 
-    private async drawLeafFrame(startX: number, startY: number, canvas: object, width: number, height: number, isRight: boolean, gradient: string) {
+    private async drawLeafFrame(startX: number, startY: number, canvas: object, width: number, height: number, isRight: boolean, gradient: string | Gradient) {
         const moduleSize = this.config.moduleSize;
         const r = startX + width;
         const b = startY + height;
@@ -956,43 +1482,31 @@ export class SVGDrawing {
 
     }
 
-    private async drawCircularFrame(startX: number, startY: number, canvas: object, width: number, height: number, isLarge: boolean, gradient: string) {
+    private async drawCircularFrame(startX: number, startY: number, canvas: object, width: number, height: number, isLarge: boolean, gradient: string | Gradient) {
         const moduleSize = this.config.moduleSize;
 
         gradient = this.config.eyeFrameColor ? this.config.eyeFrameColor : await this.getGradientFromCanvas(canvas, startX, startY, width,height);
 
+
         // @ts-ignore
-        canvas.circle().radius(width / 2).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-        // @ts-ignore
-        canvas.circle().radius(width / 2 - moduleSize).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff').move(startX + this.config.margin + moduleSize + this.shiftX, startY + this.config.margin + moduleSize + this.shiftY);
+        canvas.path(`M 0, 0
+        a ${width/2 - moduleSize},${width/2 - moduleSize} 0 1,1 ${width - moduleSize},0
+        a ${width/2 - moduleSize},${width/2 - moduleSize} 0 1,1 -${width - moduleSize},0`)
+            .fill('none')
+            .move(startX + this.config.margin + this.shiftX + moduleSize / 2, startY + this.config.margin + this.shiftY + moduleSize / 2)
+            .stroke({ color: gradient, width: this.config.moduleSize });
+        // // @ts-ignore
+        // canvas.circle().radius(width / 2).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+        // // @ts-ignore
+        // canvas.circle().radius(width / 2 - moduleSize).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff').move(startX + this.config.margin + moduleSize + this.shiftX, startY + this.config.margin + moduleSize + this.shiftY);
     }
 
     private async getGradientFromCanvas(canvas: object, startX: number, startY: number, width: number, height: number) {
         let gradient = this.config.colorDark ? this.config.colorDark : '#000';
-        if (this.config.gradientType === GradientType.HORIZONTAL || this.config.gradientType === GradientType.LINEAR) {
-            const col1 = await this.getColorFromCanvas(this.canvasQR, startX, startY);
-            const col2 = await this.getColorFromCanvas(this.canvasQR, startX + width, startY);
-            // @ts-ignore
-            gradient = canvas.gradient('linear', (add) => {
-                add.stop(0, col1)
-                add.stop(1, col2)
-            });
-        } else if (this.config.gradientType === GradientType.VERTICAL) {
-            const col1 = await this.getColorFromCanvas(this.canvasQR, startX, startY);
-            const col2 = await this.getColorFromCanvas(this.canvasQR, startX, startY + height);
-            // @ts-ignore
-            gradient = canvas.gradient('linear', (add) => {
-                add.stop(0, col1)
-                add.stop(1, col2)
-            }).from(0, 0).to(0, 1);
-        } else if (this.config.gradientType === GradientType.RADIAL) {
-
-        }
-
         return gradient;
     }
 
-    private async drawSquareEyeFrame(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string) {
+    private async drawSquareEyeFrame(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string | Gradient) {
         const moduleSize = this.config.moduleSize;
         const radius = height / 4;
 
@@ -1000,39 +1514,147 @@ export class SVGDrawing {
 
         if (isRound) {
             // @ts-ignore
-            canvas.rect(height, width).radius(radius).fill(this.config.eyeFrameColor ? this.config.eyeFrameColor : gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-            // @ts-ignore
-            canvas.rect(height - 1.5 * moduleSize, width - 1.5 * moduleSize).radius(radius).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize * 0.75 + this.config.margin + this.shiftX, startY + moduleSize * 0.75 + this.config.margin + this.shiftY);
+            canvas.path(`M0 0
+            h${width - radius * 2.5}
+            a${radius},${radius} 0 0 1 ${radius},${radius}
+            v${height - radius * 2.5}
+            a${radius},${radius} 0 0 1 -${radius},${radius}
+            h-${width - radius * 2.5}
+            a${radius},${radius} 0 0 1 -${radius},-${radius}
+            v-${height - radius * 2.5}
+            a${radius},${radius} 0 0 1 ${radius},-${radius}`)
+                .fill('none')
+                .move(startX + this.config.margin + this.shiftX + moduleSize / 2, startY + this.config.margin + this.shiftY + moduleSize / 2)
+                .stroke({ color: gradient, width: this.config.moduleSize });
+            // canvas.rect(height, width).radius(radius).fill(this.config.eyeFrameColor ? this.config.eyeFrameColor : gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            // // @ts-ignore
+            // canvas.rect(height - 1.5 * moduleSize, width - 1.5 * moduleSize).radius(radius).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize * 0.75 + this.config.margin + this.shiftX, startY + moduleSize * 0.75 + this.config.margin + this.shiftY);
         } else {
+            // TODO: move back to path based implementation
             // @ts-ignore
-            canvas.rect(height, width).fill(this.config.eyeFrameColor ? this.config.eyeFrameColor : gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-            // @ts-ignore
-            canvas.rect(height - 2 * moduleSize, width - 2 * moduleSize).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize + this.config.margin + this.shiftX, startY + moduleSize + this.config.margin + this.shiftY);
+            canvas.path(`M0 0
+            h${width - moduleSize}
+            v${height - moduleSize}
+            h-${width - moduleSize}
+            v-${height - moduleSize} z`)
+                .fill('none')
+                .move(startX + this.config.margin + this.shiftX + moduleSize / 2, startY + this.config.margin + this.shiftY + moduleSize / 2)
+                .stroke({ color: gradient, width: this.config.moduleSize });
+            // // @ts-ignore
+            // canvas.rect(height, width).fill(this.config.eyeFrameColor ? this.config.eyeFrameColor : gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            // // @ts-ignore
+            // canvas.rect(height - 2 * moduleSize, width - 2 * moduleSize).fill(this.config.backgroundColor ? this.config.backgroundColor : '#fff').move(startX + moduleSize + this.config.margin + this.shiftX, startY + moduleSize + this.config.margin + this.shiftY);
         }
 
     }
 
-    private async drawSquareFrame(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+    private async drawFocus(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+        const moduleSize = this.config.moduleSize;
+        let backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+        const radius = moduleSize;
+        let frameWidth = moduleSize * 2 / 3; 
+
+        if(backgroundColor === 'rgba(255,255,255,0)'){
+            backgroundColor = '#ffffff00'
+        }
+
+        // @ts-ignore
+        canvas.rect(width , height).move(startX , startY).fill(backgroundColor);
+
+        //TOP LEFT FOCUS 
+        // @ts-ignore
+        canvas.polyline([   startX + frameWidth / 2 , startY  + frameWidth / 2 + height / 3,
+                            startX + frameWidth / 2, startY  + frameWidth / 2, 
+                            startX + frameWidth / 2 + width / 3, startY  + frameWidth / 2
+                        ]).stroke({ 
+                            color : gradient ,
+                            width : frameWidth ,
+                            linejoin : 'round' 
+                        });
+
+        //TOP RIGHT FOCUS 
+        // @ts-ignore
+        canvas.polyline([   startX + frameWidth / 2 + width * 2 / 3  , startY  + frameWidth / 2 ,
+                            startX + width - frameWidth / 2  , startY  + frameWidth / 2,
+                            startX - frameWidth / 2 + width , startY  + frameWidth / 2 + height / 3
+                        ]).stroke({ 
+                            color : gradient ,
+                            width : frameWidth ,
+                            linejoin : 'round' 
+                        });
+
+        //BOTTOM RIGHT FOCUS 
+        // @ts-ignore
+        canvas.polyline([   startX - frameWidth / 2 + width , startY  + frameWidth / 2 + height * 2 / 3  ,
+                            startX + width - frameWidth / 2  , startY + height - frameWidth / 2,
+                            startX - frameWidth / 2 + width * 2 / 3 , startY  - frameWidth / 2 +  height
+                        ]).stroke({ 
+                            color : gradient ,
+                            width : frameWidth ,
+                            linejoin : 'round' 
+                        });
+        
+
+        //BOTTOM RIGHT FOCUS 
+        // @ts-ignore
+        canvas.polyline([   startX + frameWidth / 2  , startY  + frameWidth / 2 + height * 2 / 3  ,
+                            startX + frameWidth / 2  , startY + height - frameWidth / 2,
+                            startX - frameWidth / 2 + width / 3 , startY  - frameWidth / 2 +  height
+                        ]).stroke({ 
+                            color : gradient ,
+                            width : frameWidth ,
+                            linejoin : 'round' 
+                        });
+        
+    }
+
+    private async drawTextOnlyBackground(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
         const moduleSize = this.config.moduleSize;
         const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
         const radius = moduleSize;
         // @ts-ignore
-        canvas.rect(width, height).fill(gradient ? gradient : '#000000').radius(radius).move(startX, startY);
+        canvas.rect(width, height).fill(backgroundColor).radius(radius).move(startX, startY);
         // @ts-ignore
         canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
     }
 
+    private async drawSquareFrame(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+
+        const moduleSize = this.config.moduleSize;
+        let frameWidth = moduleSize * 2 / 3; 
+         // @ts-ignore
+        canvas.polyline([   startX + frameWidth / 2, startY  + frameWidth / 2, 
+                            startX + width - frameWidth / 2 , startY  + frameWidth / 2, 
+                            startX + width - frameWidth / 2, startY + height - frameWidth / 2, 
+                            startX + frameWidth / 2, startY + height - frameWidth / 2, 
+                            startX + frameWidth / 2 , startY + frameWidth / 2])
+                        .stroke({ 
+                            color : gradient ,
+                            width : frameWidth ,
+                            linejoin : 'round' ,
+                            linecap : 'round'
+                        })
+        
+
+        // @ts-ignore
+        // canvas.rect(width, height).fill(gradient ? gradient : '#000000').radius(radius).move(startX, startY);
+        // @ts-ignore
+        // canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
+    }
+
     private async drawFrame(canvas: object, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined) {
-        if (!frameStyle || frameStyle === QRCodeFrame.NONE) {
+        if (!frameStyle || frameStyle === QRCodeFrame.NONE || frameStyle === QRCodeFrame.CIRCULAR) {
             return;
         }
+        
 
         const color = frameColor ? frameColor : '#000000';
         const textColor = this.config.frameTextColor || '#ffffff';
         const moduleSize = this.config.moduleSize;
-        const rawSize = this.config.rawSize;
-        const size = rawSize + moduleSize * 2;
+        const rawSize = this.config.size;
+        let size = rawSize + moduleSize * 2;
         const text = frameText || 'SCAN ME';
+        const fontSize = getFrameTextSize(this.config.viewportSize, text.length);
 
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
@@ -1057,7 +1679,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize / 2 - 1;
                 textX = size / 3;
-                textY = size + 1.5 * moduleSize + size / 10;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 1.5;
                 break;
@@ -1067,7 +1689,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY = 2 * moduleSize + size / 10;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -1077,7 +1699,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY = size + moduleSize * 3 + size / 10;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -1087,7 +1709,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY = 2 * moduleSize + size / 10;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -1097,32 +1719,55 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 2.5;
                 textX = size / 3;
-                textY = size + 4 * moduleSize + size / 10;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 4;
-
-                if (this.config.isVCard) {
-                    bannerY += 4.5 * moduleSize;
-                    textY += 5.5 * moduleSize;
-                    logoY += 5.5 * moduleSize;
-                }
                 break;
             case QRCodeFrame.BALLOON_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize * 1.5 + size / 6;
+                borderY = moduleSize * 1.5 + size / 5;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY = this.config.isVCard ? moduleSize * 3 + size / 10 : moduleSize * 2 + size / 10;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = this.config.isVCard ? moduleSize * 3 : moduleSize * 2;
+                break;
+            case QRCodeFrame.TEXT_ONLY:
+                borderX = moduleSize / 2;
+                borderY = moduleSize / 2;
+                bannerX = moduleSize / 2;
+                bannerY = size + moduleSize * 1.5;
+                textX = size / 3;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                logoX = size / 3 - size / 9;
+                logoY = size + moduleSize * 3;
+                break;
+            case QRCodeFrame.FOCUS:
+                borderX = moduleSize / 2;
+                borderY = moduleSize / 2;
+                bannerX = moduleSize / 2;
+                bannerY = size + moduleSize * 1.5;
+                textX = size / 3;
+                textY = ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                logoX = size / 3 - size / 9;
+                logoY = size + moduleSize * 3;
                 break;
             default:
                 break;
         }
 
-        if (frameStyle !== QRCodeFrame.BALLOON_TOP && frameStyle !== QRCodeFrame.BALLOON_BOTTOM) {
+        if (frameStyle !== QRCodeFrame.BALLOON_TOP && frameStyle !== QRCodeFrame.BALLOON_BOTTOM
+            && frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
             this.drawSquareFrame(borderX, borderY, canvas, color, size, size);
+        }
+
+        if (frameStyle === QRCodeFrame.TEXT_ONLY) {
+            this.drawTextOnlyBackground(borderX, borderY, canvas, color, size, size)
+        }
+
+        if (frameStyle === QRCodeFrame.FOCUS) {
+            this.drawFocus(borderX, borderY, canvas, color, size, size)
         }
 
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
@@ -1137,47 +1782,41 @@ export class SVGDrawing {
         }
 
         // Banner for frame text
-        // @ts-ignore
-        canvas.rect(size, size / 5).fill(color).radius(moduleSize)
+        if (frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
+            // @ts-ignore
+            canvas.rect(size, size / 5).fill(color).radius(moduleSize)
             .move(bannerX, bannerY);
+        }
 
         if (frameStyle === QRCodeFrame.BANNER_BOTTOM) {
             // @ts-ignore
-            canvas.rect(moduleSize, moduleSize * 2).fill(color)
-                .move(bannerX, bannerY - moduleSize);
+            canvas.rect(moduleSize, moduleSize* 4/3 ).fill(color)
+                .move(bannerX, bannerY - moduleSize / 3);
 
             // @ts-ignore
-            canvas.rect(moduleSize, moduleSize * 2).fill(color)
-                .move(size - moduleSize / 2, bannerY - moduleSize);
+            canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
+                .move(size - moduleSize / 2, bannerY - moduleSize / 3);
         }
         if (frameStyle === QRCodeFrame.BANNER_TOP) {
             // @ts-ignore
-            canvas.rect(moduleSize, moduleSize * 2).fill(color)
+            canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
                 .move(bannerX, bannerY - moduleSize + size / 5);
 
             // @ts-ignore
-            canvas.rect(moduleSize, moduleSize * 2).fill(color)
+            canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
                 .move(size - moduleSize / 2, bannerY - moduleSize + size / 5);
         }
         // @ts-ignore
         canvas.defs().style(`
             @import url('https://fonts.googleapis.com/css?family=Roboto:400');
-    `);
-        // canvas.fontface('Roboto', `url(https://beaconstacqa.mobstac.com/static/fonts/Roboto-Regular.ttf)`);
-        if (this.config.isVCard) {
-            // @ts-ignore
-            textX = canvas.width()/2;
-            textY = textY + (moduleSize * 2.5)
-        } else {
-            // @ts-ignore
-            textX = canvas.width()/2;
-        }
-
-        const fontSize = getFrameTextSize(this.config.size, text.length);
+        `);
+        // @ts-ignore
+        textX = canvas.width()/2;
+       
 
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
-            .font({ fill: textColor, family: 'Roboto', size: this.config.size / 10, leading: 0, anchor: 'middle'}).attr({y: textY});
+            .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'}) ;
 
         if (this.config.isVCard) {
             // @ts-ignore
@@ -1192,7 +1831,44 @@ export class SVGDrawing {
         return canvas;
     }
 
+    getGradientColor(color1: number[], color2: number[], weight: any) {
+        var w1 = weight;
+        var w2 = 1 - w1;
+        var rgb = [Math.round(color1[0] * w1 + color2[0] * w2),
+            Math.round(color1[1] * w1 + color2[1] * w2),
+            Math.round(color1[2] * w1 + color2[2] * w2)];
+        return rgb;
+    }
+
+    hexToRgb(hex : string) {
+        //@ts-ignore
+        return hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+             ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+    .substring(1).match(/.{2}/g)
+    .map(x => parseInt(x, 16))
+    }
+
+    async setLogoDimensions(){
+        return new Promise( (resolve , reject) =>{
+            var img = new Image();
+
+            const _this = this
+
+            img.onload = function(){
+                var height = img.height;
+                var width = img.width;
+
+                _this.config.logoHeight = height;
+                _this.config.logoWidth = width ;
+                _this.config.rectangular = _this.config.logoWidth !== _this.config.logoHeight;
+                resolve(_this.config)
+            }
+
+            if(this.config.logoImage){
+                img.src = this.config.logoImage;
+            }
+        })
+    }
+
 }
-
-
 

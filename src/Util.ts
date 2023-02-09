@@ -1,90 +1,27 @@
 /* global document */
 
-import { Image as ImageCanvas } from 'canvas';
-
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 
-export const loadImage = (src: string, imageServerURL?: string | undefined, imageServerRequestHeaders?: object | undefined) => {
-    if (imageServerURL && !isNode) {
-        return new Promise((resolve, reject) => {
-            if (isNode) {
-                // TODO: Handle node
-                // const rp = require('request-promise');
-                // const options = {
-                //     uri: imageServerURL + `?url=${src}`,
-                //     headers: imageServerRequestHeaders,
-                //     json: false, // Automatically parses the JSON string in the response
-                //     encoding: null,
-                // };
-                // // @ts-ignore
-                // rp(options).then(res => {
-                //     const img = new ImageCanvas();
-                //     img.src = 'data:image/jpeg;base64,' + res.toString('base64');
-                //     resolve(img);
-                //     // @ts-ignore
-                // }, error => {
-                //     reject(error);
-                // });
-            } else {
-                const xhttp = new XMLHttpRequest();
-                xhttp.responseType = 'blob';
-                xhttp.onreadystatechange = function() {
-                    if (this.readyState === 4 && (this.status >= 200 && this.status < 300)) {
-                        const imageURL = window.URL.createObjectURL(xhttp.response);
-                        const img = document.createElement('img');
-                        img.crossOrigin = 'anonymous';
+ export const loadImage = (src: string, imageServerURL?: string | undefined | RequestInfo, imageServerRequestHeaders?: object | undefined) => {
+    // @ts-ignore
+    imageServerRequestHeaders['Content-type'] = 'application/json'
+    return new Promise<Response>((resolve , reject) =>{
+        fetch(<any>imageServerURL, {
+            method :'POST',
+            headers : <any>imageServerRequestHeaders,
+            body : JSON.stringify( {
+                url : src
+            })
+        }).then( (data : Response) => resolve(data))
+        .catch( (err : Error ) => reject(err))
+    })
+ };
 
-                        img.onerror = (err: any) => {
-                            reject(err);
-                        };
-                        img.onload = () => {
-                            resolve(img);
-                        };
-                        img.src = imageURL;
-                    } else if (this.readyState === 4 && this.status >= 400 && this.status < 500) {
-                        reject();
-                    } else if (this.status >= 500 && this.status < 600) {
-                        reject();
-                    }
-                };
-                xhttp.open('POST', imageServerURL, true);
-                if (imageServerRequestHeaders) {
-                    // @ts-ignore
-                    xhttp.setRequestHeader('Authorization', imageServerRequestHeaders.authorization);
-                    xhttp.setRequestHeader('Content-Type', 'application/json');
-                }
-                xhttp.send(JSON.stringify({url: src}));
-            }
-        });
-    }
-    let image: any;
-    if (isNode) {
-        image = new ImageCanvas();
-    } else {
-        image = document.createElement('img');
-        image.crossOrigin = 'anonymous';
-    }
-
+export const isSvgFile = (src: string) => {
     return new Promise((resolve, reject) => {
-        function cleanup() {
-            image.onload = null;
-            image.onerror = null;
-        }
-
-        image.onerror = (err: any) => {
-            cleanup();
-            reject(err);
-        };
-
-        image.onload = () => {
-            cleanup();
-            resolve(image);
-        };
-
-        image.src = src;
-    });
-};
-
+                resolve(false)        
+    })
+}
 
 export const cellPhoneSVGPath = `<?xml version="1.0" encoding="iso-8859-1"?>
 <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="<<x-axis>>" y="<<y-axis>>"
@@ -128,6 +65,7 @@ export const cellPhoneSVGPath = `<?xml version="1.0" encoding="iso-8859-1"?>
 </g>
 </svg>
 `;
+
 
 export const getFrameTextSize = (configSize: number, textLength: number) => {
     let factor;

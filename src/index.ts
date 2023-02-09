@@ -1,10 +1,5 @@
 import {
     CanvasType,
-    DataPattern,
-    EyeBallShape,
-    EyeFrameShape,
-    GradientType,
-    QRCodeFrame,
     QRErrorCorrectLevel,
 } from './Enums';
 import { QRCode } from './Models';
@@ -25,10 +20,10 @@ export class QRCodeBuilder {
             logoScale: 0.15,
             logoMargin: 800/12/4, // 1/4 of margin
             logoCornerRadius: 8,
-            dotScale: 0.35,
+            rectangular: false,
             logoWidth: 0,
             logoHeight: 0,
-            rectangular: false,
+            dotScale: 0.35,
             logoBackground: true,
             text: '',
             maskedDots: false,
@@ -39,9 +34,8 @@ export class QRCodeBuilder {
         this.config = Object.assign({}, defaultConfig, config);
     }
 
-
     public async build(format?: CanvasType): Promise<QRCode | never> {
-        this.config.canvasType = format ? format : CanvasType.PNG;
+        this.config.canvasType = format ? format : CanvasType.SVG;
         if (!this.config.text) {
             return Promise.reject('Setting text is necessary to generate the QRCode');
         }
@@ -65,15 +59,8 @@ export class QRCodeBuilder {
 
         const qrCode: QRCode = new QRCode(-1, this.config);
 
-        // uncomment these for node
-
-        // if (this.config.canvasType !== CanvasType.SVG || this.config.useCanvas) {
-            qrCode.canvas = await qrCode.drawing.draw();
-            return Promise.resolve(qrCode);
-        // } else {
-        //     qrCode.svg = await qrCode.svgDrawing.drawSVG();
-        //     return Promise.resolve(qrCode);
-        // }
+        qrCode.svg = await qrCode.svgDrawing.drawSVG();
+        return Promise.resolve(qrCode);
 
     }
 }

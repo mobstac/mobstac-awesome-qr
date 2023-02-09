@@ -1,3 +1,4 @@
+import { Gradient } from '@svgdotjs/svg.js';
 import 'mocha';
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
 import { QRCodeBuilder } from '../index';
@@ -23,53 +24,42 @@ END:VCARD`;
 
 const config = {
     // text: vCardSampleData,
-    text: "www.beaconstac.com",
-    backgroundColor:'white',
+    text: "https://qr.beaconstac.com/qwertyj",
     logoBackground: true,
+    backgroundColor: "rgba(256,256,256,0)",
     canvasType: CanvasType.SVG,
-    dataPattern: DataPattern.KITE,
+    dataPattern: DataPattern.SQUARE,
     dotScale: 1,
-    colorDark: "#290a5e",
-    eyeBallShape: EyeBallShape.LEFT_DIAMOND,
-    eyeFrameShape: EyeFrameShape.CIRCLE,
-    frameStyle: QRCodeFrame.FOCUS,
-    frameText: "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ",
-    frameColor: "#2AEAD0",
-    frameTextColor: "#b89fe3",
+    colorDark: "#000000",
+    colorLight : '#0000ff',
+    eyeBallShape: EyeBallShape.SQUARE,
+    eyeFrameShape: EyeFrameShape.SQUARE,
+    eyeFrameColor : '#000',
+    eyeBallColor : '#000',
+    frameStyle: QRCodeFrame.BALLOON_BOTTOM,
+    frameText: "THIS IS THIRTY CHARACTERS LONG",
+    frameColor: "#000",
+    frameTextColor: "#fff",
     gradientType: GradientType.NONE,
     logoScale: 1,
-    size:1024,
-    margin: 80,
-    // isVCard: true
+    backgroundImage :'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/640px-Image_created_with_a_mobile_phone.png',
+    logoImage : 'https://static.beaconstac.com/assets/img/qr-code-logos/gmail.svg',
+    size: 512,
+    margin: 40,
+    correctLevel: QRErrorCorrectLevel.Q,
+    rectangular : false,
+    imageServerRequestHeaders : { Authorization : 'token e62435a78e67ec98bba3b879ba00448650032557' , 'Content-Type': 'application/json'},
+    imageServerURL : 'https://beaconstacqa.mobstac.com/api/2.0/validate_url/'
+    // isVcard : true
 
 };
 
-function prepareImageBuffer(qrCode: QRCode, name: string) {
-    const dataUrl = qrCode.canvas.toDataURL('image/png');
-    const matches: any = dataUrl.match(
-        /^data:([A-Za-z-+\/]+);base64,(.+)$/
-        ),
-        response: any  ={};
-    response.type = matches[1];
-    response.data = Buffer.from(matches[2], "base64");
-    const decodedImg = response;
-    const imageBuffer = decodedImg.data;
-    const extension ='png';
-    const fileName = `/${name}` + "." + extension;
-
-    return {
-        name: fileName,
-        buffer: imageBuffer
-    };
-
-}
-
-describe('QR code main test', () => {
-    it('QR main test PNG', done => {
+describe('QR code main tests', () => {
+    it('QR main test SVG', done => {
         const qrCodeGenerator = new QRCodeBuilder(config);
-        qrCodeGenerator.build(CanvasType.PNG).then(qrCode => {
-            const bufferObject = prepareImageBuffer(qrCode, 'test');
-            fs.writeFileSync(__dirname + bufferObject.name, bufferObject.buffer);
+
+        qrCodeGenerator.build(CanvasType.SVG).then(async qrCode => {
+            await fs.writeFileSync(__dirname + '/test.' + CanvasType.SVG.toLowerCase(), qrCode.svg);
             done();
         }).catch(err => {
             console.error(err);

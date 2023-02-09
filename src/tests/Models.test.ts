@@ -1,8 +1,9 @@
 import { doesNotReject } from 'assert';
 import { expect } from 'chai';
 import 'mocha';
-import { QRErrorCorrectLevel } from '../Enums';
-import { QR8bitByte, QRBitBuffer, QRCode, QRPolynomial} from '../Models';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+import { QRCodeBuilder } from '../index';
+import { QR8bitByte, QRCode, QRPolynomial } from '../Models';
 import { QRCodeConfig } from '../Types';
 
 describe('QR8bitByte class tests', () => {

@@ -55,6 +55,9 @@ export interface QRDrawingConfig {
     whiteMargin?: boolean;
     autoColor?: boolean;
     dotScale: number;
+    rectangular?: boolean;
+    logoWidth?: number;
+    logoHeight?: number;
     moduleSize: number;
     backgroundDimming: string;
     backgroundImage?: string;
@@ -62,9 +65,6 @@ export interface QRDrawingConfig {
     colorLight: string;
     logoImage?: string;
     logoScale: number;
-    rectangular?: boolean;
-    logoWidth?: number;
-    logoHeight?: number;
     logoMargin: number;
     logoCornerRadius: number;
     logoBackground?: boolean;
