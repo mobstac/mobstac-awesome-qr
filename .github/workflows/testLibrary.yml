@@ -10,11 +10,11 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '10'
+          node-version: '16'
       - name: Install dependencies
         run: npm install
       - name: Run unit tests
-        run:  |
+        run: |
           cp -r ./src/tests/qrTests/. ./src/tests/qrTestsOld
           npm run test
       - name: Compare files
@@ -25,7 +25,7 @@ jobs:
         if: ${{ failure() }}
         shell: bash
         env:
-          CHANNEL: 'engineering'
+          CHANNEL: 'github-notifications'
           TITLE: 'workflow-failed'
           REPOSITORY_NAME: 'mobstac-awesome-qr'
           RUN_ID: ${{ github.run_id }}
