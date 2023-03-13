@@ -128,7 +128,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BALLOON_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = 3.5 * this.config.moduleSize + size / 5;
+                    this.shiftY = size / 5 + size / 12;
                     if (this.config.isVCard) {
                         this.shiftY = 10 * moduleSize + size / 5;
                     }
@@ -1406,9 +1406,9 @@ export class SVGDrawing {
         const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
         const radius = moduleSize;
         // @ts-ignore
-        canvas.rect(width, height).fill(backgroundColor).radius(radius).move(startX, startY);
+        canvas.rect(width, height).fill(backgroundColor).move(startX, startY);
         // @ts-ignore
-        canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
+        canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).move(startX + moduleSize, startY + moduleSize);
     }
 
     private async drawSquareFrame(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
@@ -1566,7 +1566,7 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
             const coordinates = [[0, 0], [size / 24, size / 12], [-size / 24, size / 12]];
             // @ts-ignore
-            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size - moduleSize / 2);
+            canvas.polygon(coordinates).fill(color).move(size / 2 - size / 24 + moduleSize / 2, size - moduleSize / 2);
         }
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
