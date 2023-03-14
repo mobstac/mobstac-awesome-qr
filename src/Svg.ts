@@ -755,7 +755,7 @@ export class SVGDrawing {
                     color = '#ffffff00'
                 }
                 // @ts-ignore
-                context.rect(size,size).fill(color).move(this.shiftX,this.shiftY).radius(this.config.moduleSize);
+                context.rect(size,size).fill(color).move(this.shiftX,this.shiftY).radius(0);
             }
             return;
         }
