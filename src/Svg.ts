@@ -1773,7 +1773,7 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
             const coordinates = [[0, 0], [size / 24, size / 12], [-size / 24, size / 12]];
             // @ts-ignore
-            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size - moduleSize / 2);
+            canvas.polygon(coordinates).fill(color).move(size / 2 - size / 24 + moduleSize / 2, size - moduleSize / 2);
         }
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
