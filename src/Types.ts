@@ -39,8 +39,9 @@ export interface QRCodeConfig {
     isVCard?: boolean;
     useCanvas?: boolean;
     useOpacity?: boolean;
-    imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerURL?: string;
+    imageServerRequestHeaders?: object;
+    secondaryText?: string;
 
     [key: string]: any;
 }
@@ -84,6 +85,7 @@ export interface QRDrawingConfig {
     isVCard?: boolean;
     useCanvas?: boolean;
     useOpacity?: boolean;
-    imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerURL?: string;
+    imageServerRequestHeaders?: object;
+    secondaryText?: string;
 }
