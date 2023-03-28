@@ -1845,8 +1845,8 @@ export class SVGDrawing {
 
         const logoXLength = this.calculatedLogoWidth + 10;
         const logoYLength = this.calculatedLogoHeight + 10;
-        const dotXPosition = dataDotLeftPosition ;
-        const dotYPosition = dataDotTopPosition ;
+        const dotXPosition = dataDotLeftPosition + this.shiftX ;
+        const dotYPosition = dataDotTopPosition + this.shiftY ;
 
         if( dotXPosition >= logoXPosition && 
             dotXPosition <= logoXPosition + logoXLength && 
