@@ -129,6 +129,12 @@ export class SVGDrawing {
             if (frameStyle === QRCodeFrame.BOX_TOP || frameStyle === QRCodeFrame.BOX_BOTTOM) {
                 canvasHeight = 1.25 * size;
             }
+            if( frameStyle === QRCodeFrame.TEXT_AND_BANNER ){
+                canvasHeight = 1.25 * size;
+                if( this.config.secondaryText && this.config.secondaryText.length){
+                    canvasHeight = 1.2 * canvasHeight;
+                }
+            }
 
             if (frameStyle === QRCodeFrame.CIRCULAR || frameStyle === QRCodeFrame.CIRCULAR_FRAME) {
                 if(this.config.size >= 1024) {
@@ -187,6 +193,9 @@ export class SVGDrawing {
                     this.shiftX = 1.5 *  this.config.moduleSize;
                     this.shiftY = 1.5 * this.config.moduleSize; 
                     break;
+                case QRCodeFrame.TEXT_AND_BANNER:
+                    this.shiftX = 1.5 * this.config.moduleSize;
+                    this.shiftY = this.config.secondaryText && this.config.secondaryText.length ? 1.5 * this.config.moduleSize + size / 5 - 1 : this.shiftY = 1.5 * this.config.moduleSize;
                 default:
                     break;
             }
@@ -1884,7 +1893,8 @@ export class SVGDrawing {
         const text = frameText || 'SCAN ME';
         const fontSize = getFrameTextSize(this.config.viewportSize, text.length);
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
-            textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
+            textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0,
+            secondaryTextX=0,secondaryTextY=0;
 
         if (isNode) {
             const path = require('path');
@@ -1979,6 +1989,26 @@ export class SVGDrawing {
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
+            case QRCodeFrame.TEXT_AND_BANNER:
+                cornerRadius = moduleSize;
+                borderX = moduleSize / 2;
+                borderY = moduleSize / 2;
+                bannerX = moduleSize / 2;
+                bannerY = size + moduleSize / 2 - 1;
+                textX = size / 3;
+                textY = size + 1.5 * moduleSize + size / 10;
+                logoX = size / 3 - size / 9;
+                logoY = size + moduleSize * 1.5;
+                if(this.config.secondaryText && this.config.secondaryText.length){
+                    borderY = moduleSize / 2 + size / 5 - 1;
+                    bannerY = size + moduleSize / 2 + size /5 - 1;
+                    textY =  size + 1.5 * moduleSize + size / 10 + size / 5 -1 ;
+                    logoY = size + moduleSize * 1.5 + size / 5;
+                    // @ts-ignore
+                    secondaryTextX = canvas.width() / 2;
+                    secondaryTextY = size / 6 - moduleSize;
+                }
+                break;
             default:
                 break;
         }
@@ -2032,6 +2062,15 @@ export class SVGDrawing {
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
                 .move(size - moduleSize / 2, bannerY - moduleSize + size / 5);
         }
+        if (frameStyle === QRCodeFrame.TEXT_AND_BANNER) {
+            // @ts-ignore
+            canvas.rect(moduleSize, moduleSize * 2).fill(color)
+                .move(bannerX, bannerY - moduleSize);
+
+            // @ts-ignore
+            canvas.rect(moduleSize, moduleSize * 2).fill(color)
+                .move(size - moduleSize / 2, bannerY - moduleSize);
+        }
         // @ts-ignore
         canvas.defs().style(`
             @import url('https://fonts.googleapis.com/css?family=Roboto:400');
@@ -2039,12 +2078,19 @@ export class SVGDrawing {
               
         // @ts-ignore
         textX = canvas.width()/2;
-    
 
+        if(frameStyle === QRCodeFrame.TEXT_AND_BANNER &&  this.config.secondaryText && this.config.secondaryText.length){
+            const secondaryfontSize = getFrameTextSize(this.config.size, this.config.secondaryText.length);
+            // @ts-ignore
+            canvas.plain(this.config.secondaryText).move(secondaryTextX, secondaryTextY)
+            .font({ fill: frameColor, family: 'Roboto', size: secondaryfontSize, leading: 0, anchor: 'middle'}).attr({y: secondaryTextY});
+        }
 
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
             .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
+
+        
 
         if (this.config.isVCard) {
             // @ts-ignore
