@@ -19,6 +19,7 @@ export class QRCodeBuilder {
             backgroundDimming: 'rgba(0,0,0,0)',
             logoScale: 0.15,
             logoMargin: 800/12/4, // 1/4 of margin
+            frameTextColor: "#000000",
             logoCornerRadius: 8,
             rectangular: false,
             logoWidth: 0,

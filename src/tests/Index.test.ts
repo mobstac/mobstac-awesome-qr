@@ -39,7 +39,7 @@ const config = {
     frameStyle: QRCodeFrame.CIRCULAR,
     frameText: "THIS IS THIRTY CHARACTERS LONG",
     frameColor: "#000",
-    frameTextColor: "#fff",
+    //frameTextColor: "#fff",
     gradientType: GradientType.NONE,
     logoScale: 1,
     backgroundImage :'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/640px-Image_created_with_a_mobile_phone.png',

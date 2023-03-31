@@ -65,8 +65,8 @@ export class SVGDrawing {
     public calculatedLogoWidth = 0;
     public calculatedLogoHeight = 0;
     public logoCordinateX = 0;
-    public logoCordinateY = 0
-
+    public logoCordinateY = 0;
+    public _frameTextColor = "#000000";
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
         this.moduleCount = moduleCount;
@@ -432,7 +432,7 @@ export class SVGDrawing {
         let frameTextPath = '';
         const fontSize = (size / 10);
 
-        if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME && this.config.frameText && this.config.frameText.length){
 
             const newRadius = radius - width /2 ;
             //@ts-ignore
@@ -451,7 +451,7 @@ export class SVGDrawing {
             const endX = Math.floor(pos + textLength / 2) 
             const endY = Math.floor(pos + Math.sqrt( newRadius * newRadius - (textLength * textLength )/ 4 )) ;
 
-            const tempRadius = Math.ceil(newRadius );
+            const tempRadius = Math.ceil(newRadius);
             const arcCommand = ' A' + tempRadius + ' ' + tempRadius + ' 0 0 0 ' + endX + ' ' + endY;
             frameTextPath += arcCommand;
 
@@ -485,6 +485,9 @@ export class SVGDrawing {
 
         }
 
+
+        if(this.config.frameTextColor) this._frameTextColor=this.config.frameTextColor;
+
         
         
 
@@ -496,7 +499,11 @@ export class SVGDrawing {
             finalCanvas.circle(Math.sqrt(2)*size).attr({cx : pos , cy : pos}).fill('#ffffff')
 
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-                finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this.config.frameTextColor);
+
+                if(this.config.frameText && this.config.frameText.length){
+                    finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this._frameTextColor);
+                }
+                
                 if(this.config.secondaryText && this.config.secondaryText.length){
                     finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
                 }
@@ -515,7 +522,11 @@ export class SVGDrawing {
             finalCanvas.circle(size).attr({cx: pos,cy: pos}).radius(radius - width/2).fill(color);
 
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-                finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this.config.frameTextColor);
+                
+                if(this.config.frameText && this.config.frameText.length){
+                    finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this._frameTextColor);
+                }
+                
                 if(this.config.secondaryText && this.config.secondaryText.length){
                     finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
                 }
@@ -530,7 +541,11 @@ export class SVGDrawing {
             finalCanvas.circle(Math.sqrt(2)*size).attr({cx : pos , cy : pos}).fill(color);
 
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-                finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this.config.frameTextColor);
+                
+                if(this.config.frameText && this.config.frameText.length){
+                    finalCanvas.textPath(this.config.frameText , frameTextPath).font( { family : 'Roboto',  size : fontSize } ).fill(this._frameTextColor);
+                }
+                
                 if(this.config.secondaryText && this.config.secondaryText.length){
                     finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
                 }
