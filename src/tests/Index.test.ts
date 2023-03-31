@@ -36,7 +36,7 @@ const config = {
     eyeFrameShape: EyeFrameShape.SQUARE,
     eyeFrameColor : '#000',
     eyeBallColor : '#000',
-    frameStyle: QRCodeFrame.BALLOON_BOTTOM,
+    frameStyle: QRCodeFrame.CIRCULAR,
     frameText: "THIS IS THIRTY CHARACTERS LONG",
     frameColor: "#000",
     frameTextColor: "#fff",
