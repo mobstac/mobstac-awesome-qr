@@ -505,7 +505,7 @@ export class SVGDrawing {
                 }
                 
                 if(this.config.secondaryText && this.config.secondaryText.length){
-                    finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
+                    finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this._frameTextColor);
                 }
             }
 
@@ -528,7 +528,7 @@ export class SVGDrawing {
                 }
                 
                 if(this.config.secondaryText && this.config.secondaryText.length){
-                    finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
+                    finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this._frameTextColor);
                 }
             }
 
@@ -547,7 +547,7 @@ export class SVGDrawing {
                 }
                 
                 if(this.config.secondaryText && this.config.secondaryText.length){
-                    finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this.config.frameTextColor);
+                    finalCanvas.textPath(this.config.secondaryText , secondaryTextpath).font( {'letter-spacing' : this.config.size / 1024 +'rem' , family : 'Roboto',  size : fontSize}).fill(this._frameTextColor);
                 }
             }
 
