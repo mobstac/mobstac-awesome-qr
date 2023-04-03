@@ -704,6 +704,11 @@ export class SVGDrawing {
     
 
     private async addBackground(context: object, size: number, backgroundImage?: string, backgroundColor?: string) {
+
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR ) {
+            return;
+        }
+        
         if (!backgroundImage) {
             if(backgroundColor) {
                 let color = backgroundColor ? backgroundColor : '#ffffff';
@@ -716,9 +721,7 @@ export class SVGDrawing {
             return;
         }
         this.config.backgroundColor = '';
-        if(this.config.frameStyle === QRCodeFrame.CIRCULAR ) {
-            return;
-        }
+        
         return this.addBackgroundImage(context, size, backgroundImage!);
     }
 
