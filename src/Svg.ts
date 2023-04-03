@@ -128,7 +128,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BALLOON_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = 3.5 * this.config.moduleSize + size / 5;
+                    this.shiftY = size / 5 + size / 12;
                     if (this.config.isVCard) {
                         this.shiftY = 10 * moduleSize + size / 5;
                     }
