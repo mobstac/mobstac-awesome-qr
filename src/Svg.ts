@@ -158,7 +158,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BALLOON_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = 3.5 * this.config.moduleSize + size / 5;
+                    this.shiftY = size / 5 + size / 12;
                     if (this.config.isVCard) {
                         this.shiftY = 10 * moduleSize + size / 5;
                     }
@@ -1840,7 +1840,7 @@ export class SVGDrawing {
                 textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
                 logoX = size / 3 - size / 9;
                 logoY = this.config.isVCard ? moduleSize * 3 : moduleSize * 2;
-                this.shiftY = 0.9 * this.shiftY
+                //this.shiftY = 0.9 * this.shiftY
                 break;
             case QRCodeFrame.TEXT_ONLY:
                 borderX = moduleSize / 2;
@@ -1887,7 +1887,7 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
             // @ts-ignore
-            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size / 5 - moduleSize / 2);
+            canvas.polygon(coordinates).fill(color).move(size / 2 - size/24 + moduleSize / 2, size / 5 - moduleSize / 2);
         }
 
         // Banner for frame text
