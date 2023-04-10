@@ -230,7 +230,7 @@ export class SVGDrawing {
                     }
                     else if(frameStyle === QRCodeFrame.CIRCULAR_FRAME){
                         //@ts-ignore
-                        canvas.viewbox(0, 0, canvasWidth + 350, canvasWidth + 350)
+                        canvas.viewbox(0, 0, canvasWidth + 500, canvasWidth + 500)
                     }
 
                 }
