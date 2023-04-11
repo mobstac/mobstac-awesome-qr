@@ -224,9 +224,14 @@ export class SVGDrawing {
                     canvas.width(null);
                     // @ts-ignore
                     canvas.height(null);
-                    if(frameStyle === QRCodeFrame.CIRCULAR || this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
+                    if(frameStyle === QRCodeFrame.CIRCULAR){
                         //@ts-ignore
                         canvas.viewbox(0, 0, canvasWidth + 190, canvasWidth + 190)
+                    }
+                    else if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME)
+                    {
+                        //@ts-ignore
+                        canvas.viewbox(0, 0, canvasWidth + 500, canvasWidth + 500)
                     }
                 }
                 // @ts-ignore
