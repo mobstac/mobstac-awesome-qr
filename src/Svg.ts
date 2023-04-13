@@ -1149,17 +1149,17 @@ export class SVGDrawing {
         // Top Left Eye
         eyeFrameCanvas.move(0 + this.config.margin + this.shiftX ,0 + this.config.margin + this.shiftY)
         // @ts-ignore
-        context.add(eyeFrameCanvas.svg())
+        context.svg(eyeFrameCanvas.svg())
 
         // Top Right Eye
         eyeFrameCanvas.move(0 + this.config.margin + this.shiftX + ( this.moduleCount - 7) * moduleSize ,0 + this.config.margin + this.shiftY)
         // @ts-ignore
-        context.add(eyeFrameCanvas.svg())
+        context.svg(eyeFrameCanvas.svg())
 
         // Bottom Left Eye
         eyeFrameCanvas.move(0 + this.config.margin + this.shiftX ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize)
         // @ts-ignore
-        context.add(eyeFrameCanvas.svg())
+        context.svg(eyeFrameCanvas.svg())
 
 
 
@@ -1212,17 +1212,17 @@ export class SVGDrawing {
          // Top Left Eye
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize,0 + this.config.margin + this.shiftY + 2 * moduleSize)
          // @ts-ignore
-         context.add(eyeBallCanvas.svg())
+         context.svg(eyeBallCanvas.svg())
  
          // Top Right Eye
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize,0 + this.config.margin + this.shiftY + 2 * moduleSize)
          // @ts-ignore
-         context.add(eyeBallCanvas.svg())
+         context.svg(eyeBallCanvas.svg())
  
          // Bottom Left Eye
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize)
          // @ts-ignore
-         context.add(eyeBallCanvas.svg())
+         context.svg(eyeBallCanvas.svg())
 
     }
 
