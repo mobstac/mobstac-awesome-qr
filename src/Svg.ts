@@ -66,7 +66,7 @@ export class SVGDrawing {
     public calculatedLogoHeight = 0;
     public logoCordinateX = 0;
     public logoCordinateY = 0;
-    public _frameTextColor = "#000000";
+    public _frameTextColor = "#FFFFFF";
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
         this.moduleCount = moduleCount;
@@ -270,7 +270,7 @@ export class SVGDrawing {
         const color = this.config.backgroundColor?this.config.backgroundColor:'none' ;
         let pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-            pos += size/5 - this.config.moduleSize;
+            pos += size/5;
         }
         const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
         // @ts-ignore
@@ -283,11 +283,11 @@ export class SVGDrawing {
         const increment  = this.config.nSize + (1-this.config.dotScale)*0.5*this.config.nSize;
         let shift = (Math.sqrt(2)*size + 2*this.config.moduleSize-size) / 2 ;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-            shift += size/5 - this.config.moduleSize;
+            shift += size/5;
         }
         let limit  = Math.sqrt(2)*size + 2*this.config.moduleSize;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-            limit += size/5 - 2*this.config.moduleSize;
+            limit += size/5;
         }
         const str = this.config.text;
         const len = str.length;
@@ -425,11 +425,11 @@ export class SVGDrawing {
         
         let pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
         if( this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-            pos += width - this.config.moduleSize;
+            pos += size / 5;
         }
         let radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
-            radius += width/2 - this.config.moduleSize/2;
+            radius += size / 10;
         }
 
 
@@ -439,7 +439,7 @@ export class SVGDrawing {
 
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME && this.config.frameText && this.config.frameText.length){
 
-            const newRadius = radius - width /2 ;
+            const newRadius = radius - width /2 + this.config.moduleSize / 2 ;
             //@ts-ignore
             var text = finalCanvas.text(this.config.frameText).font({ size : fontSize , family : 'Roboto'});
             let arcLength = text.length();
@@ -466,7 +466,7 @@ export class SVGDrawing {
 
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME && this.config.secondaryText && this.config.secondaryText.length){
 
-            const newRadius = radius + width / 2 ;
+            const newRadius = radius + width / 2  - this.config.moduleSize / 2;
             var text = finalCanvas.text(this.config.secondaryText).font({  size : fontSize , family : 'Roboto'});
             let arcLength = text.length() + 16 * ( this.config.secondaryText.length - 1 ) * ( this.config.size / 1024 );
             text.remove();
@@ -500,7 +500,8 @@ export class SVGDrawing {
 
         if (this.config.backgroundImage) {
 
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(grad);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:this.config.frameColor, 'stroke-width':width}).radius(radius).fill(grad);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':this.config.moduleSize}).radius(radius - width /2 + this.config.moduleSize / 2).fill(grad);
             finalCanvas.circle(Math.sqrt(2)*size).attr({cx : pos , cy : pos}).fill('#ffffff')
 
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
@@ -523,7 +524,8 @@ export class SVGDrawing {
         } else if( this.config.backgroundColor && this.config.backgroundColor.includes('rgba')) {
 
             
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(color);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:this.config.frameColor, 'stroke-width':width}).radius(radius).fill(grad);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':this.config.moduleSize}).radius(radius - width / 2 + this.config.moduleSize / 2).fill(grad);
             finalCanvas.circle(size).attr({cx: pos,cy: pos}).radius(radius - width/2).fill(color);
 
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
@@ -542,7 +544,8 @@ export class SVGDrawing {
             return finalCanvas;
         } else {
 
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(grad);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:this.config.frameColor, 'stroke-width':width}).radius(radius).fill(grad);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':this.config.moduleSize}).radius(radius - width / 2 + this.config.moduleSize / 2).fill(grad);
             finalCanvas.circle(Math.sqrt(2)*size).attr({cx : pos , cy : pos}).fill(color);
 
             if(this.config.frameStyle === QRCodeFrame.CIRCULAR_FRAME){
