@@ -925,6 +925,33 @@ export class SVGDrawing {
             for (let j = 0; j < patternPosition.length; j++) {
                 const agnX = patternPosition[j];
                 const agnY = patternPosition[i];
+
+                // Checking if alignment eye is behind logo
+                let isEyeBehindLogo = false
+                let leftTop = { 
+                    x : this.config.margin + (agnX - 2) * this.config.moduleSize,
+                    y : this.config.margin + (agnY - 2) * this.config.moduleSize
+                }
+                isEyeBehindLogo = isEyeBehindLogo ||  this.isDataDotBehindLogo(leftTop.x , leftTop.y);
+                let leftBottom = {
+                    x : this.config.margin + (agnX - 2) * this.config.moduleSize,
+                    y : this.config.margin + (agnY + 2) * this.config.moduleSize
+                }
+                isEyeBehindLogo = isEyeBehindLogo ||  this.isDataDotBehindLogo(leftBottom.x , leftBottom.y);
+                let rightTop = {
+                    x : this.config.margin + (agnX + 2) * this.config.moduleSize,
+                    y : this.config.margin + (agnY - 2) * this.config.moduleSize
+                }
+                isEyeBehindLogo = isEyeBehindLogo ||  this.isDataDotBehindLogo(rightTop.x , rightTop.y);
+                let rightBottom = {
+                    x : this.config.margin + (agnX + 2) * this.config.moduleSize,
+                    y : this.config.margin + (agnY + 2) * this.config.moduleSize
+                }
+                isEyeBehindLogo = isEyeBehindLogo ||  this.isDataDotBehindLogo(rightBottom.x , rightBottom.y);
+
+                if(isEyeBehindLogo) continue;
+
+                
                 if (agnX === 6 && (agnY === 6 || agnY === edgeCenter)) {
                 } else if (agnY === 6 && (agnX === 6 || agnX === edgeCenter)) {
                 } else if (agnX !== 6 && agnX !== edgeCenter && agnY !== 6 && agnY !== edgeCenter) {
