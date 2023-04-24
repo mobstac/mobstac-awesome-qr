@@ -1406,9 +1406,9 @@ export class SVGDrawing {
         const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
         const radius = moduleSize;
         // @ts-ignore
-        canvas.rect(width, height).fill(backgroundColor).radius(radius).move(startX, startY);
+        canvas.rect(width, height).fill(backgroundColor).move(startX, startY);
         // @ts-ignore
-        canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
+        canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).move(startX + moduleSize, startY + moduleSize);
     }
 
     private async drawSquareFrame(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
