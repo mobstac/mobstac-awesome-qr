@@ -1,7 +1,7 @@
 /* tslint:disable:no-var-requires */
 // @ts-ignore
 import { Gradient, SVG, registerWindow } from '@svgdotjs/svg.js';
-import { CanvasUtil } from './Common';
+import { CanvasUtil, maxLogoScale } from './Common';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { isNode, loadImage, getFrameTextSize } from './Util';
@@ -66,6 +66,10 @@ export class SVGDrawing {
     public calculatedLogoHeight = 0;
     public logoCordinateX = 0;
     public logoCordinateY = 0
+    public calculatedLogoAreaWidth = 0;
+    public calculatedLogoAreaHeight = 0;
+    public logoAreaCordinateX = 0;
+    public logoAreaCordinateY = 0;
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -593,7 +597,6 @@ export class SVGDrawing {
         const logoHeight = this.calculatedLogoHeight ;
         const coordinateX = this.logoCordinateX ;
         const coordinateY = this.logoCordinateY ;
-        const logoMargin = this.config.logoMargin ;
         if(this.config.logoImage){
             await this.getImageBase64Data(this.config.logoImage).then( result =>{
                 let image = context.image(result);
@@ -1694,11 +1697,11 @@ export class SVGDrawing {
 
         const dotLength = this.config.moduleSize ;        
 
-        const logoXPosition = this.logoCordinateX - this.config.margin - 5;
-        const logoYPosition = this.logoCordinateY - this.config.margin - 5;
+        const logoXPosition = this.logoAreaCordinateX - this.config.margin ;
+        const logoYPosition = this.logoAreaCordinateY - this.config.margin ;
 
-        const logoXLength = this.calculatedLogoWidth + 10;
-        const logoYLength = this.calculatedLogoHeight + 10;
+        const logoXLength = this.calculatedLogoAreaWidth ;
+        const logoYLength = this.calculatedLogoAreaHeight ;
         const dotXPosition = dataDotLeftPosition + this.shiftX ;
         const dotYPosition = dataDotTopPosition + this.shiftY ;
 
@@ -1732,62 +1735,73 @@ export class SVGDrawing {
 
 
     calculateLogoDimensions(){
-        let logoHeight = this.config.size ;
-        let logoWidth = this.config.size ;
+
+        let logoHeight , logoWidth , logoAreaWidth , logoAreaHeight;
+
         let logoScale = this.config.logoScale ;
         let logoMargin = this.config.logoMargin ;
-
+        let rectangular = this.config.rectangular ;
+        
         if (logoScale <= 0 || logoScale >= 1) {
-            logoScale = 0.2;
+            logoScale = 0.2 ;
         }
-        if ( logoMargin < 0) {
-            logoMargin = 0;
+        if( logoMargin < 0 || logoMargin > 100 ){
+            logoMargin = 50 ;
         }
 
-        if(this.config.rectangular){
-            let maxLogoSide = 0.24 * this.config.size ; 
-            if(this.config.logoHeight && this.config.logoWidth){
-                logoHeight = this.config.logoHeight ;
-                logoWidth = this.config.logoWidth ;
-                if(this.config.logoHeight > maxLogoSide || this.config.logoWidth > maxLogoSide){
-                    if(this.config.logoHeight > this.config.logoWidth){ 
-                        let ratio = this.config.logoWidth / this.config.logoHeight;
-                        logoHeight = maxLogoSide;
-                        logoWidth = ratio * logoHeight;
-                    } else {
-                        let ratio = this.config.logoHeight / this.config.logoWidth;
-                        logoWidth = maxLogoSide;
-                        logoHeight = ratio * logoWidth;
-                    }
-                    logoHeight = logoHeight * ( logoScale / 0.24);
-                    logoWidth = logoWidth * ( logoScale / 0.24);
-                } else {
-                    logoWidth = logoWidth * ( logoScale / 0.24);
-                    logoHeight = logoHeight * ( logoScale / 0.24);
-                }
-            } else {
-                logoWidth = logoWidth * logoScale ;
-                logoHeight = logoHeight * logoScale ;
-            }
+         // Calibrating logo margin to avoid small logos ( This will ensure atleast 50% area of logo is covered by the actual logo)
+         logoMargin = 0.5 * logoMargin 
+
+        if(!this.config.logoHeight || !this.config.logoWidth ){
+            logoHeight = this.config.size ;
+            logoWidth = this.config.size ;
+            rectangular = false ;
         } else {
-            let maxLength : any = 0;
-            if(this.config.logoHeight || this.config.logoWidth){
-                const logoSideLength : number | undefined= this.config.logoHeight ? this.config.logoHeight : this.config.logoWidth ;
-                if(logoSideLength && logoSideLength > 0.24 * this.config.size){
-                    maxLength = 0.24 * this.config.size ;
-                } else {
-                    maxLength = logoSideLength ;
-                }
-            }
-            logoWidth = maxLength * (logoScale / 0.24);
-            logoHeight = maxLength * ( logoScale / 0.24 );
+            logoHeight = this.config.logoHeight;
+            logoWidth = this.config.logoWidth;
         }
+
+        // Calculate max area for logo
+        if( rectangular ){
+
+            let logoAreaMaxSide = maxLogoScale * this.config.size ;
+            let ratio = logoHeight / logoWidth ;
+
+            if( logoHeight > logoWidth ){
+                logoAreaHeight = logoAreaMaxSide;
+                logoAreaWidth = logoAreaHeight * ratio ;
+            } else {
+                logoAreaWidth = logoAreaMaxSide ;
+                logoAreaHeight = logoAreaWidth * ratio ;
+            }
+
+            logoAreaHeight = ( logoScale / maxLogoScale ) * logoAreaHeight ;
+            logoAreaWidth = ( logoScale / maxLogoScale ) * logoAreaWidth ;
+            this.calculatedLogoAreaHeight = logoAreaHeight ;
+            this.calculatedLogoAreaWidth = logoAreaWidth ;
+
+        } else {
+            
+            let logoAreaMaxSide = maxLogoScale * this.config.size ;
+            logoAreaHeight = logoAreaMaxSide  * ( logoScale / maxLogoScale) ;
+            logoAreaWidth = logoAreaMaxSide * ( logoScale / maxLogoScale) ;
+            this.calculatedLogoAreaHeight = logoAreaMaxSide  * ( logoScale / maxLogoScale) ;
+            this.calculatedLogoAreaWidth = logoAreaMaxSide * ( logoScale / maxLogoScale) ;
+
+        }
+
+        logoHeight = ( ( 100 - logoMargin) / 100 ) * logoAreaHeight ;
+        logoWidth = ( ( 100 - logoMargin) / 100 ) * logoAreaWidth ;
 
         this.calculatedLogoWidth = logoWidth ;
         this.calculatedLogoHeight = logoHeight ;
         this.logoCordinateX = this.shiftX + 0.5 * (this.config.size - logoWidth);
-        this.logoCordinateY = this.shiftY + 0.5 * (this.config.size - logoHeight);   
+        this.logoCordinateY = this.shiftY + 0.5 * (this.config.size - logoHeight);  
+        this.logoAreaCordinateX = this.shiftX + 0.5 * ( this.config.size - logoAreaWidth )
+        this.logoAreaCordinateY = this.shiftY + 0.5 * ( this.config.size - logoAreaHeight );
+
     }
+
 
     async drawEyes(context: object, eyeFrameShape: EyeFrameShape, eyeFrameColor: string, eyeBallShape: EyeBallShape, eyeBallColor: string) {
 
