@@ -1765,12 +1765,13 @@ export class SVGDrawing {
         if( rectangular ){
 
             let logoAreaMaxSide = maxLogoScale * this.config.size ;
-            let ratio = logoHeight / logoWidth ;
 
             if( logoHeight > logoWidth ){
+                let ratio = logoWidth / logoHeight ;
                 logoAreaHeight = logoAreaMaxSide;
                 logoAreaWidth = logoAreaHeight * ratio ;
             } else {
+                let ratio = logoHeight / logoWidth ;
                 logoAreaWidth = logoAreaMaxSide ;
                 logoAreaHeight = logoAreaWidth * ratio ;
             }
