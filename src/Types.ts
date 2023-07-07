@@ -86,4 +86,5 @@ export interface QRDrawingConfig {
     useOpacity?: boolean;
     imageServerURL?: string,
     imageServerRequestHeaders?: object
+    dataPatternCustomShapeImage: string;
 }

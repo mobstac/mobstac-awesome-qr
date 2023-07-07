@@ -71,6 +71,7 @@ export class SVGDrawing {
     public logoAreaCordinateY = 0;
     public TwoDArray: any;
     public isSmoothPattern: boolean = false;
+    private dataPatternCustomShapeSVG: any;
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -84,7 +85,7 @@ export class SVGDrawing {
         this.canvas = SVG().size(config.size, config.size);
     }
 
-    
+
 
     public async drawSVG(): Promise<any> {
         const frameStyle = this.config.frameStyle;
@@ -200,7 +201,7 @@ export class SVGDrawing {
         /* The Svg is drawn in layers 
             - drawFrame() : used to draw frame (if any)
             - drawAlignPatterns() : used to for plotting actual data dots of Qr Code
-            - drawAlignProtectors() : Used for drawing alignment eyes 
+            - drawAlignProtectors() : Used for drawing alignment eyes
             - drawPositionPatterns() : this function creates eyes and time-line
             - drawLogoImage() : used for adding  logo , this handles different cases for different file types and size of logo
             - addDesign() : This is explicitly for circular frames , above functions may not run for circular frames.
@@ -211,7 +212,7 @@ export class SVGDrawing {
                 return this.addBackground(mainCanvas, this.config.size, this.config.backgroundImage, this.config.backgroundColor);
             })
             .then(() => {
-                return this.drawAlignPatterns(mainCanvas, gradient); 
+                return this.drawAlignPatterns(mainCanvas, gradient);
             })
             .then(() => {
                 return this.drawAlignProtectors(mainCanvas);
@@ -288,7 +289,7 @@ export class SVGDrawing {
 
 
 
-        //Left Side Dots 
+        //Left Side Dots
         let leftSideDots : Array<Array<boolean | object>> = [];
         for(let r = shift - moduleSize - margin, row = 0 ; r >=0 ; r -= increment, row++) {
             leftSideDots[row] = []
@@ -472,7 +473,7 @@ export class SVGDrawing {
                         this.drawSmoothRound(positionX, positionY, canvas, gradient, this.config.moduleSize, this.config.moduleSize, row, col)
                     } else {
                         this.drawSmoothSharp(positionX, positionY, canvas, gradient, this.config.moduleSize, this.config.moduleSize, row, col)
-                    }      
+                    }
                 }
             }
         }        
@@ -544,7 +545,7 @@ export class SVGDrawing {
             Eg : For a dot with cordinates (100 , 200) and horizontal gradient
             `direction` will store 100.
 
-            `direction` is used to calculate how far the point is from starting point (0,0) horizontally or vertically 
+            `direction` is used to calculate how far the point is from starting point (0,0) horizontally or vertically
             The distance calculated is used for calculating effect of color ( `weight` )
         */
         let direction  =  x;
@@ -620,9 +621,9 @@ export class SVGDrawing {
             let color2 : number[] = this.hexToRgb(colorLight);
             const xFromCenter = Math.abs(x - lengthForGradient/2);
             const yFromCenter = Math.abs(y - lengthForGradient/2);
-            /* 
-                `direction` is used to calculate how far the point is from starting point (0,0) 
-                The distance calculated is used for calculating effect of color ( `weight` ) 
+            /*
+                `direction` is used to calculate how far the point is from starting point (0,0)
+                The distance calculated is used for calculating effect of color ( `weight` )
             */
             direction = Math.sqrt ( xFromCenter * xFromCenter + yFromCenter * yFromCenter) - 50;
             let weightOfColorOne = direction / ( lengthForGradient / 2) <= 1 ? direction / ( lengthForGradient / 2) : 1;
@@ -665,7 +666,7 @@ export class SVGDrawing {
 
             return colorOneInHex + ' ' + colorTwoInHex;
         }
-          
+
         return colorDark;
 
     }
@@ -730,11 +731,11 @@ export class SVGDrawing {
         const blob = await data.blob();
         return new Promise<string | ArrayBuffer | null>((resolve, reject) => {
             const reader = new FileReader();
-            reader.readAsDataURL(blob); 
+            reader.readAsDataURL(blob);
             reader.onload = () => {
-                const base64data = reader.result;   
+                const base64data = reader.result;
                 resolve(base64data);
-            } 
+            }
             reader.onerror = () =>{
                 reject;
             }
@@ -767,7 +768,7 @@ export class SVGDrawing {
             let image = context.image(result);
             image.attr( { preserveAspectRatio :  'none' , opacity : 0.6})
             image.size(size , size).move(_this.shiftX , _this.shiftY);
-        });   
+        });
     }
 
     private async addCircularBackgroundImage(context: object, size: number, backgroundImage: string, pos: number, grad: string, width: number, radius: number) {
@@ -821,6 +822,10 @@ export class SVGDrawing {
         const xyOffset = (1 - this.config.dotScale) * 0.5;
 
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+
+        if(this.config.dataPattern === DataPattern.CUSTOM_SHAPE){
+            await this.fetchDataPatternCustomShapeImage();
+        }
 
         for (let row = 0; row < moduleCount; row++) {
             for (let col = 0; col < moduleCount; col++) {
@@ -897,9 +902,27 @@ export class SVGDrawing {
         }
     }
 
+    private async fetchDataPatternCustomShapeImage() {
+        try {
+            const response = await fetch(this.config.dataPatternCustomShapeImage);
+            const svgText = await response.text();
+            const cleanedSvgText = this.removeXmlDeclarationFromText(svgText);
+            this.dataPatternCustomShapeSVG = cleanedSvgText;
+        } catch (error) {
+            console.error('Failed to fetch or process data pattern custom shape image:', error);
+            // Handle the error as appropriate for your application
+        }
+    }
+
+    removeXmlDeclarationFromText(text: string) {
+        const xmlDeclarationPattern = /<!--\?xml[^?]*\?-->\s*/;
+        const cleanedText = text.replace(xmlDeclarationPattern, '');
+        return cleanedText;
+    }
+
 
     //Function to create data dots in QR.
-    private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern, row: number, col: number) {        
+    private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern, row: number, col: number) {
         if (!bIsDark) {
             return;
         }
@@ -933,6 +956,9 @@ export class SVGDrawing {
                 case DataPattern.SMOOTH_SHARP:
                     this.drawSmoothSharp(x, y, canvas, color, w, h, row, col, false, !bIsDark);
                     break;
+                case DataPattern.CUSTOM_SHAPE:
+                    this.drawCustomShape(x, y, canvas, w, h, false, color, !bIsDark);
+                    break;
                 default:
                     this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
                     break;
@@ -945,6 +971,54 @@ export class SVGDrawing {
             this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
         }
     }
+
+    drawCustomShape(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean){
+        // @ts-ignore
+        canvas.add(this.dataPatternCustomShapeSVG);
+
+        /*
+        let op = isMask ? 0.6 : 1;
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
+            op = 0.0;
+        }
+
+        if(gradient.length > 7 ){
+            // @ts-ignore
+            gradient = canvas.gradient( 'linear',function(add){
+                add.stop(0 , gradient.split(" ")[0])
+                add.stop(1 , gradient.split(" ")[1])
+            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
+        }
+        let rotate = 0;
+        if (isRound) {
+            if (this.config.useOpacity) {
+                // @ts-ignore
+                canvas.rect(height, width).radius(height / 4)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+            } else {
+                // @ts-ignore
+                    canvas.rect(height, width).radius(height / 4)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            }
+            return;
+        }
+        if (this.config.useOpacity) {
+            //@ts-ignore
+            canvas.rect(height, width).
+            move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
+            attr({opacity: op }).
+            fill(gradient).
+            transform({ rotate : rotate})
+        } else {
+            // @ts-ignore
+            canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+        }
+
+        */
+
+    }
+
+
 
     private drawAlignProtectors(context: object , disable : boolean = true) {
         if(this.isSmoothPattern)
@@ -1048,7 +1122,7 @@ export class SVGDrawing {
 
                 // Checking if alignment eye is behind logo
                 let isEyeBehindLogo = false
-                let leftTop = { 
+                let leftTop = {
                     x : this.config.margin + (agnX - 2) * this.config.moduleSize,
                     y : this.config.margin + (agnY - 2) * this.config.moduleSize
                 }
@@ -1071,7 +1145,7 @@ export class SVGDrawing {
 
                 if(isEyeBehindLogo) continue;
 
-                
+
                 if (agnX === 6 && (agnY === 6 || agnY === edgeCenter)) {
                 } else if (agnY === 6 && (agnX === 6 || agnX === edgeCenter)) {
                 } else if (agnX !== 6 && agnX !== edgeCenter && agnY !== 6 && agnY !== edgeCenter) {
@@ -1396,7 +1470,7 @@ export class SVGDrawing {
         if( row !== 0 &&
             col !== 0 &&
             row !== maxHeight - 1 &&
-            col !== maxWidth - 1 && 
+            col !== maxWidth - 1 &&
             array[row-1][col-1] &&
             !( array[row-1][col] && array[row][col-1] ) 
         )  {
@@ -1489,7 +1563,7 @@ export class SVGDrawing {
         if( row !== 0 &&
             col !== 0 &&
             row !== maxHeight - 1 &&
-            col !== maxWidth - 1 && 
+            col !== maxWidth - 1 &&
             array[row+1][col-1] &&
             !( array[row+1][col] && array[row][col-1] ) 
         ) {  
@@ -1509,7 +1583,7 @@ export class SVGDrawing {
         context.path(dotPath).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr( { 'data-pos' : `${row} ${col}`})
     }
 
-    
+
     private drawSquare(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean) {
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
@@ -1571,7 +1645,7 @@ export class SVGDrawing {
             fill(gradient).
             transform({ rotate : rotate})
 
-            
+
 
         } else {
             // TODO: Move back to path based implementation
@@ -1582,7 +1656,7 @@ export class SVGDrawing {
             // h-${width}
             // v-${height} Z`)
             canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-            
+
         }
     }
 
@@ -1763,7 +1837,7 @@ export class SVGDrawing {
                             width : frameWidth ,
                             linejoin : 'round' 
                         });
-        
+
     }
 
     private async drawTextOnlyBackground(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
@@ -1804,7 +1878,7 @@ export class SVGDrawing {
         if (!frameStyle || frameStyle === QRCodeFrame.NONE || frameStyle === QRCodeFrame.CIRCULAR) {
             return;
         }
-        
+
 
         const color = frameColor ? frameColor : '#000000';
         const textColor = this.config.frameTextColor || '#ffffff';
@@ -1970,7 +2044,7 @@ export class SVGDrawing {
         `);
         // @ts-ignore
         textX = canvas.width()/2;
-       
+
 
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
@@ -2035,7 +2109,7 @@ export class SVGDrawing {
         if(this.config.dotScale > 0 && this.config.dotScale <= 1)
             dotLength = this.config.moduleSize * this.config.dotScale ;
         else   
-            dotLength = this.config.moduleSize ;        
+            dotLength = this.config.moduleSize ;
 
         const logoXPosition = this.logoAreaCordinateX - this.config.margin ;
         const logoYPosition = this.logoAreaCordinateY - this.config.margin ;
@@ -2090,7 +2164,7 @@ export class SVGDrawing {
         }
 
          // Calibrating logo margin to avoid small logos ( This will ensure atleast 50% area of logo is covered by the actual logo)
-         logoMargin = 0.5 * logoMargin 
+         logoMargin = 0.5 * logoMargin
 
         if(!this.config.logoHeight || !this.config.logoWidth ){
             logoHeight = this.config.size ;
@@ -2148,10 +2222,10 @@ export class SVGDrawing {
 
         /*
             CALCULATION
-                - The eye frame has dimensions equal to 7 modules 
+                - The eye frame has dimensions equal to 7 modules
                 - The eye ball has dimensions equal to 3 modules
                 - The width of eye frame is equal to 1 module
-                - The Gap between the eyeball and eyeFrame is 1 module 
+                - The Gap between the eyeball and eyeFrame is 1 module
                 - Size of 1 module is referred as `moduleSize`
         */
 
@@ -2253,7 +2327,7 @@ export class SVGDrawing {
                 // @ts-ignore
                 eyeBallCanvas.rect(3 * moduleSize , 3 * moduleSize ).fill(eyeBallColor)
                 break ;
-            case EyeBallShape.ROUNDED : 
+            case EyeBallShape.ROUNDED :
                 // @ts-ignore
                 eyeBallCanvas.rect(3 * moduleSize , 3 * moduleSize).fill(eyeBallColor).radius(3 * moduleSize / 4)
                 break ;
@@ -2296,13 +2370,13 @@ export class SVGDrawing {
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize,0 + this.config.margin + this.shiftY + 2 * moduleSize)
          // @ts-ignore
          context.add(eyeBallCanvas.svg())
- 
+
          // Top Right Eye
          // @ts-ignore
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize,0 + this.config.margin + this.shiftY + 2 * moduleSize)
          // @ts-ignore
          context.add(eyeBallCanvas.svg())
- 
+
          // Bottom Left Eye
          // @ts-ignore
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize)

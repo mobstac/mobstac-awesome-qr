@@ -28,7 +28,7 @@ const config = {
     logoBackground: true,
     backgroundColor: "rgba(256,256,256,0)",
     canvasType: CanvasType.SVG,
-    dataPattern: DataPattern.SQUARE,
+    dataPattern: DataPattern.CUSTOM_SHAPE,
     dotScale: 1,
     colorDark: "#000000",
     colorLight : '#0000ff',
@@ -47,6 +47,9 @@ const config = {
     size: 512,
     margin: 40,
     correctLevel: QRErrorCorrectLevel.Q,
+    logoMargin : 0,
+    dataPatternCustomShapeImage : 'https://svgshare.com/i/uwR.svg',
+    // isVCard : true
     rectangular : false,
     imageServerRequestHeaders : { Authorization : 'token e62435a78e67ec98bba3b879ba00448650032557' , 'Content-Type': 'application/json'},
     imageServerURL : 'https://beaconstacqa.mobstac.com/api/2.0/validate_url/'
