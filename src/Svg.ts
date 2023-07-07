@@ -76,6 +76,7 @@ export class SVGDrawing {
     public logoCordinateY = 0
     public TwoDArray: any;
     public isSmoothPattern: boolean = false;
+    private dataPatternCustomShapeSVG: any;
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -950,6 +951,11 @@ export class SVGDrawing {
         const xyOffset = (1 - this.config.dotScale) * 0.5;
 
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+
+        if(this.config.dataPattern === DataPattern.CUSTOM_SHAPE){
+            await this.fetchDataPatternCustomShapeImage();
+        }
+
         for (let row = 0; row < moduleCount; row++) {
             for (let col = 0; col < moduleCount; col++) {
                 const bIsDark = this.isDark.bind(this)(row, col) || false; //  data dot is black or white ( should not be drawn )
@@ -1025,6 +1031,24 @@ export class SVGDrawing {
         }
     }
 
+    private async fetchDataPatternCustomShapeImage() {
+        try {
+            const response = await fetch(this.config.dataPatternCustomShapeImage);
+            const svgText = await response.text();
+            const cleanedSvgText = this.removeXmlDeclarationFromText(svgText);
+            this.dataPatternCustomShapeSVG = cleanedSvgText;
+        } catch (error) {
+            console.error('Failed to fetch or process data pattern custom shape image:', error);
+            // Handle the error as appropriate for your application
+        }
+    }
+
+    removeXmlDeclarationFromText(text: string) {
+        const xmlDeclarationPattern = /<!--\?xml[^?]*\?-->\s*/;
+        const cleanedText = text.replace(xmlDeclarationPattern, '');
+        return cleanedText;
+    }
+
 
     //Function to create data dots in QR.
     private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern,row : number, col : number) {
@@ -1066,6 +1090,9 @@ export class SVGDrawing {
                 case DataPattern.SMOOTH_SHARP:
                     this.drawSmoothSharp(x, y, canvas, color, w, h, row, col, false, !bIsDark);
                     break;
+                case DataPattern.CUSTOM_SHAPE:
+                    this.drawCustomShape(x, y, canvas, w, h, false, color, !bIsDark);
+                    break;
                 default:
                     this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
                     break;
@@ -1078,6 +1105,54 @@ export class SVGDrawing {
             this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
         }
     }
+
+    drawCustomShape(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean){
+        // @ts-ignore
+        canvas.add(this.dataPatternCustomShapeSVG);
+
+        /*
+        let op = isMask ? 0.6 : 1;
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
+            op = 0.0;
+        }
+
+        if(gradient.length > 7 ){
+            // @ts-ignore
+            gradient = canvas.gradient( 'linear',function(add){
+                add.stop(0 , gradient.split(" ")[0])
+                add.stop(1 , gradient.split(" ")[1])
+            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
+        }
+        let rotate = 0;
+        if (isRound) {
+            if (this.config.useOpacity) {
+                // @ts-ignore
+                canvas.rect(height, width).radius(height / 4)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+            } else {
+                // @ts-ignore
+                    canvas.rect(height, width).radius(height / 4)
+                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            }
+            return;
+        }
+        if (this.config.useOpacity) {
+            //@ts-ignore
+            canvas.rect(height, width).
+            move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
+            attr({opacity: op }).
+            fill(gradient).
+            transform({ rotate : rotate})
+        } else {
+            // @ts-ignore
+            canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+        }
+
+        */
+
+    }
+
+
     drawSmoothSharp(startX: number, startY: number, context: object, gradient: string, width: number, height: number, row : number, col : number, isRound?: boolean, isMask?: boolean) {
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {

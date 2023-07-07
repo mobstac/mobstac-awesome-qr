@@ -27,9 +27,9 @@ const config = {
     // text: vCardSampleData,
     text: "hAPPYHAPPYHAPPYHAPYHAYJ",
     logoBackground: true,
-    backgroundColor: "#ffff0060",
+    backgroundColor: "#FFFFFF",
     canvasType: CanvasType.SVG,
-    dataPattern: DataPattern.SMOOTH_SHARP,
+    dataPattern: DataPattern.CUSTOM_SHAPE,
     dotScale: 1,
     colorDark: "#000000",
     colorLight : '#00FFFF',
@@ -49,6 +49,7 @@ const config = {
     margin: 0,
     correctLevel: QRErrorCorrectLevel.Q,
     logoMargin : 0,
+    dataPatternCustomShapeImage : 'https://svgshare.com/i/uwR.svg',
     // isVCard : true
 
 };
