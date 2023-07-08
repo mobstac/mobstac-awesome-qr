@@ -1107,10 +1107,10 @@ export class SVGDrawing {
     }
 
     drawCustomShape(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean){
-        // @ts-ignore
-        canvas.add(this.dataPatternCustomShapeSVG);
+        const distLeft = startX + this.config.margin + this.shiftX;
+        const distTop = startY + this.config.margin + this.shiftY;
+        let dimensionedSVG = `<svg width="${width}" height="${height}" x="${distLeft}" y="${distTop}"> ${this.dataPatternCustomShapeSVG} </svg>`;
 
-        /*
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
             op = 0.0;
@@ -1127,29 +1127,30 @@ export class SVGDrawing {
         if (isRound) {
             if (this.config.useOpacity) {
                 // @ts-ignore
-                canvas.rect(height, width).radius(height / 4)
-                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+                canvas.add(dimensionedSVG);
+                // canvas.rect(height, width).radius(height / 4)
+                //     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
                 // @ts-ignore
-                    canvas.rect(height, width).radius(height / 4)
-                    .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+                canvas.add(dimensionedSVG);
+                    // canvas.rect(height, width).radius(height / 4)
+                    // .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
             return;
         }
         if (this.config.useOpacity) {
-            //@ts-ignore
-            canvas.rect(height, width).
-            move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
-            attr({opacity: op }).
-            fill(gradient).
-            transform({ rotate : rotate})
+            // @ts-ignore
+            canvas.add(dimensionedSVG);
+            // canvas.rect(height, width).
+            // move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
+            // attr({opacity: op }).
+            // fill(gradient).
+            // transform({ rotate : rotate})
         } else {
             // @ts-ignore
-            canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+            canvas.add(dimensionedSVG);
+            // canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
         }
-
-        */
-
     }
 
 
