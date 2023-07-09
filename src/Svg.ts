@@ -1039,7 +1039,6 @@ export class SVGDrawing {
             this.dataPatternCustomShapeSVG = cleanedSvgText;
         } catch (error) {
             console.error('Failed to fetch or process data pattern custom shape image:', error);
-            // Handle the error as appropriate for your application
         }
     }
 
