@@ -1104,6 +1104,12 @@ export class SVGDrawing {
                         gradient = this.getColorFromQrSvg( leftTimelineX, leftTimelineY);
                         this.drawThinSquare(leftTimelineX, leftTimelineY, context, gradient, dotSize, dotSize, false);
                         break;
+                    case DataPattern.CUSTOM_SHAPE:
+                        gradient = this.getColorFromQrSvg(topTimelineX, topTimelineY);
+                        this.drawCustomShape(topTimelineX, topTimelineY, context, dotSize, dotSize, false, gradient);
+                        gradient = this.getColorFromQrSvg( leftTimelineX, leftTimelineY);
+                        this.drawCustomShape(leftTimelineX, leftTimelineY, context, dotSize, dotSize, false, gradient);
+                        break;
                     default:
                         gradient = this.getColorFromQrSvg( topTimelineX, topTimelineY);
                         this.drawSquare(topTimelineX, topTimelineY, context, dotSize, dotSize, false, gradient);
