@@ -1189,6 +1189,9 @@ export class SVGDrawing {
             case DataPattern.THIN_SQUARE:
                 drawShape = this.drawThinSquare.bind(this);
                 break;
+            case DataPattern.CUSTOM_SHAPE:
+                drawShape = this.drawCustomShape.bind(this);
+                break;
             default:
                 drawShape = this.drawSquare.bind(this);
                 break;
@@ -1206,7 +1209,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
+            if (shape === DataPattern.SQUARE || shape === DataPattern.CUSTOM_SHAPE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
@@ -1225,7 +1228,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
+            if (shape === DataPattern.SQUARE || shape === DataPattern.CUSTOM_SHAPE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
@@ -1243,7 +1246,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
+            if (shape === DataPattern.SQUARE || shape === DataPattern.CUSTOM_SHAPE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
@@ -1261,7 +1264,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x , y );
-            if (shape === DataPattern.SQUARE) {
+            if (shape === DataPattern.SQUARE || shape === DataPattern.CUSTOM_SHAPE) {
                 // @ts-ignore
                 drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
@@ -1278,7 +1281,7 @@ export class SVGDrawing {
 
         let gr = this.getColorFromQrSvg( x, y);
 
-        if (shape === DataPattern.SQUARE) {
+        if (shape === DataPattern.SQUARE || shape === DataPattern.CUSTOM_SHAPE) {
             // @ts-ignore
             drawShape(x, y, context, width, height, boolFlag, gr);
         } else {
