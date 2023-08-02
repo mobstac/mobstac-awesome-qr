@@ -75,11 +75,13 @@
     "dependencies": {
         "@svgdotjs/svg.js": "3.0.16",
         "@types/node": "11.13.0",
+        "@types/svg-parser": "^2.0.3",
         "filereader": "^0.10.3",
         "node-fetch": "^2.6.7",
         "probe-image-size": "^7.2.3",
         "request": "^2.88.2",
         "sharp": "^0.30.7",
+        "svg-parser": "^2.0.4",
         "svg.colorat.js": "^1.0.0",
         "svgdom": "^0.1.10",
         "xmlhttprequest": "^1.8.0"

@@ -8,6 +8,7 @@ import { isNode, isSvgFile, getFrameTextSize } from './Util';
 const fetch = require('node-fetch');
 const sharp = require("sharp")
 const probe = require('probe-image-size');
+import { parse } from 'svg-parser';
 
 
 
@@ -946,6 +947,15 @@ export class SVGDrawing {
         }
     }
 
+    parseUploadedSVG() {
+        // const parsed = parse(this.dataPatternCustomShapeSVG);
+        console.log('this.dataPatternCustomShapeSVG', this.dataPatternCustomShapeSVG);
+        const parsed = parse(this.dataPatternCustomShapeSVG);
+        // @ts-ignore
+        console.log(parsed.children[0].properties.width);
+    }
+
+
     private async drawAlignPatterns(context: object, gradient: string) {
         const moduleCount = this.moduleCount;
         const xyOffset = (1 - this.config.dotScale) * 0.5;
@@ -954,6 +964,7 @@ export class SVGDrawing {
 
         if(this.config.dataPattern === DataPattern.CUSTOM_SHAPE){
             await this.fetchDataPatternCustomShapeImage();
+            this.parseUploadedSVG();
         }
 
         for (let row = 0; row < moduleCount; row++) {
@@ -1043,8 +1054,13 @@ export class SVGDrawing {
     }
 
     removeXmlDeclarationFromText(text: string) {
-        const xmlDeclarationPattern = /<!--\?xml[^?]*\?-->\s*/;
-        const cleanedText = text.replace(xmlDeclarationPattern, '');
+        // console.log('initial text', text);
+        // console.log('\n\n\n\n\n\n');
+        // cleaning
+        const svgStartIndex = text.indexOf('<svg');
+        // console.log('svgStartIndex', svgStartIndex);
+        const cleanedText = text.substring(svgStartIndex);
+        // console.log('cleaned text', cleanedText);
         return cleanedText;
     }
 
@@ -1105,10 +1121,16 @@ export class SVGDrawing {
         }
     }
 
-    drawCustomShape(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean){
+    private getDimensionedSVG(distLeft: number, distTop: number, width: number, height: number): string{
+        const dimensionedSVG = `<svg width="${width}" height="${height}" x="${distLeft}" y="${distTop}"> ${this.dataPatternCustomShapeSVG} </svg>`;
+        return dimensionedSVG;
+    }
+
+    private drawCustomShape(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean){
         const distLeft = startX + this.config.margin + this.shiftX;
         const distTop = startY + this.config.margin + this.shiftY;
-        let dimensionedSVG = `<svg width="${width}" height="${height}" x="${distLeft}" y="${distTop}"> ${this.dataPatternCustomShapeSVG} </svg>`;
+
+        const dimensionedSVG = this.getDimensionedSVG(distLeft, distTop, width, height);
 
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {

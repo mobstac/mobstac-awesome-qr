@@ -49,7 +49,7 @@ const config = {
     margin: 0,
     correctLevel: QRErrorCorrectLevel.Q,
     logoMargin : 0,
-    dataPatternCustomShapeImage : 'https://svgshare.com/i/uwR.svg',
+    dataPatternCustomShapeImage : 'https://svgshare.com/i/w0r.svg',
     // isVCard : true
 
 };
