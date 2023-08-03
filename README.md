@@ -156,3 +156,20 @@ To run tests specific to different component of the QR code
 ```
 
 The generated QR codes after testing can be found in `tests` folder.
+## Usage/Examples
+
+```javascript
+import {QRCodeBuilder} from 'mobstac-awesome-qr';
+import {CanvasType} from 'mobstac-awesome-qr/lib/Enums';
+
+const qRCodeGenerator = new QRCodeBuilder(<QR_CONFIG>);
+qRCodeGenerator.build(CanvasType.SVG).then(
+    svgText => {
+        console.log(svgText);
+    }
+)
+// Build function returns a promise which when resolved returns the generated QR code in SVG format as a string.
+
+
+```
+
