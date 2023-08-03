@@ -168,8 +168,7 @@ qRCodeGenerator.build(CanvasType.SVG).then(
         console.log(svgText);
     }
 )
-// Build function returns a promise which when resolved returns the generated QR code in SVG format as a string.
-
 
 ```
 
+Build function returns a promise which when resolved returns the generated QR code in SVG format as a string.
