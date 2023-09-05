@@ -191,7 +191,7 @@ export class QRCode {
         this.make();
         // this.drawing = new Drawing(this.moduleCount, this.patternPosition, config, this.isDark, this.modules);
         // for dashboard comment this out
-        this.svgDrawing = new SVGDrawing(this.moduleCount, this.patternPosition, config, this.isDark, this.modules);
+        this.svgDrawing = new SVGDrawing(this.moduleCount, this.patternPosition, this.config, this.isDark, this.modules);
     }
 
     get patternPosition() {
@@ -211,6 +211,7 @@ export class QRCode {
     public toBuffer(): Buffer {
         return this.svg;
     }
+
 
     public isDark(row: number, col: number) {
         if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
@@ -243,6 +244,7 @@ export class QRCode {
                 }
             }
             this.typeNumber = typeNumber;
+            this.config.typeNumber = typeNumber;
         }
         this.makeImpl(!1, this.getBestMaskPattern());
     }
