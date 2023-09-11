@@ -2084,11 +2084,18 @@ export class SVGDrawing {
     calculateLogoDimensionsModuleApproach() {
         let logoHeight , logoWidth , logoAreaWidth , logoAreaHeight;
 
+        let logoScale = this.config.logoScale ;
         let logoMargin = this.config.logoMargin ;
         let rectangular = this.config.rectangular ;
 
         // Calibrating logo margin to avoid small logos
         // ( This will ensure at least 50% area of logo is covered by the actual logo)
+        if (logoScale <= 0 || logoScale >= 1) {
+            logoScale = 0.2 ;
+        }
+        if( logoMargin < 0 || logoMargin > 100 ){
+            logoMargin = 50 ;
+        }
         logoMargin = 0.5 * logoMargin
 
         if ( !this.config.logoHeight || !this.config.logoWidth ){
@@ -2145,6 +2152,8 @@ export class SVGDrawing {
 
         }
 
+        logoAreaHeight = ( logoScale / maxLogoScale ) * logoAreaHeight ;
+        logoAreaWidth = ( logoScale / maxLogoScale ) * logoAreaWidth ;
         this.calculatedLogoAreaHeight = logoAreaHeight ;
         this.calculatedLogoAreaWidth = logoAreaWidth ;
         logoHeight = ( ( 100 - logoMargin) / 100 ) * logoAreaHeight ;
