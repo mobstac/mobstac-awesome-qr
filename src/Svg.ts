@@ -2090,7 +2090,7 @@ export class SVGDrawing {
 
         // Calibrating logo margin to avoid small logos
         // ( This will ensure at least 50% area of logo is covered by the actual logo)
-        if (logoScale <= 0 || logoScale >= 1) {
+        if (logoScale <= 0 || logoScale > maxLogoScale) {
             logoScale = 0.2 ;
         }
         if( logoMargin < 0 || logoMargin > 100 ){
