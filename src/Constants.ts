@@ -59,7 +59,7 @@ const ERL_QR6: LogoSize = { maxLogoSize: 9, maxLogoHeight: 7, maxLogoWidth: 11 }
 const ERL_QR5: LogoSize = { maxLogoSize: 9, maxLogoHeight: 5, maxLogoWidth: 11 } ;
 const ERL_QR4: LogoSize = { maxLogoSize: 7, maxLogoHeight: 5, maxLogoWidth: 11 } ;
 const ERL_QR3: LogoSize = { maxLogoSize: 5, maxLogoHeight: 5, maxLogoWidth: 7 } ;
-const ERL_QR2: LogoSize = { maxLogoSize: 5, maxLogoHeight: 3, maxLogoWidth: 7 } ;
+const ERL_QR2: LogoSize = { maxLogoSize: 5, maxLogoHeight: 3, maxLogoWidth: 5 } ;
 const ERL_QR1: LogoSize = { maxLogoSize: 5, maxLogoHeight: 3, maxLogoWidth: 5 } ;
 
 export let maxLogoSizeConfigERL = new Map<number, LogoSize>([
@@ -73,6 +73,31 @@ export let maxLogoSizeConfigERL = new Map<number, LogoSize>([
     [3, ERL_QR3],
     [2, ERL_QR2],
     [1, ERL_QR1]
+]) ;
+
+// ER M
+const ERM_QR10: LogoSize = { maxLogoSize: 15, maxLogoHeight: 13, maxLogoWidth: 19 } ;
+const ERM_QR9: LogoSize = { maxLogoSize: 15, maxLogoHeight: 11, maxLogoWidth: 17 } ;
+const ERM_QR8: LogoSize = { maxLogoSize: 13, maxLogoHeight: 11, maxLogoWidth: 15 } ;
+const ERM_QR7: LogoSize = { maxLogoSize: 11, maxLogoHeight: 9, maxLogoWidth: 15 } ;
+const ERM_QR6: LogoSize = { maxLogoSize: 9, maxLogoHeight: 7, maxLogoWidth: 11 } ;
+const ERM_QR5: LogoSize = { maxLogoSize: 9, maxLogoHeight: 5, maxLogoWidth: 11 } ;
+const ERM_QR4: LogoSize = { maxLogoSize: 7, maxLogoHeight: 5, maxLogoWidth: 11 } ;
+const ERM_QR3: LogoSize = { maxLogoSize: 5, maxLogoHeight: 5, maxLogoWidth: 7 } ;
+const ERM_QR2: LogoSize = { maxLogoSize: 5, maxLogoHeight: 3, maxLogoWidth: 7 } ;
+const ERM_QR1: LogoSize = { maxLogoSize: 5, maxLogoHeight: 3, maxLogoWidth: 5 } ;
+
+export let maxLogoSizeConfigERM = new Map<number, LogoSize>([
+    [10, ERM_QR10],
+    [9, ERM_QR9],
+    [8, ERM_QR8],
+    [7, ERM_QR7],
+    [6, ERM_QR6],
+    [5, ERM_QR5],
+    [4, ERM_QR4],
+    [3, ERM_QR3],
+    [2, ERM_QR2],
+    [1, ERM_QR1]
 ]) ;
 
 // ER Q
@@ -98,4 +123,29 @@ export let maxLogoSizeConfigERQ = new Map<number, LogoSize>([
     [3, ERQ_QR3],
     [2, ERQ_QR2],
     [1, ERQ_QR1]
+]) ;
+
+// ER H
+const ERH_QR10: LogoSize = { maxLogoSize: 25, maxLogoHeight: 23, maxLogoWidth: 27 } ;
+const ERH_QR9: LogoSize = { maxLogoSize: 21, maxLogoHeight: 19, maxLogoWidth: 25 } ;
+const ERH_QR8: LogoSize = { maxLogoSize: 21, maxLogoHeight: 19, maxLogoWidth: 23 } ;
+const ERH_QR7: LogoSize = { maxLogoSize: 17, maxLogoHeight: 17, maxLogoWidth: 21 } ;
+const ERH_QR6: LogoSize = { maxLogoSize: 17, maxLogoHeight: 15, maxLogoWidth: 19 } ;
+const ERH_QR5: LogoSize = { maxLogoSize: 13, maxLogoHeight: 11, maxLogoWidth: 19 } ;
+const ERH_QR4: LogoSize = { maxLogoSize: 13, maxLogoHeight: 11, maxLogoWidth: 15 } ;
+const ERH_QR3: LogoSize = { maxLogoSize: 9, maxLogoHeight: 9, maxLogoWidth: 11 } ;
+const ERH_QR2: LogoSize = { maxLogoSize: 7, maxLogoHeight: 7, maxLogoWidth: 9 } ;
+const ERH_QR1: LogoSize = { maxLogoSize: 7, maxLogoHeight: 5, maxLogoWidth: 9 } ;
+
+export let maxLogoSizeConfigERH = new Map<number, LogoSize>([
+    [10, ERH_QR10],
+    [9, ERH_QR9],
+    [8, ERH_QR8],
+    [7, ERH_QR7],
+    [6, ERH_QR6],
+    [5, ERH_QR5],
+    [4, ERH_QR4],
+    [3, ERH_QR3],
+    [2, ERH_QR2],
+    [1, ERH_QR1]
 ]) ;

@@ -2,7 +2,7 @@
 // @ts-ignore
 import { Gradient, SVG, registerWindow } from '@svgdotjs/svg.js';
 import { CanvasUtil, maxLogoScale } from './Common';
-import { LogoSize, maxLogoSizeConfigERL, maxLogoSizeConfigERQ} from './Constants';
+import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { isNode, loadImage, getFrameTextSize } from './Util';
@@ -2109,10 +2109,14 @@ export class SVGDrawing {
 
         // Calculate max area for logo
         let maxLogoSize: LogoSize | undefined ;
-        if ( this.correctLevel === QRErrorCorrectLevel.L || this.correctLevel === QRErrorCorrectLevel.M ) {
+        if ( this.correctLevel === QRErrorCorrectLevel.L ) {
             maxLogoSize = maxLogoSizeConfigERL.get(this.typeNumber) ;
-        } else {
+        } else if ( this.correctLevel === QRErrorCorrectLevel.M  ) {
+            maxLogoSize = maxLogoSizeConfigERM.get(this.typeNumber) ;
+        } else if ( this.correctLevel === QRErrorCorrectLevel.Q  ) {
             maxLogoSize = maxLogoSizeConfigERQ.get(this.typeNumber) ;
+        } else {
+            maxLogoSize = maxLogoSizeConfigERH.get(this.typeNumber) ;
         }
         if ( maxLogoSize == null ) {
             this.calculateLogoDimensions() ;
