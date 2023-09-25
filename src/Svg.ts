@@ -2,7 +2,8 @@
 // @ts-ignore
 import { Gradient, SVG, registerWindow } from '@svgdotjs/svg.js';
 import { CanvasUtil, maxLogoScale } from './Common';
-import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from './Enums';
+import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
+import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { isNode, loadImage, getFrameTextSize } from './Util';
 
@@ -46,6 +47,8 @@ export class SVGDrawing {
     }
 
     public config: QRDrawingConfig;
+    public typeNumber: number;
+    public correctLevel: QRErrorCorrectLevel;
     public isPainted: boolean;
     public canvas: any;
     public context: any;
@@ -79,6 +82,8 @@ export class SVGDrawing {
         this.isDark = isDark;
         this.modules = modules;
         this.config = SVGDrawing.generateDrawingConfig(config, moduleCount);
+        this.typeNumber = config.typeNumber;
+        this.correctLevel = config.correctLevel;
         this.isPainted = false;
 
         this.canvas = SVG().size(config.size, config.size);
@@ -184,7 +189,7 @@ export class SVGDrawing {
 
         if(this.config.logoImage){
             await this.setLogoDimensions() ;
-            this.calculateLogoDimensions() ;
+            this.calculateLogoDimensionsModuleApproach() ;
         }
 
         if( this.config.dataPattern === DataPattern.SMOOTH_ROUND || this.config.dataPattern === DataPattern.SMOOTH_SHARP ) {
@@ -2028,14 +2033,14 @@ export class SVGDrawing {
         })
     }
 
-    isDataDotBehindLogo(  dataDotLeftPosition : number, dataDotTopPosition :number) {
+    isDataDotBehindLogo( dataDotLeftPosition : number, dataDotTopPosition :number ) {
 
         let dotLength ;
         
         if(this.config.dotScale > 0 && this.config.dotScale <= 1)
             dotLength = this.config.moduleSize * this.config.dotScale ;
         else   
-            dotLength = this.config.moduleSize ;        
+            dotLength = this.config.moduleSize ;
 
         const logoXPosition = this.logoAreaCordinateX - this.config.margin ;
         const logoYPosition = this.logoAreaCordinateY - this.config.margin ;
@@ -2045,33 +2050,126 @@ export class SVGDrawing {
         const dotXPosition = dataDotLeftPosition + this.shiftX ;
         const dotYPosition = dataDotTopPosition + this.shiftY ;
 
-        if( dotXPosition >= logoXPosition && 
-            dotXPosition <= logoXPosition + logoXLength && 
-            dotYPosition >= logoYPosition && 
-            dotYPosition <= logoYPosition + logoYLength)
-            return true;
+        if( dotXPosition >= logoXPosition &&
+            dotXPosition < logoXPosition + logoXLength &&
+            dotYPosition >= logoYPosition &&
+            dotYPosition < logoYPosition + logoYLength) {
+            return true ;
+        }
+        if( dotXPosition + dotLength > logoXPosition &&
+            dotXPosition + dotLength <= logoXPosition + logoXLength &&
+            dotYPosition >= logoYPosition &&
+            dotYPosition < logoYPosition + logoYLength) {
+            return true ;
+        }
 
-        if( dotXPosition + dotLength >= logoXPosition && 
-            dotXPosition + dotLength <= logoXPosition + logoXLength && 
-            dotYPosition >= logoYPosition && 
-            dotYPosition <= logoYPosition + logoYLength)
-            return true;
-
-        if( dotXPosition >= logoXPosition && 
-            dotXPosition <= logoXPosition + logoXLength && 
-            dotYPosition + dotLength >= logoYPosition && 
-            dotYPosition + dotLength <= logoYPosition + logoYLength)
-            return true;
-
-        if( dotXPosition + dotLength >= logoXPosition && 
-            dotXPosition + dotLength <= logoXPosition + logoXLength && 
-            dotYPosition + dotLength >= logoYPosition && 
-            dotYPosition + dotLength <= logoYPosition + logoYLength)
-            return true;
+        if( dotXPosition >= logoXPosition &&
+            dotXPosition < logoXPosition + logoXLength &&
+            dotYPosition + dotLength > logoYPosition &&
+            dotYPosition + dotLength <= logoYPosition + logoYLength) {
+            return true ;
+        }
+        if( dotXPosition + dotLength > logoXPosition &&
+            dotXPosition + dotLength <= logoXPosition + logoXLength &&
+            dotYPosition + dotLength > logoYPosition &&
+            dotYPosition + dotLength <= logoYPosition + logoYLength) {
+            return true ;
+        }
 
         return false ;
 
     }   
+
+
+    calculateLogoDimensionsModuleApproach() {
+        let logoHeight , logoWidth , logoAreaWidth , logoAreaHeight;
+
+        let logoScale = this.config.logoScale ;
+        let logoMargin = this.config.logoMargin ;
+        let rectangular = this.config.rectangular ;
+
+        // Calibrating logo margin to avoid small logos
+        // ( This will ensure at least 50% area of logo is covered by the actual logo)
+        if (logoScale <= 0 || logoScale > maxLogoScale) {
+            logoScale = 0.2 ;
+        }
+        if( logoMargin < 0 || logoMargin > 100 ){
+            logoMargin = 50 ;
+        }
+        logoMargin = 0.5 * logoMargin
+
+        if ( !this.config.logoHeight || !this.config.logoWidth ){
+            logoHeight = this.config.size ;
+            logoWidth = this.config.size ;
+            rectangular = false ;
+        } else {
+            logoHeight = this.config.logoHeight;
+            logoWidth = this.config.logoWidth;
+        }
+
+        // Calculate max area for logo
+        let maxLogoSize: LogoSize | undefined ;
+        if ( this.correctLevel === QRErrorCorrectLevel.L ) {
+            maxLogoSize = maxLogoSizeConfigERL.get(this.typeNumber) ;
+        } else if ( this.correctLevel === QRErrorCorrectLevel.M  ) {
+            maxLogoSize = maxLogoSizeConfigERM.get(this.typeNumber) ;
+        } else if ( this.correctLevel === QRErrorCorrectLevel.Q  ) {
+            maxLogoSize = maxLogoSizeConfigERQ.get(this.typeNumber) ;
+        } else {
+            maxLogoSize = maxLogoSizeConfigERH.get(this.typeNumber) ;
+        }
+        if ( maxLogoSize == null ) {
+            this.calculateLogoDimensions() ;
+            return ;
+        }
+        const logoAreaMaxSide = maxLogoSize.maxLogoSize * this.config.moduleSize ;
+
+        if ( rectangular ) {
+            let logoAreaMaxWidth = maxLogoSize.maxLogoWidth * this.config.moduleSize ;
+            let logoAreaMaxHeight = maxLogoSize.maxLogoHeight * this.config.moduleSize ;
+            const ratio = logoHeight / logoWidth ;
+
+            if ( logoHeight > logoWidth ) {
+                logoAreaMaxWidth = maxLogoSize.maxLogoHeight * this.config.moduleSize ;
+                logoAreaMaxHeight = maxLogoSize.maxLogoWidth * this.config.moduleSize ;
+            }
+
+            if ( logoHeight <= logoAreaMaxHeight && logoWidth <= logoAreaMaxWidth ) {
+                logoAreaHeight = logoHeight ;
+                logoAreaWidth = logoWidth ;
+            } else if ( ratio > ( logoAreaMaxHeight / logoAreaMaxWidth ) ) {
+                logoAreaHeight = logoAreaMaxHeight ;
+                logoAreaWidth = logoAreaHeight / ratio ;
+            } else {
+                logoAreaWidth = logoAreaMaxWidth ;
+                logoAreaHeight = ratio * logoAreaWidth ;
+            }
+
+        } else {
+            if( logoWidth < logoAreaMaxSide ){
+                logoAreaHeight = logoHeight ;
+                logoAreaWidth = logoWidth ;
+            } else {
+                logoAreaHeight = logoAreaMaxSide ;
+                logoAreaWidth = logoAreaMaxSide ;
+            }
+
+        }
+
+        logoAreaHeight = ( logoScale / maxLogoScale ) * logoAreaHeight ;
+        logoAreaWidth = ( logoScale / maxLogoScale ) * logoAreaWidth ;
+        this.calculatedLogoAreaHeight = logoAreaHeight ;
+        this.calculatedLogoAreaWidth = logoAreaWidth ;
+        logoHeight = ( ( 100 - logoMargin) / 100 ) * logoAreaHeight ;
+        logoWidth = ( ( 100 - logoMargin) / 100 ) * logoAreaWidth ;
+
+        this.calculatedLogoWidth = logoWidth ;
+        this.calculatedLogoHeight = logoHeight ;
+        this.logoCordinateX = this.shiftX + 0.5 * ( this.config.size - logoWidth );
+        this.logoCordinateY = this.shiftY + 0.5 * ( this.config.size - logoHeight );
+        this.logoAreaCordinateX = this.shiftX + 0.5 * ( this.config.size - logoAreaWidth );
+        this.logoAreaCordinateY = this.shiftY + 0.5 * ( this.config.size - logoAreaHeight );
+    }
 
 
     calculateLogoDimensions(){
@@ -2089,8 +2187,8 @@ export class SVGDrawing {
             logoMargin = 50 ;
         }
 
-         // Calibrating logo margin to avoid small logos ( This will ensure atleast 50% area of logo is covered by the actual logo)
-         logoMargin = 0.5 * logoMargin 
+        // Calibrating logo margin to avoid small logos ( This will ensure atleast 50% area of logo is covered by the actual logo)
+        logoMargin = 0.5 * logoMargin
 
         if(!this.config.logoHeight || !this.config.logoWidth ){
             logoHeight = this.config.size ;
