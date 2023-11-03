@@ -2056,10 +2056,11 @@ export class SVGDrawing {
         if (isNode) {
             const path = require('path');
             const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto');
-            const {setFontDir, setFontFamilyMappings, preloadFonts} = require('svgdom');
-            setFontDir(fontPath);
-            setFontFamilyMappings({'Roboto': 'Roboto-Regular.ttf'});
-            preloadFonts();
+
+            // const {setFontDir, setFontFamilyMappings, preloadFonts} = require('svgdom');
+            // setFontDir(fontPath);
+            // setFontFamilyMappings({'Roboto': 'Roboto-Regular.ttf'});
+            // preloadFonts();
         }
 
 
