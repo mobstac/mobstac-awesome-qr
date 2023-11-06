@@ -6,9 +6,9 @@ import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfig
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { isNode, isSvgFile, getFrameTextSize } from './Util';
-const fetch = require('node-fetch');
-const sharp = require("sharp")
-const probe = require('probe-image-size');
+const fetch = eval('require')('node-fetch');
+const sharp = eval('require')("sharp")
+const probe = eval('require')('probe-image-size');
 
 
 
@@ -509,10 +509,10 @@ export class SVGDrawing {
         }
 
         const size = this.config.size;;
-        const { createSVGWindow } = require('svgdom');
+        const { createSVGWindow } = eval('require')('svgdom');
         const svgWindow = createSVGWindow();
         const svgDocument = svgWindow.document;
-        const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+        const { SVG, registerWindow } = eval('require')('@svgdotjs/svg.js');
         const finalCanvas = SVG(svgDocument.documentElement).size(Math.sqrt(2)*size + 2*this.config.moduleSize, Math.sqrt(2)*size + 2*this.config.moduleSize);
         const color = this.config.backgroundColor ? this.config.backgroundColor : 'none' ;
         const width = this.config.moduleSize;
@@ -717,7 +717,7 @@ export class SVGDrawing {
 
         // ----------------------------------- Local testing ----------------------------------------
 
-        // const fs = require('fs');
+        // const fs = eval('require')('fs');
         //
         // try {
         //     const data = fs.readFileSync(__dirname + '/tests/phone-receiver.' + CanvasType.SVG.toLowerCase(), 'utf8');
@@ -2054,7 +2054,7 @@ export class SVGDrawing {
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
 
         if (isNode) {
-            const path = require('path');
+            const path = eval('require')('path');
             const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto');
             const {setFontDir, setFontFamilyMappings, preloadFonts} = eval('require')('svgdom');
             setFontDir(fontPath);
