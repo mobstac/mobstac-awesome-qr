@@ -2201,7 +2201,7 @@ export class SVGDrawing {
         }
         // @ts-ignore
         canvas.defs().style(`
-            @import url('https://fonts.googleapis.com/css?family=Roboto:400');
+            @import url('https://fonts.googleapis.com/css?family=Arial:400');
     `);
               
         // @ts-ignore
@@ -2211,7 +2211,7 @@ export class SVGDrawing {
 
         // @ts-ignore
         canvas.plain(text).move(textX, textY)
-            .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
+            .font({ fill: textColor, family: 'Arial', size: fontSize, leading: 0, anchor: 'middle'});
 
         if (this.config.isVCard) {
             // @ts-ignore
