@@ -37,7 +37,7 @@ const config = {
     eyeFrameShape: EyeFrameShape.SQUARE,
     eyeFrameColor : '#000000',
     eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.NONE,
+    frameStyle: QRCodeFrame.BANNER_BOTTOM,
     frameText: "고고양양_스마트스탬프용_임수현",
     frameColor: "#724DDB",
     frameTextColor: "#FFFFFF",
