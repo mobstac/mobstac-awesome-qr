@@ -44,12 +44,12 @@ const config = {
     gradientType: GradientType.NONE,
     logoScale: 0.3,
     // backgroundImage :'https://s3.amazonaws.com/beaconstac-content-qa/5118/890b88c1e2c2406cafa6f6eec5240287',
-    // logoImage : 'https://images.freeimages.com/images/previews/ac9/railway-hdr-1361893.jpg',
+    // logoImage : 'https://svgshare.com/i/zvR.svg',
     size: 1024,
     margin: 0,
     correctLevel: QRErrorCorrectLevel.Q,
     logoMargin : 0,
-    dataPatternCustomShapeImage : 'https://svgshare.com/i/w0r.svg',
+    dataPatternCustomShapeImage : 'https://svgshare.com/i/zvR.svg',
     // isVCard : true
 
 };
