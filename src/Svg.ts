@@ -790,6 +790,7 @@ export class SVGDrawing {
                                    context.svg(text.replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${logoWidth}" height="${logoHeight}"`));
                                    // console.log('text:', text.replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${logoWidth}" height="${logoHeight}"`))
                                 } catch(e){
+                                    console.log('LOGO ADDING DIDNT WORK');
                                     await fetch(this.config.logoImage)
                                     .then(  (response : Response) => response.arrayBuffer())
                                     .then( async (array : ArrayBuffer) => {
@@ -799,6 +800,7 @@ export class SVGDrawing {
                                         const stringifiedBuffer = Buffer.from(buffer).toString('base64');
                                         const contentType = 'png'
                                         const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
+                                        console.log(imageBase64);
 
                                         // @ts-ignore
                                         // context.svg('<image x="'+coordinateX+'" y="'+coordinateY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'"  height="'+ logoHeight +'px" width="'+ logoWidth +'px" />')
@@ -969,9 +971,9 @@ export class SVGDrawing {
             // this.parseUploadedSVG();
         }
 
-        for (let row = 0; row < moduleCount; row++) {
-            for (let col = 0; col < moduleCount; col++) {
-                // console.log('row col', row, col);
+        for (let row = 0; row < 1; row++) {
+            for (let col = 12; col < 13; col++) {
+                console.log('row col', row, col);
                 const bIsDark = this.isDark.bind(this)(row, col) || false; //  data dot is black or white ( should not be drawn )
 
                 const isBlkPosCtr = (col < 8 && (row < 8 || row >= moduleCount - 8)) || (col >= moduleCount - 8 && row < 8); // data dot is behind an eye
@@ -1109,7 +1111,7 @@ export class SVGDrawing {
                     this.drawSmoothSharp(x, y, canvas, color, w, h, row, col, false, !bIsDark);
                     break;
                 case DataPattern.CUSTOM_SHAPE:
-                    this.drawCustomShape(x, y, canvas, w, h, false, color, !bIsDark);
+                    await this.drawCustomShape(x, y, canvas, w, h, false, color, !bIsDark);
                     break;
                 default:
                     this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
@@ -1125,88 +1127,74 @@ export class SVGDrawing {
     }
 
     private async getDimensionedSVG(distLeft: number, distTop: number, customSVGWidth: number, customSVGHeight: number) {
-                // console.log('getDimensionedSVG called');
-                //const dimensionedSVG = `<svg width="${width}" height="${height}" x="${distLeft}" y="${distTop}"> ${this.dataPatternCustomShapeSVG} </svg>`;
-                let text = this.dataPatternCustomShapeSVG;
+            let text = this.dataPatternCustomShapeSVG;
 
-                const mainMargin = this.config.margin;
-                // const logoSize = this.config.size;
-                const coordinateX = distLeft;
-                const coordinateY = distTop;
-                const centreCoordinateX = coordinateX - mainMargin;
-                const centreCoordinateY = coordinateY - mainMargin;
-        // console.log('getDimensionedSVG called 2');
-                const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
-                text = text.substring(text.indexOf('<svg'));
-                text = text.substring(0, text.indexOf('</svg>') + 6);
-                let extraText = '';
-                const headSvg = text.substring(0, text.indexOf('>') + 1);
-        // console.log('getDimensionedSVG called 3');
-                if (headSvg.indexOf(' viewBox') === -1) {
-                    let width = 0, height = 0;
-                    if (headSvg.indexOf(' width') !== -1) {
-                        const widthIndex = headSvg.indexOf('"',headSvg.indexOf('width'));
-                        width = text.substring(widthIndex + 1, headSvg.indexOf('"', widthIndex + 1));
-                    }
-                    if (headSvg.indexOf(' height') !== -1) {
-                        const heightIndex = headSvg.indexOf('"',headSvg.indexOf('height'));
-                        height = text.substring(heightIndex + 1, headSvg.indexOf('"', heightIndex + 1))
-                    }
-                    if (width || height) {
-                        width = width ? width : height;
-                        height = height ? height : width;
-                    } else {
-                        console.log('THIS IS PRONE TO ERROR - TEST!')
-                        width = centreCoordinateX + this.config.margin + this.shiftX;
-                        height = centreCoordinateY + this.config.margin + this.shiftY;
-                    }
-                    extraText += ` viewBox="0 0 ${width} ${height }"`
-                }
-        // console.log('getDimensionedSVG called 4');
-                if (headSvg.indexOf('x=') !== -1 || headSvg.indexOf('x =') !== -1) {
-                    text = text.replace(/x\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                }
-                if (headSvg.indexOf('y=') !== -1 || headSvg.indexOf('y =') !== -1) {
-                    text = text.replace(/y\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                }
+            const mainMargin = this.config.margin;
+            // const logoSize = this.config.size;
+            const coordinateX = distLeft;
+            const coordinateY = distTop;
+            const centreCoordinateX = coordinateX - mainMargin;
+            const centreCoordinateY = coordinateY - mainMargin;
+            const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+            text = text.substring(text.indexOf('<svg'));
+            text = text.substring(0, text.indexOf('</svg>') + 6);
+            let extraText = '';
+            const headSvg = text.substring(0, text.indexOf('>') + 1);
+            if (headSvg.indexOf(' viewBox') === -1) {
+                let width = 0, height = 0;
                 if (headSvg.indexOf(' width') !== -1) {
-                    text = text.replace(/width\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
+                    const widthIndex = headSvg.indexOf('"',headSvg.indexOf('width'));
+                    width = text.substring(widthIndex + 1, headSvg.indexOf('"', widthIndex + 1));
                 }
                 if (headSvg.indexOf(' height') !== -1) {
-                    text = text.replace(/height\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
+                    const heightIndex = headSvg.indexOf('"',headSvg.indexOf('height'));
+                    height = text.substring(heightIndex + 1, headSvg.indexOf('"', heightIndex + 1))
                 }
+                if (width || height) {
+                    width = width ? width : height;
+                    height = height ? height : width;
+                } else {
+                    console.log('THIS IS PRONE TO ERROR - TEST!')
+                    width = centreCoordinateX + this.config.margin + this.shiftX;
+                    height = centreCoordinateY + this.config.margin + this.shiftY;
+                }
+                extraText += ` viewBox="0 0 ${width} ${height }"`
+            }
+            if (headSvg.indexOf('x=') !== -1 || headSvg.indexOf('x =') !== -1) {
+                text = text.replace(/x\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
+            }
+            if (headSvg.indexOf('y=') !== -1 || headSvg.indexOf('y =') !== -1) {
+                text = text.replace(/y\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
+            }
+            if (headSvg.indexOf(' width') !== -1) {
+                text = text.replace(/width\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
+            }
+            if (headSvg.indexOf(' height') !== -1) {
+                text = text.replace(/height\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
+            }
+            try{
+                // @ts-ignore
+                text = text.replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${customSVGWidth}" height="${customSVGHeight}"`)
+                return text;
+            } catch(e){
+                console.log('REPLACE DIDNT WORK!')
+                await fetch(this.config.dataPatternCustomShapeImage)
+                    .then(  (response : Response) => response.arrayBuffer())
+                    .then( async (array : ArrayBuffer) => {
+                        array = new Uint8Array(array);
+                        let jpegImage = await sharp(array).resize({ width : Math.round(customSVGWidth) , height : Math.round(customSVGHeight) , fit : 'fill'}).png();
+                        let buffer = await jpegImage.toBuffer();
+                        const stringifiedBuffer = Buffer.from(buffer).toString('base64');
+                        const contentType = 'png'
+                        const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
 
-        // console.log('getDimensionedSVG called 5');
-                try{
-                    // console.log('getDimensionedSVG called 6');
-                    // @ts-ignore
-                    text = text.replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${customSVGWidth}" height="${customSVGHeight}"`)
-                    // console.log('text:', text.replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${customSVGWidth}" height="${customSVGHeight}"`));
-                    // console.log('text: ', text);
-                    // console.log('getDimensionedSVG called 7');
-                    return text;
-                    // context.svg(text.replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${customSVGWidth}" height="${customSVGHeight}"`));
-                } catch(e){
-                    // console.log('getDimensionedSVG called 8');
-                    console.log('REPLACE DIDNT WORK!')
-                    await fetch(this.config.dataPatternCustomShapeImage)
-                        .then(  (response : Response) => response.arrayBuffer())
-                        .then( async (array : ArrayBuffer) => {
-                            array = new Uint8Array(array);
-                            let jpegImage = await sharp(array).resize({ width : Math.round(customSVGWidth) , height : Math.round(customSVGHeight) , fit : 'fill'}).png();
-                            let buffer = await jpegImage.toBuffer();
-                            const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-                            const contentType = 'png'
-                            const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
-
-                            // @ts-ignore
-                            // context.svg('<image x="'+coordinateX+'" y="'+coordinateY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'"  height="'+ logoHeight +'px" width="'+ logoWidth +'px" />')
-                            context.image('').size(customSVGWidth , customSVGHeight)
-                                .attr({ 'xlink:href': imageBase64 ,'preserveAspectRatio': 'none'})
-                                .move(coordinateX , coordinateY)
-                        }).catch(console.error.bind(console));
-                };
-        // return dimensionedSVG;
+                        // @ts-ignore
+                        // context.svg('<image x="'+coordinateX+'" y="'+coordinateY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'"  height="'+ logoHeight +'px" width="'+ logoWidth +'px" />')
+                        context.image('').size(customSVGWidth , customSVGHeight)
+                            .attr({ 'xlink:href': imageBase64 ,'preserveAspectRatio': 'none'})
+                            .move(coordinateX , coordinateY)
+                    }).catch(console.error.bind(console));
+            };
     }
 
     private async drawCustomShape(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean){
@@ -1219,46 +1207,72 @@ export class SVGDrawing {
         // console.log('dimensionedSVG', dimensionedSVG);
 
 
-        let op = isMask ? 0.6 : 1;
-        if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
-            op = 0.0;
+        try{
+            // @ts-ignore
+            canvas.add(dimensionedSVG);
+        }catch (e) {
+            console.log('ADDING dimensionedSVG to canvas DIDNT WORK!')
+            await fetch(this.config.dataPatternCustomShapeImage)
+                .then(  (response : Response) => response.arrayBuffer())
+                .then( async (array : ArrayBuffer) => {
+                    array = new Uint8Array(array);
+                    let jpegImage = await sharp(array).resize({ width : Math.round(width) , height : Math.round(height) , fit : 'fill'}).png();
+                    let buffer = await jpegImage.toBuffer();
+                    const stringifiedBuffer = Buffer.from(buffer).toString('base64');
+                    const contentType = 'png'
+                    const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
+                    // console.log(width, height, imageBase64);
+
+
+                    // context.svg('<image x="'+coordinateX+'" y="'+coordinateY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'"  height="'+ logoHeight +'px" width="'+ logoWidth +'px" />')
+                    // @ts-ignore
+                    canvas.image('').size(width, height)
+                        .attr({'xlink:href': imageBase64, 'preserveAspectRatio': 'none'})
+                        .move(distLeft, distTop)
+                }).catch(console.error.bind(console));
         }
 
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = canvas.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
-        }
-        let rotate = 0;
-        if (isRound) {
-            if (this.config.useOpacity) {
-                // @ts-ignore
-                canvas.add(dimensionedSVG);
-                // canvas.rect(height, width).radius(height / 4)
-                //     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
-            } else {
-                // @ts-ignore
-                canvas.add(dimensionedSVG);
-                    // canvas.rect(height, width).radius(height / 4)
-                    // .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-            }
-            return;
-        }
-        if (this.config.useOpacity) {
-            // @ts-ignore
-            canvas.add(dimensionedSVG);
-            // canvas.rect(height, width).
-            // move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
-            // attr({opacity: op }).
-            // fill(gradient).
-            // transform({ rotate : rotate})
-        } else {
-            // @ts-ignore
-            canvas.add(dimensionedSVG);
-            // canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
-        }
+
+        // let op = isMask ? 0.6 : 1;
+        // if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
+        //     op = 0.0;
+        // }
+        //
+        // if(gradient.length > 7 ){
+        //     // @ts-ignore
+        //     gradient = canvas.gradient( 'linear',function(add){
+        //         add.stop(0 , gradient.split(" ")[0])
+        //         add.stop(1 , gradient.split(" ")[1])
+        //     }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
+        // }
+        // let rotate = 0;
+        // if (isRound) {
+        //     if (this.config.useOpacity) {
+        //         // @ts-ignore
+        //
+        //         // canvas.rect(height, width).radius(height / 4)
+        //         //     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
+        //     } else {
+        //         // @ts-ignore
+        //         canvas.add(dimensionedSVG);
+        //             // canvas.rect(height, width).radius(height / 4)
+        //             // .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+        //     }
+        //     return;
+        // }
+        // if (this.config.useOpacity) {
+        //     // @ts-ignore
+        //     canvas.add(dimensionedSVG);
+        //     // canvas.rect(height, width).
+        //     // move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
+        //     // attr({opacity: op }).
+        //     // fill(gradient).
+        //     // transform({ rotate : rotate})
+        // } else {
+        //     // @ts-ignore
+        //     canvas.add(dimensionedSVG);
+        //     // canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
+        // }
     }
 
 
@@ -1651,9 +1665,9 @@ export class SVGDrawing {
                         break;
                     case DataPattern.CUSTOM_SHAPE:
                         gradient = this.getColorFromQrSvg(topTimelineX, topTimelineY);
-                        this.drawCustomShape(topTimelineX, topTimelineY, context, dotSize, dotSize, false, gradient);
+                        // this.drawCustomShape(topTimelineX, topTimelineY, context, dotSize, dotSize, false, gradient);
                         gradient = this.getColorFromQrSvg( leftTimelineX, leftTimelineY);
-                        this.drawCustomShape(leftTimelineX, leftTimelineY, context, dotSize, dotSize, false, gradient);
+                        // this.drawCustomShape(leftTimelineX, leftTimelineY, context, dotSize, dotSize, false, gradient);
                         break;
                     default:
                         gradient = this.getColorFromQrSvg( topTimelineX, topTimelineY);
@@ -1884,7 +1898,7 @@ export class SVGDrawing {
                 drawShape = this.drawThinSquare.bind(this);
                 break;
             case DataPattern.CUSTOM_SHAPE:
-                drawShape = this.drawCustomShape.bind(this);
+                // drawShape = this.drawCustomShape.bind(this);
                 break;
             default:
                 drawShape = this.drawSquare.bind(this);
