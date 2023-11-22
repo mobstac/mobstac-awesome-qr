@@ -971,9 +971,9 @@ export class SVGDrawing {
             // this.parseUploadedSVG();
         }
 
-        for (let row = 0; row < 1; row++) {
-            for (let col = 12; col < 13; col++) {
-                console.log('row col', row, col);
+        for (let row = 0; row < moduleCount; row++) {
+            for (let col = 0; col < moduleCount; col++) {
+                // console.log('row col', row, col);
                 const bIsDark = this.isDark.bind(this)(row, col) || false; //  data dot is black or white ( should not be drawn )
 
                 const isBlkPosCtr = (col < 8 && (row < 8 || row >= moduleCount - 8)) || (col >= moduleCount - 8 && row < 8); // data dot is behind an eye
@@ -998,7 +998,7 @@ export class SVGDrawing {
 
                 if(this.isSmoothPattern){
                     if(this.TwoDArray[row][col]){
-                        this.fillRectWithMask(
+                        await this.fillRectWithMask(
                             context,
                             nLeft,
                             nTop,
@@ -1014,7 +1014,7 @@ export class SVGDrawing {
                     if (patternPosition.length === 0) {
                         // if align pattern list is empty, then it means that we don't need to leave room for the align patterns
                         if (!bProtected ) {
-                            this.fillRectWithMask(
+                            await this.fillRectWithMask(
                                 context,
                                 nLeft,
                                 nTop,
@@ -1029,7 +1029,7 @@ export class SVGDrawing {
                     } else {
                         let inAgnRange = col < moduleCount - 4 && col >= moduleCount - 4 - 5 && row < moduleCount - 4 && row >= moduleCount - 4 - 5; // data is major alignment eye
                         if ((!bProtected && !inAgnRange ) ) {
-                            this.fillRectWithMask(
+                            await this.fillRectWithMask(
                                 context,
                                 nLeft,
                                 nTop,
