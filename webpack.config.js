@@ -20,6 +20,6 @@ module.exports = {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist')
     },
-    target: 'node',
-    externals: [nodeExternals(), { fs: "commonjs fs" }],
+    target: 'web',
+    // externals: [nodeExternals(), { fs: "commonjs fs" }],
 };
