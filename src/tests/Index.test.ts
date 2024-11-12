@@ -37,7 +37,7 @@ const config = {
     eyeFrameShape: EyeFrameShape.SQUARE,
     eyeFrameColor : '#000000',
     eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.NONE,
+    frameStyle: QRCodeFrame.CIRCULAR,
     frameText: "고고양양_스마트스탬프용_임수현",
     frameColor: "#724DDB",
     frameTextColor: "#FFFFFF",
@@ -50,6 +50,8 @@ const config = {
     correctLevel: QRErrorCorrectLevel.Q,
     logoMargin : 0,
     // isVCard : true
+    stickerImage: 'https://s3.amazonaws.com/beaconstac-content-qa/949/aa0d90ece791407ea6e7f2ba72372d3c',
+    stickerImageName: ''
 
 };
 

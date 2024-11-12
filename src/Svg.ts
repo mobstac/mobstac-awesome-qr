@@ -10,8 +10,6 @@ const fetch = require('node-fetch');
 const sharp = require("sharp")
 const probe = require('probe-image-size');
 
-
-
 export class SVGDrawing {
     private static generateDrawingConfig(config: QRCodeConfig, qrModuleCount: number): QRDrawingConfig {
         const dotScale = config.dotScale;
@@ -262,7 +260,12 @@ export class SVGDrawing {
                 // @ts-ignore
                 return this.addDesign(mainCanvas,gradient);
             })
-            .then((canvas: object) => {
+            .then((canvas: any)=>{
+                const svgString = canvas.svg();  // This returns an SVG string
+                const parsedCanvas = SVG(svgString);  // Convert the SVG string back into an SVG.js object
+                return this.addSticker(parsedCanvas);
+            })
+            .then((canvas: any) => {
                 // @ts-ignore
                 return canvas.svg();
             });
@@ -2484,7 +2487,55 @@ export class SVGDrawing {
             }
         this.TwoDArray = TwoDArrayOfDataDots;
     }
-      
+
+    async addSticker(mainCanvas: any) {
+        // sizetable 
+        if (!this.config.stickerImage || !this.config.stickerImageName) {
+            return mainCanvas;
+        }
+        const StickerSizeTable = {
+            TOMS_TROT: {
+                'x': 145,
+                'y': 1713,
+                'scale': 0.265,
+            },
+            SWEET_SLICE: {
+                'x': 210,
+                'y': 210,
+                'scale': 0.532,
+            },
+            FESTIVE_FEAST: {
+                'x': 2250,
+                'y': 270,
+                'scale': 0.23,
+            },
+        } as const;
+        const size = this.config.size
+        const { createSVGWindow } = eval('require')('svgdom');
+        const stickerWindow = createSVGWindow();
+        const stickerDocument = stickerWindow.document;
+        registerWindow(stickerWindow, stickerDocument);
+        // @ts-ignore
+        let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
+        // Add Sticker Image
+        const stickerImage = this.config.stickerImage;
+        // @ts-ignore
+        let imageBase64 = await this.getImageBase64Data(stickerImage);
+        stickerCanvas.image('').size(size , size)
+        .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' });
+        type StickerNames = keyof typeof StickerSizeTable;
+        const stickerName = this.config.stickerImageName as StickerNames;
+        const scale = StickerSizeTable[stickerName].scale;
+        mainCanvas.attr({
+            'transform': 'scale('+ scale +')'  
+        });
+        const moveX = StickerSizeTable[stickerName].x;
+        const moveY = StickerSizeTable[stickerName].y;
+        mainCanvas.move(moveX, moveY);
+        stickerCanvas.svg(mainCanvas.svg());
+        return stickerCanvas;
+    }
+
 }
 
 
