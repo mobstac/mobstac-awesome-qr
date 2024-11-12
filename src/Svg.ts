@@ -2489,46 +2489,30 @@ export class SVGDrawing {
     }
 
     async addSticker(mainCanvas: any){
-        
+
+        const size = this.config.size
         const { createSVGWindow } = eval('require')('svgdom');
         const stickerWindow = createSVGWindow();
         const stickerDocument = stickerWindow.document;
         registerWindow(stickerWindow, stickerDocument);
         // @ts-ignore
-        let stickerCanvas = SVG(stickerDocument.documentElement).size( 2048, 2048 )
+        let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size )
 
 
         // Add Sticker Image
-        const stickerImage = 'https://www.yourprint.in/wp-content/uploads/2019/04/Square-Sticker-1.jpg'
+        const stickerImage = 'https://s3.amazonaws.com/beaconstac-content-qa/27835/1701414f11024ef6b1aa5f747e6735a7'
         // @ts-ignore
-        await isSvgFile(stickerImage).then( async isSvg =>{
-            if(isSvg){
-                await fetch(stickerImage)
-                .then(  (response : Response) => response.arrayBuffer())
-                .then( async (array : ArrayBuffer) => {
-                    array = new Uint8Array(array);
-                    let jpegImage = await sharp(array).resize({ width : 2048 , height : 2048 , fit : 'fill'}).png();
-                    let buffer = await jpegImage.toBuffer();
-                    const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-                    const contentType = 'png'
-                    const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
-                    stickerCanvas.image('').size(2048 , 2048)
-                    .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' })   
-                    .move(this.shiftX , this.shiftY)         
-            
-                })  
-            } else {
-                let imageBase64 = await this.getImageBase64Data(stickerImage);
-                stickerCanvas.image('').size(2048 , 2048)
-                .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' })   
-                .move(this.shiftX , this.shiftY)      
-            }
-        })
+        let imageBase64 = await this.getImageBase64Data(stickerImage);
+        stickerCanvas.image('').size(size , size)
+        .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' })  
 
+        const scale = 0.3 * ( size / 1024)
         mainCanvas.attr({
-            'transform': 'scale(0.5)'  // Scaling the canvas content by 50% (1024/2048)
+            'transform': 'scale('+ scale +')'  // Scaling the canvas content by 50% (1024/2048)
         });
-        mainCanvas.move(100,100)
+        const moveX = size/4
+        const moveY = size/4
+        mainCanvas.move(moveX, moveY + 1000)
 
         stickerCanvas.svg(mainCanvas.svg())
 
