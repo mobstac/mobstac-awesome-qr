@@ -40,7 +40,15 @@ export class QRCodeBuilder {
             return Promise.reject('Setting text is necessary to generate the QRCode');
         }
         if (this.config.frameText && this.config.frameText.length > 30) {
-            return Promise.reject('Frame text length exceeded');
+
+            // Calculations for multiline text
+            const text = this.config.frameText;
+            const textLinesLength = text.split('\n').length;
+            const textLineMaxLength = text.split('\n').map(value => value.trim())
+                .reduce((max, line) => Math.max(max, line.length), 0);
+            if ( textLineMaxLength > 30 ) {
+                return Promise.reject('Frame text length exceeded');
+            }
         }
         if (this.config.logoScale > maxLogoScale) {
             this.config.logoScale = maxLogoScale ;

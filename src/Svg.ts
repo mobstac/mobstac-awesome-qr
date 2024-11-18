@@ -2079,6 +2079,8 @@ export class SVGDrawing {
             .reduce((max, line) => Math.max(max, line.length), 0);
         let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
+        const multiLineHeight = ( textLinesLength - 1 ) * fontSize;
+
         switch (frameStyle) {
             case QRCodeFrame.BANNER_BOTTOM:
                 cornerRadius = moduleSize;
@@ -2093,7 +2095,7 @@ export class SVGDrawing {
                 break;
             case QRCodeFrame.BANNER_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize / 2 + size / 5 - 1;
+                borderY = (moduleSize / 2 + size / 5 - 1) + multiLineHeight;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
@@ -2113,7 +2115,7 @@ export class SVGDrawing {
                 break;
             case QRCodeFrame.BOX_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize * 1.5 + size / 5;
+                borderY = ( moduleSize * 1.5 + size / 5 ) + multiLineHeight;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
@@ -2133,7 +2135,7 @@ export class SVGDrawing {
                 break;
             case QRCodeFrame.BALLOON_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize * 1.5 + size / 5;
+                borderY = ( moduleSize * 1.5 + size / 5 ) + multiLineHeight;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
@@ -2187,7 +2189,7 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
             // @ts-ignore
-            canvas.polygon(coordinates).fill(color).move(size / 2 - size/24 + moduleSize / 2, size / 5 - moduleSize / 2);
+            canvas.polygon(coordinates).fill(color).move(size / 2 - size/24 + moduleSize / 2, size / 5 - moduleSize / 2 + multiLineHeight);
         }
 
         // Banner for frame text
@@ -2209,11 +2211,11 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BANNER_TOP) {
             // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
-                .move(bannerX, bannerY - moduleSize + size / 5);
+                .move(bannerX, bannerY - moduleSize + size / 5 + multiLineHeight);
 
             // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
-                .move(size - moduleSize / 2, bannerY - moduleSize + size / 5);
+                .move(size - moduleSize / 2, bannerY - moduleSize + size / 5 + multiLineHeight);
         }
         // @ts-ignore
         canvas.defs().style(`
