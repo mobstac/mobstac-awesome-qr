@@ -37,7 +37,7 @@ const config = {
     eyeFrameColor : '#000000',
     eyeBallColor : '#000000',
     frameStyle: QRCodeFrame.NONE,
-    frameText: "LINE 1 LINE 1 LINE 1 \\n LINE 2 LINE 2 \\n LINE 3",
+    frameText: "LINE 1 LINE 1 LINE 1 \n LINE 2 LINE 2 \n LINE 3",
     frameColor: "#724DDB",
     frameTextColor: "#FFFFFF",
     gradientType: GradientType.NONE,
