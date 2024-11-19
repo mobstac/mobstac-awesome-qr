@@ -42,10 +42,10 @@ export class QRCodeBuilder {
         }
         if (this.config.frameText && this.config.frameText.length > 30) {
             // Calculations for multiline text
-            const text = this.config.frameText;
-            const textLinesLength = text.split('\n').length;
-            const textLineMaxLength = text.split('\n').map(value => value.trim())
-                .reduce((max, line) => Math.max(max, line.length), 0);
+            const text = this.config.frameText
+            const textLinesLength = text.length ? text.split('\n').length : 0;
+            const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
+                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
             if ( textLineMaxLength > 30 ) {
                 return Promise.reject('Frame text length exceeded');
             }
