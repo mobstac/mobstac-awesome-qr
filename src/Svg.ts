@@ -144,7 +144,7 @@ export class SVGDrawing {
                 canvasHeight = 1.25 * size;
             }
 
-            const multiLineHeight = (textLinesLength - 1) * fontSize;
+            const multiLineHeight = (textLinesLength - 1) * ( fontSize + 10);
             if (textLineMaxLength) {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
@@ -2079,7 +2079,8 @@ export class SVGDrawing {
                 .reduce((max, line) => Math.max(max, line.length), 0) : 7;
         let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
-        const multiLineHeight = ( textLinesLength - 1 ) * fontSize;
+        // 10 is line gap
+        const multiLineHeight = ( textLinesLength - 1 ) * ( fontSize + 10 ) 
 
         switch (frameStyle) {
             case QRCodeFrame.BANNER_BOTTOM:
@@ -2195,7 +2196,7 @@ export class SVGDrawing {
         // Banner for frame text
         if (frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
             // @ts-ignore
-            canvas.rect(size, (size / 5) + (textLinesLength -1) * fontSize).fill(color).radius(moduleSize)
+            canvas.rect(size, (size / 5) + multiLineHeight).fill(color).radius(moduleSize)
             .move(bannerX, bannerY);
         }
 
