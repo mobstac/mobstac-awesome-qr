@@ -100,9 +100,9 @@ export class SVGDrawing {
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
 
-            const textLinesLength = this.config.frameText ? this.config.frameText.split('\n').length : 1;
+            const textLinesLength = this.config.frameText ? this.config.frameText.split('\\n').length : 1;
 
-            const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
+            const textLineMaxLength = this.config.frameText? this.config.frameText.split('\\n').map(value => value.trim())
                 .reduce((max, line) => Math.max(max, line.length), 0) : 7;
             let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
@@ -1845,9 +1845,9 @@ export class SVGDrawing {
             // preloadFonts();
         }
 
-        const textLinesLength = text.length ? text.split('\n').length : 0;
+        const textLinesLength = text.length ? text.split('\\n').length : 0;
 
-        const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
+        const textLineMaxLength = this.config.frameText? this.config.frameText.split('\\n').map(value => value.trim())
                 .reduce((max, line) => Math.max(max, line.length), 0) : 7;
         fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
@@ -1999,7 +1999,7 @@ export class SVGDrawing {
 
         // @ts-ignore
         let textYVal = textY;
-        const textLines = text.split('\n');
+        const textLines = text.split('\\n');
         for (const line of textLines){
             // @ts-ignore
             const textRef = canvas.plain(line);
