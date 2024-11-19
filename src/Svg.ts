@@ -144,7 +144,7 @@ export class SVGDrawing {
                 canvasHeight = 1.25 * size;
             }
 
-            const multiLineHeight = (textLinesLength - 1) * ( fontSize + 10);
+            const multiLineHeight = (textLinesLength - 1) * (fontSize + 10);
             if (textLineMaxLength) {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
@@ -2077,10 +2077,9 @@ export class SVGDrawing {
 
         const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
                 .reduce((max, line) => Math.max(max, line.length), 0) : 7;
-        let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
+        const fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
-        // 10 is line gap
-        const multiLineHeight = ( textLinesLength - 1 ) * ( fontSize + 10 ) 
+        const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10); 
 
         switch (frameStyle) {
             case QRCodeFrame.BANNER_BOTTOM:
