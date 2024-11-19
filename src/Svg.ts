@@ -126,7 +126,7 @@ export class SVGDrawing {
         }
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
-            const textLinesLength = this.config.frameText ? this.config.frameText.split('\n').length : 0;
+            const textLinesLength = this.config.frameText ? this.config.frameText.split('\n').length : 1;
 
             const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
                 .reduce((max, line) => Math.max(max, line.length), 0) : 7;
@@ -2073,10 +2073,10 @@ export class SVGDrawing {
             // preloadFonts();
         }
 
-        const textLinesLength = text.split('\n').length;
+        const textLinesLength = text.length ? text.split('\n').length : 0;
 
-        const textLineMaxLength = text.split('\n').map(value => value.trim())
-            .reduce((max, line) => Math.max(max, line.length), 0);
+        const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
+                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
         let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
         const multiLineHeight = ( textLinesLength - 1 ) * fontSize;
