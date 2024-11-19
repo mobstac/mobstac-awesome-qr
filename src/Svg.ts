@@ -1986,7 +1986,7 @@ export class SVGDrawing {
 
             // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
-                .move(size - moduleSize / 2, bannerY - moduleSize + size / 5);
+                .move(size - moduleSize / 2, bannerY - moduleSize + size / 5 + multiLineHeight);
         }
         // @ts-ignore
         canvas.defs().style(`
