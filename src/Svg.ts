@@ -1829,7 +1829,6 @@ export class SVGDrawing {
         const rawSize = this.config.size;
         let size = rawSize + moduleSize * 2;
         const text = frameText || 'SCAN ME';
-        let fontSize = getFrameTextSize(this.config.viewportSize, text.length);
 
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
@@ -1849,7 +1848,7 @@ export class SVGDrawing {
 
         const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
                 .reduce((max, line) => Math.max(max, line.length), 0) : 7;
-        fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
+        const fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
         const multiLineHeight = ( textLinesLength - 1 ) * fontSize;
 
