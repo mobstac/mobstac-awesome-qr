@@ -99,6 +99,13 @@ export class SVGDrawing {
         let canvasWidth: number;
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
+
+            const textLinesLength = this.config.frameText ? this.config.frameText.split('\n').length : 0;
+
+            const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
+                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
+            let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
+
             const moduleSize = this.config.moduleSize;
             const rawSize = this.config.size;
             const size = rawSize + moduleSize * 2;
@@ -109,6 +116,11 @@ export class SVGDrawing {
             }
             if (frameStyle === QRCodeFrame.BOX_TOP || frameStyle === QRCodeFrame.BOX_BOTTOM) {
                 canvasHeight = 1.25 * size;
+            }
+
+            const multiLineHeight = (textLinesLength - 1) * fontSize;
+            if (textLineMaxLength) {
+                canvasHeight = canvasHeight + multiLineHeight ;
             }
 
             if (frameStyle === QRCodeFrame.CIRCULAR) {
@@ -138,7 +150,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BALLOON_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = size / 5 + size / 12;
+                    this.shiftY = size / 5 + size / 12 + + multiLineHeight;
                     if (this.config.isVCard) {
                         this.shiftY = 10 * moduleSize + size / 5;
                     }
@@ -149,7 +161,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BANNER_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = 1.5 * this.config.moduleSize + size / 5 - 1;
+                    this.shiftY = ( 1.5 * this.config.moduleSize + size / 5 - 1) + multiLineHeight;
                     break;
                 case QRCodeFrame.BANNER_BOTTOM:
                     this.shiftX = 1.5 * this.config.moduleSize;
@@ -157,7 +169,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BOX_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = 2.5 * this.config.moduleSize + size / 5;
+                    this.shiftY = (2.5 * this.config.moduleSize + size / 5) + multiLineHeight;
                     break;
                 case QRCodeFrame.TEXT_ONLY:
                     this.shiftX = 1.5 * this.config.moduleSize;
@@ -1817,7 +1829,7 @@ export class SVGDrawing {
         const rawSize = this.config.size;
         let size = rawSize + moduleSize * 2;
         const text = frameText || 'SCAN ME';
-        const fontSize = getFrameTextSize(this.config.viewportSize, text.length);
+        let fontSize = getFrameTextSize(this.config.viewportSize, text.length);
 
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
@@ -1832,6 +1844,14 @@ export class SVGDrawing {
             // setFontFamilyMappings({'Roboto': 'Roboto-Regular.ttf'});
             // preloadFonts();
         }
+
+        const textLinesLength = text.split('\n').length;
+
+        const textLineMaxLength = text.split('\n').map(value => value.trim())
+            .reduce((max, line) => Math.max(max, line.length), 0);
+        fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
+
+        const multiLineHeight = ( textLinesLength - 1 ) * fontSize;
 
 
         switch (frameStyle) {
@@ -1848,7 +1868,7 @@ export class SVGDrawing {
                 break;
             case QRCodeFrame.BANNER_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize / 2 + size / 5 - 1;
+                borderY = (moduleSize / 2 + size / 5 - 1) + multiLineHeight;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
@@ -1868,7 +1888,7 @@ export class SVGDrawing {
                 break;
             case QRCodeFrame.BOX_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize * 1.5 + size / 5;
+                borderY = (moduleSize * 1.5 + size / 5) + multiLineHeight;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
@@ -1888,7 +1908,7 @@ export class SVGDrawing {
                 break;
             case QRCodeFrame.BALLOON_TOP:
                 borderX = moduleSize / 2;
-                borderY = moduleSize * 1.5 + size / 5;
+                borderY = (moduleSize * 1.5 + size / 5) + multiLineHeight;
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
@@ -1941,13 +1961,13 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
             // @ts-ignore
-            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size / 5 - moduleSize / 2);
+            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, ( size / 5 - moduleSize / 2) + multiLineHeight);
         }
 
         // Banner for frame text
         if (frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
             // @ts-ignore
-            canvas.rect(size, size / 5).fill(color).radius(moduleSize)
+            canvas.rect(size, size / 5 + (textLinesLength -1) * fontSize ).fill(color).radius(moduleSize)
             .move(bannerX, bannerY);
         }
 
@@ -1963,7 +1983,7 @@ export class SVGDrawing {
         if (frameStyle === QRCodeFrame.BANNER_TOP) {
             // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
-                .move(bannerX, bannerY - moduleSize + size / 5);
+                .move(bannerX, bannerY - moduleSize + size / 5 + multiLineHeight);
 
             // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
@@ -1978,8 +1998,16 @@ export class SVGDrawing {
        
 
         // @ts-ignore
-        canvas.plain(text).move(textX, textY)
-            .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'}) ;
+        let textYVal = textY;
+        const textLines = text.split('\n');
+        for (const line of textLines){
+            // @ts-ignore
+            const textRef = canvas.plain(line);
+            textRef.move(textX, textYVal)
+                .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
+            textYVal += fontSize + 10;
+
+        }
 
         if (this.config.isVCard) {
             // @ts-ignore
