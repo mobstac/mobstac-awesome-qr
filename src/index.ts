@@ -5,6 +5,7 @@ import {
 import { QRCode } from './Models';
 import { QRCodeConfig } from './Types';
 import { maxLogoScale } from './Common';
+import { getLengthOfLongestText } from './Util';
 
 export class QRCodeBuilder {
     private config: QRCodeConfig;
@@ -42,10 +43,7 @@ export class QRCodeBuilder {
         if (this.config.frameText && this.config.frameText.length > 30) {
 
             // Calculations for multiline text
-            const text = this.config.frameText
-            const textLinesLength = text.length ? text.split('\n').length : 0;
-            const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
-                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
+            const textLineMaxLength = getLengthOfLongestText(this.config.frameText);
             if ( textLineMaxLength > 30 ) {
                 return Promise.reject('Frame text length exceeded');
             }

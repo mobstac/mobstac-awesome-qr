@@ -5,7 +5,7 @@ import { CanvasUtil, maxLogoScale } from './Common';
 import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
-import { isNode, isSvgFile, getFrameTextSize } from './Util';
+import { isNode, isSvgFile, getFrameTextSize, getLengthOfLongestText } from './Util';
 const fetch = require('node-fetch');
 const sharp = require("sharp")
 const probe = require('probe-image-size');
@@ -128,8 +128,7 @@ export class SVGDrawing {
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
             const textLinesLength = this.config.frameText ? this.config.frameText.split('\n').length : 1;
 
-            const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
-                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
+            const textLineMaxLength = getLengthOfLongestText(this.config.frameText);
             let fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
             const moduleSize = this.config.moduleSize;
@@ -2075,8 +2074,7 @@ export class SVGDrawing {
 
         const textLinesLength = text.length ? text.split('\n').length : 0;
 
-        const textLineMaxLength = this.config.frameText? this.config.frameText.split('\n').map(value => value.trim())
-                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
+        const textLineMaxLength = getLengthOfLongestText(text);
         const fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
         const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10); 
