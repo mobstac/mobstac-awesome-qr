@@ -149,7 +149,7 @@ export class SVGDrawing {
                     break;
                 case QRCodeFrame.BALLOON_TOP:
                     this.shiftX = 1.5 * this.config.moduleSize;
-                    this.shiftY = size / 5 + size / 12 + + multiLineHeight;
+                    this.shiftY = size / 5 + size / 12 + multiLineHeight;
                     if (this.config.isVCard) {
                         this.shiftY = 10 * moduleSize + size / 5;
                     }
@@ -2350,7 +2350,7 @@ export class SVGDrawing {
 
         // Bottom Left Eye
         // @ts-ignore
-        eyeFrameCanvas.move(0 + this.config.margin + this.shiftX ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize)
+        eyeFrameCanvas.move(0 + this.config.margin + this.shiftX ,0 + this.config.margin + this.shiftY + ( this.moduleCount - 7) * moduleSize)
         // @ts-ignore
         context.add(eyeFrameCanvas.svg())
 
@@ -2428,7 +2428,7 @@ export class SVGDrawing {
  
          // Bottom Left Eye
          // @ts-ignore
-         eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize)
+         eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize ,0 + this.config.margin + this.shiftY + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize)
          // @ts-ignore
          context.add(eyeBallCanvas.svg())
 
