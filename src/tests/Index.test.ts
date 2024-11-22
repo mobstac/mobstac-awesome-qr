@@ -24,34 +24,31 @@ END:VCARD`;
 
 const config = {
     // text: vCardSampleData,
-    text: "https://qr.beaconstac.com/qwertyj",
+    text: "https://qrcodes.pro/scan/p",
     logoBackground: true,
-    backgroundColor: "rgba(256,256,256,0)",
+    backgroundColor: "#ffffff",
     canvasType: CanvasType.SVG,
     dataPattern: DataPattern.SQUARE,
     dotScale: 1,
     colorDark: "#000000",
-    colorLight : '#0000ff',
+    colorLight : '#00FFFF',
     eyeBallShape: EyeBallShape.SQUARE,
     eyeFrameShape: EyeFrameShape.SQUARE,
-    eyeFrameColor : '#000',
-    eyeBallColor : '#000',
-    frameStyle: QRCodeFrame.BALLOON_BOTTOM,
-    frameText: "THIS IS THIRTY CHARACTERS LONG",
-    frameColor: "#000",
-    frameTextColor: "#fff",
+    eyeFrameColor : '#000000',
+    eyeBallColor : '#000000',
+    frameStyle: QRCodeFrame.NONE,
+    frameText: "LINE 1 LINE 1 LINE 1 \n LINE 2 LINE 2 \n LINE 3",
+    frameColor: "#724DDB",
+    frameTextColor: "#FFFFFF",
     gradientType: GradientType.NONE,
-    logoScale: 1,
-    backgroundImage :'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/640px-Image_created_with_a_mobile_phone.png',
-    logoImage : 'https://static.beaconstac.com/assets/img/qr-code-logos/gmail.svg',
-    size: 512,
-    margin: 40,
+    logoScale: 0.3,
+    backgroundImage :'https://s3.amazonaws.com/beaconstac-content-qa/5118/890b88c1e2c2406cafa6f6eec5240287',
+    logoImage : 'https://images.freeimages.com/images/previews/ac9/railway-hdr-1361893.jpg',
+    size: 1024,
+    margin: 80,
     correctLevel: QRErrorCorrectLevel.Q,
-    rectangular : false,
-    imageServerRequestHeaders : { Authorization : 'token e62435a78e67ec98bba3b879ba00448650032557' , 'Content-Type': 'application/json'},
-    imageServerURL : 'https://beaconstacqa.mobstac.com/api/2.0/validate_url/'
-    // isVcard : true
-
+    logoMargin : 0,
+    // isVCard : true
 };
 
 describe('QR code main tests', () => {
