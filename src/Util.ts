@@ -36,3 +36,10 @@ export const getFrameTextSize = (configSize: number, textLength: number) => {
     }
     return configSize / factor;
 };
+
+export const getLengthOfLongestText = (text: string | undefined) => {
+    const textLineMaxLength = text ? text.split('\n').map(value => value.trim())
+                .reduce((max, line) => Math.max(max, line.length), 0) : 7;
+
+    return textLineMaxLength;
+}
