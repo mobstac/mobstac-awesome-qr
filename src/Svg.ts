@@ -2486,13 +2486,7 @@ export class SVGDrawing {
             },
         } as const;
         const size = this.config.size
-        const { createSVGWindow } = require('svgdom');
-        const stickerWindow = createSVGWindow();
-        const stickerDocument = stickerWindow.document;
-        registerWindow(stickerWindow, stickerDocument);
-        // @ts-ignore
-        let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
-        // Add Sticker Image
+        const stickerCanvas = SVG().size(size, size);
         const stickerImage = this.config.stickerImage;
         // @ts-ignore
         let imageBase64 = await this.getImageBase64Data(stickerImage);
