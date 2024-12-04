@@ -2486,12 +2486,26 @@ export class SVGDrawing {
             },
         } as const;
         const size = this.config.size
-        const { createSVGWindow } = eval('require')('svgdom');
-        const stickerWindow = createSVGWindow();
-        const stickerDocument = stickerWindow.document;
-        registerWindow(stickerWindow, stickerDocument);
-        // @ts-ignore
-        let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
+        let stickerCanvas;
+        if (typeof window === 'undefined') {
+            // Node.js environment
+            const { createSVGWindow } = require('svgdom');
+            const stickerWindow = createSVGWindow();
+            const stickerDocument = stickerWindow.document;
+            registerWindow(stickerWindow, stickerDocument);
+
+            // @ts-ignore
+            stickerCanvas = SVG(stickerDocument.documentElement).size(size, size);
+        } else {
+            // Browser environment
+            stickerCanvas = SVG().size(size, size);
+        }
+        // const { createSVGWindow } = eval('require')('svgdom');
+        // const stickerWindow = createSVGWindow();
+        // const stickerDocument = stickerWindow.document;
+        // registerWindow(stickerWindow, stickerDocument);
+        // // @ts-ignore
+        // let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
         // Add Sticker Image
         const stickerImage = this.config.stickerImage;
         // @ts-ignore
