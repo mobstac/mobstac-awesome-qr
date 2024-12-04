@@ -2500,13 +2500,6 @@ export class SVGDrawing {
             // Browser environment
             stickerCanvas = SVG().size(size, size);
         }
-        // const { createSVGWindow } = eval('require')('svgdom');
-        // const stickerWindow = createSVGWindow();
-        // const stickerDocument = stickerWindow.document;
-        // registerWindow(stickerWindow, stickerDocument);
-        // // @ts-ignore
-        // let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
-        // Add Sticker Image
         const stickerImage = this.config.stickerImage;
         // @ts-ignore
         let imageBase64 = await this.getImageBase64Data(stickerImage);
