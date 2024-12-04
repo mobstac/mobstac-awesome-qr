@@ -41,6 +41,8 @@ export interface QRCodeConfig {
     useOpacity?: boolean;
     imageServerURL?: string,
     imageServerRequestHeaders?: object
+    stickerImage?: string;
+    stickerImageName?: string;
 
     [key: string]: any;
 }
@@ -86,4 +88,6 @@ export interface QRDrawingConfig {
     useOpacity?: boolean;
     imageServerURL?: string,
     imageServerRequestHeaders?: object
+    stickerImage?: string;
+    stickerImageName?: string;
 }
