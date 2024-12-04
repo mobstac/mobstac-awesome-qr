@@ -2486,12 +2486,16 @@ export class SVGDrawing {
             },
         } as const;
         const size = this.config.size
-        const stickerCanvas = SVG().size(size, size);
+        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
         const stickerImage = this.config.stickerImage;
         // @ts-ignore
         let imageBase64 = await this.getImageBase64Data(stickerImage);
         stickerCanvas.image('').size(size , size)
         .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' });
+        // Validate mainCanvas initialization
+        if (!mainCanvas || typeof mainCanvas.svg !== "function") {
+            mainCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+        }
         type StickerNames = keyof typeof StickerSizeTable;
         const stickerName = this.config.stickerImageName as StickerNames;
         const scale = StickerSizeTable[stickerName].scale;
@@ -2501,7 +2505,7 @@ export class SVGDrawing {
         const moveX = StickerSizeTable[stickerName].x;
         const moveY = StickerSizeTable[stickerName].y;
         mainCanvas.move(moveX, moveY);
-        stickerCanvas.svg(mainCanvas.svg());
+        stickerCanvas.add(mainCanvas);
         return stickerCanvas;
     }
 }
