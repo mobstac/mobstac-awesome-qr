@@ -122,7 +122,7 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if (frameStyle === QRCodeFrame.CIRCULAR && this.config.stickerImageName === '') {
+            if (frameStyle === QRCodeFrame.CIRCULAR) {
                 if(this.config.size >= 1024) {
                     this.widthSVG = 12;
                     this.widthView = 15;
@@ -2524,7 +2524,7 @@ export class SVGDrawing {
             FESTIVE_FEAST: { x: 2250, y: 270, scale: 0.23 },
         } as const;
     
-        const size = this.config.size;
+        const size = this.config.rawSize;
         const stickerImage = this.config.stickerImage;
         const imageBase64 = await this.getImageBase64Data(stickerImage);
     
