@@ -2493,9 +2493,6 @@ export class SVGDrawing {
         stickerCanvas.image('').size(size , size)
         .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' });
         // Validate mainCanvas initialization
-        if (!mainCanvas || typeof mainCanvas.svg !== "function") {
-            mainCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
-        }
         type StickerNames = keyof typeof StickerSizeTable;
         const stickerName = this.config.stickerImageName as StickerNames;
         const scale = StickerSizeTable[stickerName].scale;
