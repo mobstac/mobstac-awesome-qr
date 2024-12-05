@@ -37,7 +37,7 @@ const config = {
     eyeFrameShape: EyeFrameShape.SQUARE,
     eyeFrameColor : '#000000',
     eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.NONE,
+    frameStyle: QRCodeFrame.CIRCULAR,
     frameText: "고고양양_스마트스탬프용_임수현",
     frameColor: "#724DDB",
     frameTextColor: "#FFFFFF",
@@ -50,8 +50,8 @@ const config = {
     correctLevel: QRErrorCorrectLevel.H,
     logoMargin : 0,
     // isVCard : true
-    stickerImage: 'https://s3.amazonaws.com/beaconstac-content-qa/949/f497c9a934d2486ba52bfd02117e9715',
-    stickerImageName: 'FESTIVE_FEAST'
+    stickerImage: 'https://s3.amazonaws.com/beaconstac-content-qa/949/2832b0b5e38b46f0b173c59279ebe9ad',
+    stickerImageName: 'TOMS_TROT'
 
 };
 
