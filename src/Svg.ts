@@ -2470,9 +2470,9 @@ export class SVGDrawing {
         }
         const StickerSizeTable = {
             TOMS_TROT: {
-                'x': -2100,
-                'y': -450,
-                'scale': 0.25,
+                x: 145,
+                y: 1713,
+                scale: 0.265,
             },
             SWEET_SLICE: {
                 'x': 210,
@@ -2486,12 +2486,16 @@ export class SVGDrawing {
             },
         } as const;
         const size = this.config.size
-        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+        let stickerCanvas : object;
+        stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
         const stickerImage = this.config.stickerImage;
         // @ts-ignore
         let imageBase64 = await this.getImageBase64Data(stickerImage);
-        stickerCanvas.image('').size(size , size)
-        .attr({ 'xlink:href': imageBase64 , opacity : 1 , 'preserveAspectRatio': 'none' });
+
+        // @ts-ignore
+        let image = stickerCanvas.image(imageBase64);
+        image.size(size , size).move(0 , 0)
+       
         type StickerNames = keyof typeof StickerSizeTable;
         const stickerName = this.config.stickerImageName as StickerNames;
         const scale = StickerSizeTable[stickerName].scale;
@@ -2501,8 +2505,9 @@ export class SVGDrawing {
         const moveX = StickerSizeTable[stickerName].x;
         const moveY = StickerSizeTable[stickerName].y;
         mainCanvas.move(moveX, moveY);
+
+        // @ts-ignore
         stickerCanvas.add(mainCanvas);
-        console.log(stickerCanvas);
         return stickerCanvas;
     }
 }
