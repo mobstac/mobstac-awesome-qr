@@ -47,11 +47,11 @@ const config = {
     // logoImage : 'https://images.freeimages.com/images/previews/ac9/railway-hdr-1361893.jpg',
     size: 1024,
     margin: 0,
-    correctLevel: QRErrorCorrectLevel.Q,
+    correctLevel: QRErrorCorrectLevel.H,
     logoMargin : 0,
     // isVCard : true
-    stickerImage: 'https://s3.amazonaws.com/beaconstac-content-qa/949/aa0d90ece791407ea6e7f2ba72372d3c',
-    stickerImageName: ''
+    stickerImage: 'https://s3.amazonaws.com/beaconstac-content-qa/949/2832b0b5e38b46f0b173c59279ebe9ad',
+    stickerImageName: 'TOMS_TROT'
 
 };
 
