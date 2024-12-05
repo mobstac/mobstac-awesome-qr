@@ -2553,10 +2553,11 @@ export class SVGDrawing {
         });
     
         // Append the group to the stickerCanvas (not the original mainCanvas)
-        stickerCanvas.add(group);
         stickerCanvas.image('')
             .size(size, size)
             .attr({ 'xlink:href': imageBase64, opacity: 1, 'preserveAspectRatio': 'none' });
+        stickerCanvas.add(group);
+        
     
         // Debugging: Final structure
         // console.log('Final Sticker Canvas:', stickerCanvas.node.outerHTML);
