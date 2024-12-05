@@ -2524,7 +2524,7 @@ export class SVGDrawing {
             FESTIVE_FEAST: { x: 2250, y: 270, scale: 0.23 },
         } as const;
     
-        const size = this.config.rawSize;
+        const size = this.config.size;
         const stickerImage = this.config.stickerImage;
         const imageBase64 = await this.getImageBase64Data(stickerImage);
     
