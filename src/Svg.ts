@@ -2463,51 +2463,106 @@ export class SVGDrawing {
         this.TwoDArray = TwoDArrayOfDataDots;
     }
 
+    // async addSticker(mainCanvas: any) {
+    //     // sizetable 
+    //     if (!this.config.stickerImage || !this.config.stickerImageName) {
+    //         return mainCanvas;
+    //     }
+    //     const StickerSizeTable = {
+    //         TOMS_TROT: {
+    //             x: 145,
+    //             y: 1713,
+    //             scale: 0.265,
+    //         },
+    //         SWEET_SLICE: {
+    //             'x': 210,
+    //             'y': 210,
+    //             'scale': 0.532,
+    //         },
+    //         FESTIVE_FEAST: {
+    //             'x': 2250,
+    //             'y': 270,
+    //             'scale': 0.23,
+    //         },
+    //     } as const;
+    //     const size = this.config.size
+    //     let stickerCanvas : object;
+    //     stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+    //     const stickerImage = this.config.stickerImage;
+    //     // @ts-ignore
+    //     let imageBase64 = await this.getImageBase64Data(stickerImage);
+
+    //     // @ts-ignore
+    //     let image = stickerCanvas.image(imageBase64);
+    //     image.size(size , size).move(0 , 0)
+       
+    //     type StickerNames = keyof typeof StickerSizeTable;
+    //     const stickerName = this.config.stickerImageName as StickerNames;
+    //     const scale = StickerSizeTable[stickerName].scale;
+    //     mainCanvas.attr({
+    //         'transform': 'scale('+ scale +')'  
+    //     });
+    //     const moveX = StickerSizeTable[stickerName].x;
+    //     const moveY = StickerSizeTable[stickerName].y;
+    //     mainCanvas.move(moveX, moveY);
+
+    //     // @ts-ignore
+    //     stickerCanvas.add(mainCanvas);
+    //     return stickerCanvas;
+    // }
+
+
+    // new version with g tag
     async addSticker(mainCanvas: any) {
-        // sizetable 
         if (!this.config.stickerImage || !this.config.stickerImageName) {
             return mainCanvas;
         }
+    
         const StickerSizeTable = {
-            TOMS_TROT: {
-                x: 145,
-                y: 1713,
-                scale: 0.265,
-            },
-            SWEET_SLICE: {
-                'x': 210,
-                'y': 210,
-                'scale': 0.532,
-            },
-            FESTIVE_FEAST: {
-                'x': 2250,
-                'y': 270,
-                'scale': 0.23,
-            },
+            TOMS_TROT: { x: 145, y: 1713, scale: 0.265 },
+            SWEET_SLICE: { x: 210, y: 210, scale: 0.532 },
+            FESTIVE_FEAST: { x: 2250, y: 270, scale: 0.23 },
         } as const;
-        const size = this.config.size
-        let stickerCanvas : object;
-        stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+    
+        const size = this.config.size;
         const stickerImage = this.config.stickerImage;
-        // @ts-ignore
-        let imageBase64 = await this.getImageBase64Data(stickerImage);
-
-        // @ts-ignore
-        let image = stickerCanvas.image(imageBase64);
-        image.size(size , size).move(0 , 0)
-       
+        const imageBase64 = await this.getImageBase64Data(stickerImage);
+    
+        // Parent SVG canvas
+        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+    
+        // Retrieve transformation details
         type StickerNames = keyof typeof StickerSizeTable;
         const stickerName = this.config.stickerImageName as StickerNames;
         const scale = StickerSizeTable[stickerName].scale;
-        mainCanvas.attr({
-            'transform': 'scale('+ scale +')'  
-        });
         const moveX = StickerSizeTable[stickerName].x;
         const moveY = StickerSizeTable[stickerName].y;
-        mainCanvas.move(moveX, moveY);
-
-        // @ts-ignore
-        stickerCanvas.add(mainCanvas);
+    
+        // Create a <g> tag inside the mainCanvas
+        const group = stickerCanvas.group();
+        group.attr({
+            transform: `scale(${scale}) translate(${moveX}, ${moveY})`,
+        });
+    
+        console.log(group.node.outerHTML, 'here is the gtag');
+    
+        // Move all children from mainCanvas to group
+        const children = [...mainCanvas.node.childNodes]; // Get all children as NodeList
+        children.forEach((child: Node) => {
+            group.node.appendChild(child); // Append to the group
+        });
+    
+        // Append the group to the stickerCanvas (not the original mainCanvas)
+        stickerCanvas.add(group);
+        stickerCanvas.image('')
+            .size(size, size)
+            .attr({ 'xlink:href': imageBase64, opacity: 1, 'preserveAspectRatio': 'none' });
+    
+        // Add the sticker image to ensure proper layering
+    
+        // Debugging: Final structure
+        // console.log('Final Sticker Canvas:', stickerCanvas.node.outerHTML);
+    
         return stickerCanvas;
     }
 }
