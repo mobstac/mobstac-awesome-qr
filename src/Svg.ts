@@ -2669,7 +2669,7 @@ export class SVGDrawing {
         console.log(group.node.outerHTML, 'here is the gtag');
     
         // Move all children from mainCanvas to group
-        const children = [...mainCanvas.node.childNodes]; // Get all children as NodeList
+        const children = Array.from(mainCanvas.node.childNodes) as Node[]; // Cast NodeList to Node[]
         children.forEach((child: Node) => {
             group.node.appendChild(child); // Append to the group
         });
@@ -2680,13 +2680,12 @@ export class SVGDrawing {
             .size(size, size)
             .attr({ 'xlink:href': imageBase64, opacity: 1, 'preserveAspectRatio': 'none' });
     
-        // Add the sticker image to ensure proper layering
-    
         // Debugging: Final structure
         // console.log('Final Sticker Canvas:', stickerCanvas.node.outerHTML);
     
         return stickerCanvas;
     }
+    
     
     
     
