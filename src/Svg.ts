@@ -122,7 +122,7 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if (frameStyle === QRCodeFrame.CIRCULAR && this.config.stickerImageName !== '') {
+            if (frameStyle === QRCodeFrame.CIRCULAR && this.config.stickerImageName === '') {
                 if(this.config.size >= 1024) {
                     this.widthSVG = 12;
                     this.widthView = 15;
