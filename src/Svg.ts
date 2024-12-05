@@ -2486,7 +2486,7 @@ export class SVGDrawing {
             },
         } as const;
         const size = this.config.size
-        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+        let stickerCanvas = SVG().size(size, size);
         const stickerImage = this.config.stickerImage;
         // @ts-ignore
         let imageBase64 = await this.getImageBase64Data(stickerImage);
