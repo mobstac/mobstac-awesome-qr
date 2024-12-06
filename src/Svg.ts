@@ -2641,7 +2641,7 @@ export class SVGDrawing {
         }
     
         const StickerSizeTable = {
-            TOMS_TROT: { x: 145, y: 1713, scale: 0.265 },
+            TOMS_TROT: { x: 145, y: 1490, scale: 0.265 },
             SWEET_SLICE: { x: 210, y: 210, scale: 0.532 },
             FESTIVE_FEAST: { x: 2250, y: 270, scale: 0.23 },
         } as const;

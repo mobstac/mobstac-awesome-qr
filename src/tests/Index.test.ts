@@ -45,7 +45,7 @@ const config = {
     logoScale: 0.3,
     // backgroundImage :'https://s3.amazonaws.com/beaconstac-content-qa/5118/890b88c1e2c2406cafa6f6eec5240287',
     // logoImage : 'https://images.freeimages.com/images/previews/ac9/railway-hdr-1361893.jpg',
-    size: 1024,
+    size: 891,
     margin: 0,
     correctLevel: QRErrorCorrectLevel.H,
     logoMargin : 0,
