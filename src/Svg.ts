@@ -122,7 +122,7 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if (frameStyle === QRCodeFrame.CIRCULAR) {
+            if (frameStyle === QRCodeFrame.CIRCULAR && this.config.stickerImageName === '') {
                 if(this.config.size >= 1024) {
                     this.widthSVG = 12;
                     this.widthView = 15;
@@ -194,7 +194,7 @@ export class SVGDrawing {
 
         const gradient: string = this.config.colorDark;
 
-        if(this.config.frameStyle === QRCodeFrame.CIRCULAR ){
+        if(this.config.frameStyle === QRCodeFrame.CIRCULAR  && this.config.stickerImageName === '' ){
             this.config.size = this.config.viewportSize;
         }
 
@@ -256,7 +256,7 @@ export class SVGDrawing {
                     canvas.width(null);
                     // @ts-ignore
                     canvas.height(null);
-                    if(frameStyle === QRCodeFrame.CIRCULAR){
+                    if(frameStyle === QRCodeFrame.CIRCULAR  && this.config.stickerImageName === ''){
                         //@ts-ignore
                         canvas.viewbox(0, 0, canvasWidth + 190, canvasWidth + 190)
                     }
