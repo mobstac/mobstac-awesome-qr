@@ -37,7 +37,7 @@ const config = {
     eyeFrameShape: EyeFrameShape.SQUARE,
     eyeFrameColor : '#000000',
     eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.CIRCULAR,
+    frameStyle: QRCodeFrame.NONE,
     frameText: "고고양양_스마트스탬프용_임수현",
     frameColor: "#724DDB",
     frameTextColor: "#FFFFFF",
@@ -45,13 +45,13 @@ const config = {
     logoScale: 0.3,
     // backgroundImage :'https://s3.amazonaws.com/beaconstac-content-qa/5118/890b88c1e2c2406cafa6f6eec5240287',
     // logoImage : 'https://images.freeimages.com/images/previews/ac9/railway-hdr-1361893.jpg',
-    size: 891,
+    size: 1024,
     margin: 0,
     correctLevel: QRErrorCorrectLevel.H,
     logoMargin : 0,
     // isVCard : true
-    stickerImage: 'https://s3.amazonaws.com/beaconstac-content-qa/949/2832b0b5e38b46f0b173c59279ebe9ad',
-    stickerImageName: 'TOMS_TROT'
+    stickerImage: 'https://cdn.uniqode.com/1697/ea6cbef3e5074c63873222b352a8fca3',
+    stickerImageName: 'SANTA_22'
 
 };
 
