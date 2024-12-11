@@ -2512,6 +2512,7 @@ export class SVGDrawing {
         const imageBase64 = await this.getImageBase64Data(stickerImage);
     
         // Parent SVG canvas
+        // @ts-ignore
         let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
     
         // Retrieve transformation details
