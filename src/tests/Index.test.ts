@@ -51,7 +51,7 @@ const config = {
     logoMargin : 0,
     // isVCard : true
     stickerImage: 'https://cdn.uniqode.com/1697/ea6cbef3e5074c63873222b352a8fca3',
-    stickerImageName: 'SANTA_22'
+    stickerImageName: 'winter_cheer'
 
 };
 

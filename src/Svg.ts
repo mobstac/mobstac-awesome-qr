@@ -1,6 +1,6 @@
 /* tslint:disable:no-var-requires */
 // @ts-ignore
-import { Gradient, SVG , registerWindow, Element} from '@svgdotjs/svg.js';
+import { SVG , registerWindow} from '@svgdotjs/svg.js';
 import { CanvasUtil, maxLogoScale } from './Common';
 import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
