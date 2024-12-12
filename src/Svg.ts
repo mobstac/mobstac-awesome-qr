@@ -2512,7 +2512,13 @@ export class SVGDrawing {
         const imageBase64 = await this.getImageBase64Data(stickerImage);
     
         // Parent SVG canvas
-        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+        const { createSVGWindow } = eval('require')('svgdom');
+        const stickerWindow = createSVGWindow();
+        const stickerDocument = stickerWindow.document;
+        registerWindow(stickerWindow, stickerDocument);
+        // @ts-ignore
+        let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
+        // let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
     
         // Retrieve transformation details
         type StickerNames = keyof typeof StickerSizeTable;
