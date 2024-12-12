@@ -261,9 +261,9 @@ export class SVGDrawing {
                 return this.addDesign(mainCanvas,gradient);
             })
             .then((canvas: any)=>{
-                const svgString = canvas.svg();  // This returns an SVG string
-                const parsedCanvas = SVG(svgString);  // Convert the SVG string back into an SVG.js object
-                return this.addSticker(parsedCanvas);
+                // const svgString = canvas.svg();  // This returns an SVG string
+                // const parsedCanvas = SVG(svgString);  // Convert the SVG string back into an SVG.js object
+                return this.addSticker(canvas);
             })
             .then((canvas: any) => {
                 // @ts-ignore
