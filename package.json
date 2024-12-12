@@ -1,6 +1,6 @@
 {
     "name": "mobstac-awesome-qr",
-    "version": "4.1.1-beta.11",
+    "version": "4.1.1-beta.12",
     "description": "MobStac Awesome QR code library",
     "homepage": "https://github.com/mobstac/mobstac-awesome-qr",
     "bugs": "https://github.com/mobstac/mobstac-awesome-qr/issues",
@@ -59,7 +59,7 @@
         "prettier": "1.16.4",
         "source-map-support": "0.5.11",
         "ts-loader": "5.3.3",
-        "ts-node": "8.0.3",
+        "ts-node": "^8.0.3",
         "tslint": "5.14.0",
         "tslint-config-prettier": "1.18.0",
         "typescript": "3.4.3",
