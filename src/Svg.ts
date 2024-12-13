@@ -265,7 +265,7 @@ export class SVGDrawing {
             //     const parsedCanvas = SVG(svgString);  // Convert the SVG string back into an SVG.js object
             //     return this.addSticker(parsedCanvas);
             // })
-            .then((canvas: any) => {
+            .then((canvas: object) => {
                 // @ts-ignore
                 return canvas.svg();
             });
