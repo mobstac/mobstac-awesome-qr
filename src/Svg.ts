@@ -260,11 +260,11 @@ export class SVGDrawing {
                 // @ts-ignore
                 return this.addDesign(mainCanvas,gradient);
             })
-            .then((canvas: any)=>{
-                const svgString = canvas.svg();  // This returns an SVG string
-                const parsedCanvas = SVG(svgString);  // Convert the SVG string back into an SVG.js object
-                return this.addSticker(parsedCanvas);
-            })
+            // .then((canvas: any)=>{
+            //     const svgString = canvas.svg();  // This returns an SVG string
+            //     const parsedCanvas = SVG(svgString);  // Convert the SVG string back into an SVG.js object
+            //     return this.addSticker(parsedCanvas);
+            // })
             .then((canvas: any) => {
                 // @ts-ignore
                 return canvas.svg();
@@ -2488,70 +2488,66 @@ export class SVGDrawing {
         this.TwoDArray = TwoDArrayOfDataDots;
     }
 
-    async addSticker(mainCanvas: any) {
-        if (!this.config.stickerImage || !this.config.stickerImageName) {
-            return mainCanvas;
-        }
+    // async addSticker(mainCanvas: any) {
+    //     if (!this.config.stickerImage || !this.config.stickerImageName) {
+    //         return mainCanvas;
+    //     }
     
-        const StickerSizeTable = {
-            winter_cheer: { x: 1310 , y: 1540 , scale: 0.3},
-            qr_claus: {x: 1140 , y: 670 , scale: 0.33},
-            rudolphs_magic: { x: 1480 , y: 1920 , scale: 0.29},
-            snowy_surprise: {x: 2850 , y: 240 , scale: 0.16},
-            arctic_buddy: { x: 1370 , y:1700 , scale: 0.23},
-            tinsel_magic: { x: 1235 , y:550 , scale: 0.42},
-            santa_swag: { x: 1270 , y: 850 , scale: 0.4},
-            qr_esolution_2025: { x: 250 , y: 250 , scale: 0.49},
-            scan_2025: { x: 3140 , y: 1600 , scale: 0.18},
-            fortune_scan: { x: 330 , y: 330 , scale: 0.45},
-            qr_to_the_beat: { x: 500 , y: 2620 , scale: 0.25},
-        } as const;
+    //     const StickerSizeTable = {
+    //         winter_cheer: { x: 1310 , y: 1540 , scale: 0.3},
+    //         qr_claus: {x: 1140 , y: 670 , scale: 0.33},
+    //         rudolphs_magic: { x: 1480 , y: 1920 , scale: 0.29},
+    //         snowy_surprise: {x: 2850 , y: 240 , scale: 0.16},
+    //         arctic_buddy: { x: 1370 , y:1700 , scale: 0.23},
+    //         tinsel_magic: { x: 1235 , y:550 , scale: 0.42},
+    //         santa_swag: { x: 1270 , y: 850 , scale: 0.4},
+    //         qr_esolution_2025: { x: 250 , y: 250 , scale: 0.49},
+    //         scan_2025: { x: 3140 , y: 1600 , scale: 0.18},
+    //         fortune_scan: { x: 330 , y: 330 , scale: 0.45},
+    //         qr_to_the_beat: { x: 500 , y: 2620 , scale: 0.25},
+    //     } as const;
     
-        const size = this.config.size;
-        const stickerImage = this.config.stickerImage;
-        const imageBase64 = await this.getImageBase64Data(stickerImage);
+    //     const size = this.config.size;
+    //     const stickerImage = this.config.stickerImage;
+    //     const imageBase64 = await this.getImageBase64Data(stickerImage);
     
-        // Parent SVG canvas
-        const { createSVGWindow } = eval('require')('svgdom');
-        const stickerWindow = createSVGWindow();
-        const stickerDocument = stickerWindow.document;
-        registerWindow(stickerWindow, stickerDocument);
-        // @ts-ignore
-        let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
-        // let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+    //     // Parent SVG canvas
+    //     const { createSVGWindow } = eval('require')('svgdom');
+    //     const stickerWindow = createSVGWindow();
+    //     const stickerDocument = stickerWindow.document;
+    //     registerWindow(stickerWindow, stickerDocument);
+    //     // @ts-ignore
+    //     let stickerCanvas = SVG(stickerDocument.documentElement).size( size, size );
+    //     // let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
     
-        // Retrieve transformation details
-        type StickerNames = keyof typeof StickerSizeTable;
-        const stickerName = this.config.stickerImageName as StickerNames;
-        const scale = StickerSizeTable[stickerName].scale;
-        const moveX = StickerSizeTable[stickerName].x;
-        const moveY = StickerSizeTable[stickerName].y;
+    //     // Retrieve transformation details
+    //     type StickerNames = keyof typeof StickerSizeTable;
+    //     const stickerName = this.config.stickerImageName as StickerNames;
+    //     const scale = StickerSizeTable[stickerName].scale;
+    //     const moveX = StickerSizeTable[stickerName].x;
+    //     const moveY = StickerSizeTable[stickerName].y;
     
-        // Create a <g> tag inside the mainCanvas
-        const group = stickerCanvas.group();
-        group.attr({
-            transform: `scale(${scale}) translate(${moveX}, ${moveY})`,
-        });
+    //     // Create a <g> tag inside the mainCanvas
+    //     const group = stickerCanvas.group();
+    //     group.attr({
+    //         transform: `scale(${scale}) translate(${moveX}, ${moveY})`,
+    //     });
     
-        // Move all children from mainCanvas to group
-        const children = Array.from(mainCanvas.node.childNodes) as Node[]; 
-        children.forEach((child: Node) => {
-            group.node.appendChild(child); // Append to the group
-        });
+    //     // Move all children from mainCanvas to group
+    //     const children = Array.from(mainCanvas.node.childNodes) as Node[]; 
+    //     children.forEach((child: Node) => {
+    //         group.node.appendChild(child); // Append to the group
+    //     });
     
-        stickerCanvas.image('')
-            .size(size, size)
-            .attr({ 'xlink:href': imageBase64, opacity: 1, 'preserveAspectRatio': 'none' });
+    //     stickerCanvas.image('')
+    //         .size(size, size)
+    //         .attr({ 'xlink:href': imageBase64, opacity: 1, 'preserveAspectRatio': 'none' });
         
-        // Append the group to the stickerCanvas (not the original mainCanvas)
-        stickerCanvas.add(group);
+    //     // Append the group to the stickerCanvas (not the original mainCanvas)
+    //     stickerCanvas.add(group);
     
-        return stickerCanvas;
-    }
-    
-    
-    
-    
+    //     return stickerCanvas;
+    // }
     
 }
 
