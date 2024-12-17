@@ -1,11 +1,29 @@
 {
     "name": "mobstac-awesome-qr",
-    "version": "4.1.1-beta.22",
+    "version": "4.1.1-beta.23",
     "description": "MobStac Awesome QR code library",
     "homepage": "https://github.com/mobstac/mobstac-awesome-qr",
     "bugs": "https://github.com/mobstac/mobstac-awesome-qr/issues",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+          "require": "./lib/index.js",
+          "import": "./lib/index.mjs" 
+        },
+        "./lib/Types": {
+          "require": "./lib/Types.js",
+          "import": "./lib/Types.mjs"
+        },
+        "./lib/Enums": {
+          "require": "./lib/Enums.js",
+          "import": "./lib/Enums.mjs"
+        },
+        "./lib/Models": {
+          "require": "./lib/Models.js",
+          "import": "./lib/Models.mjs"
+        }
+      },
     "scripts": {
         "test": "nyc mocha",
         "testMain": "nyc mocha -g 'QR code main tests'",
