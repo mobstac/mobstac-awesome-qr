@@ -87,6 +87,6 @@ export interface QRDrawingConfig {
     imageServerURL?: string,
     imageServerRequestHeaders?: object,
     showBarcodeValue?: boolean;
-    barcodeValue?: string;
+    barcodeValue: string;
     showBarcode?: boolean;
 }

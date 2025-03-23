@@ -6,7 +6,7 @@ import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfig
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
 import { QRCodeConfig, QRDrawingConfig } from './Types';
 import { isNode, loadImage, getFrameTextSize, getLengthOfLongestText } from './Util';
-const JsBarcode = require('jsbarcode');
+import JsBarcode = require('jsbarcode');
 
 
 export class SVGDrawing {
