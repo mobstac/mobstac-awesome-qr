@@ -2515,7 +2515,7 @@ export class SVGDrawing {
             const barcodeCanvasWidth = parseInt(barcodeCanvas.width(),10);
             barcodeXPosition = this.config.size / 2 - barcodeCanvasWidth / 2 + this.shiftX;
             barcodeCanvas.move(barcodeXPosition, barcodeYPosition)
-            mainCanvas.svg(barcodeCanvas.svg());
+            mainCanvas.add(barcodeCanvas.svg());
             overallYPosition += 200;
         }
 
