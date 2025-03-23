@@ -2502,14 +2502,10 @@ export class SVGDrawing {
         if( this.config.showBarcode ) {
             let barcodeXPosition = this.shiftX + this.config.margin;
             const barcodeYPosition = overallYPosition;
-            const { createSVGWindow } = eval('require')('svgdom');
-            const barcodeWindow = createSVGWindow();
-            const barcodeDocument = barcodeWindow.document;
-            registerWindow(barcodeWindow, barcodeDocument);
-            // @ts-ignore
-            let barcodeCanvas = SVG(barcodeDocument.documentElement).size( this.config.size - this.config.margin * 2, 150 ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150);
+            let barcodeCanvas : any;
+            barcodeCanvas = SVG().size( this.config.size - this.config.margin * 2, 150 ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150);
             JsBarcode(barcodeCanvas.node, this.config.barcodeValue, {
-                xmlDocument: barcodeDocument,
+                xmlDocument: document,
                 displayValue: true,
                 fontSize: 60,
                 width: 5.5,
