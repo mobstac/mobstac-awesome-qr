@@ -85,5 +85,8 @@ export interface QRDrawingConfig {
     useCanvas?: boolean;
     useOpacity?: boolean;
     imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerRequestHeaders?: object,
+    showBarcodeValue?: boolean;
+    barcodeValue?: string;
+    showBarcode?: boolean;
 }
