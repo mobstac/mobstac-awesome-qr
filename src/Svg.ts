@@ -197,7 +197,7 @@ export class SVGDrawing {
                 canvasHeight += 200; 
              }
              if ( this.config.showBarcode ) {
-                 canvasHeight += 200;
+                 canvasHeight += 400;
              } 
 
             // @ts-ignore
@@ -520,7 +520,7 @@ export class SVGDrawing {
         const size = this.config.size;
         let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize
         if ( this.config.showBarcode ){
-            canvasHeight += 200;
+            canvasHeight += 400;
         }
         if ( this.config.showBarcodeValue ){
             canvasHeight += 200;
