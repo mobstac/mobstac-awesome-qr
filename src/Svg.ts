@@ -75,6 +75,7 @@ export class SVGDrawing {
     public logoAreaCordinateY = 0;
     public TwoDArray: any;
     public isSmoothPattern: boolean = false;
+    public multiLineHeight: number = 0;
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -119,6 +120,7 @@ export class SVGDrawing {
             }
 
             const multiLineHeight = (textLinesLength - 1) * (fontSize + 10);
+            this.multiLineHeight = frameStyle === QRCodeFrame.CIRCULAR ? 0 : multiLineHeight;
             if (textLineMaxLength) {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
@@ -2485,20 +2487,30 @@ export class SVGDrawing {
     }
 
     drawBarcode(mainCanvas: any){
-        let overallYPosition = this.config.size + 50;
+        let overallYPosition = this.config.size + 100 + this.multiLineHeight;
         if ( this.config.frameStyle !== QRCodeFrame.NONE ){
             if ( this.config.frameStyle !== QRCodeFrame.CIRCULAR && this.config.frameStyle !== QRCodeFrame.FOCUS ){
-                overallYPosition = this.config.size + 370;
+                overallYPosition += 350;
             } else {
                 if ( this.config.frameStyle === QRCodeFrame.FOCUS ){
-                    overallYPosition = this.config.size + 300;
+                    overallYPosition += 250;
                 }
                 if ( this.config.frameStyle === QRCodeFrame.CIRCULAR ){
-                    overallYPosition = this.config.size + 250;
+                    overallYPosition += 200;
                 }
             }
         }
+        
+        if ( this.config.showBarcodeValue ) {
+            let barcodeValueXPosition = this.config.size / 2 + this.shiftX;
+            const barcodeValueYPosition = overallYPosition;
+            const textRef = mainCanvas.plain(this.config.barcodeValue);
+            const fontSize = 70;
+            textRef.move(barcodeValueXPosition, barcodeValueYPosition)
+                .font({ fill: "#000000", family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
+        }
 
+        overallYPosition += 100;
         if( this.config.showBarcode ) {
             let barcodeXPosition = this.shiftX + this.config.margin;
             const barcodeYPosition = overallYPosition;
@@ -2516,17 +2528,6 @@ export class SVGDrawing {
             barcodeXPosition = this.config.size / 2 - barcodeCanvasWidth / 2 + this.shiftX;
             barcodeCanvas.move(barcodeXPosition, barcodeYPosition)
             mainCanvas.add(barcodeCanvas.svg());
-            overallYPosition += 200;
-        }
-
-        overallYPosition += 100;
-        if ( this.config.showBarcodeValue ) {
-            let barcodeValueXPosition = this.config.size / 2 + this.shiftX;
-            const barcodeValueYPosition = overallYPosition;
-            const textRef = mainCanvas.plain(this.config.barcodeValue);
-            const fontSize = 70;
-            textRef.move(barcodeValueXPosition, barcodeValueYPosition)
-                .font({ fill: "#000000", family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
         }
     }
 
