@@ -2487,7 +2487,7 @@ export class SVGDrawing {
     }
 
     drawBarcode(mainCanvas: any){
-        let overallYPosition = this.config.size + 100 + this.multiLineHeight;
+        let overallYPosition = this.config.size + this.multiLineHeight;
         if ( this.config.frameStyle !== QRCodeFrame.NONE ){
             if ( this.config.frameStyle !== QRCodeFrame.CIRCULAR && this.config.frameStyle !== QRCodeFrame.FOCUS ){
                 overallYPosition += 350;
@@ -2502,6 +2502,7 @@ export class SVGDrawing {
         }
         
         if ( this.config.showBarcodeValue ) {
+            overallYPosition += 100;
             let barcodeValueXPosition = this.config.size / 2 + this.shiftX;
             const barcodeValueYPosition = overallYPosition;
             const textRef = mainCanvas.plain(this.config.barcodeValue);
@@ -2510,8 +2511,8 @@ export class SVGDrawing {
                 .font({ fill: "#000000", family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
         }
 
-        overallYPosition += 100;
         if( this.config.showBarcode ) {
+            overallYPosition += 100;
             let barcodeXPosition = this.shiftX + this.config.margin;
             const barcodeYPosition = overallYPosition;
             let barcodeCanvas : any;
