@@ -2505,7 +2505,7 @@ export class SVGDrawing {
             overallYPosition += 100;
             let barcodeValueXPosition = this.config.size / 2 + this.shiftX;
             const barcodeValueYPosition = overallYPosition;
-            const textRef = mainCanvas.plain(this.config.barcodeValue);
+            const textRef = mainCanvas.plain(this.config.primaryIdentifierValue);
             const fontSize = 70;
             textRef.move(barcodeValueXPosition, barcodeValueYPosition)
                 .font({ fill: "#000000", family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
