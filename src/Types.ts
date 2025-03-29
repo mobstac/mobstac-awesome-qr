@@ -90,4 +90,5 @@ export interface QRDrawingConfig {
     barcodeValue: string;
     showBarcode?: boolean;
     barcodeType?: string;
+    barcodeText?: string;
 }

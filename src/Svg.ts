@@ -2519,6 +2519,7 @@ export class SVGDrawing {
             barcodeCanvas = SVG().size( this.config.size - this.config.margin * 2, 150 ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150);
             JsBarcode(barcodeCanvas.node, this.config.barcodeValue, {
                 format: this.config.barcodeType,
+                text: this.config.barcodeText,
                 xmlDocument: document,
                 displayValue: true,
                 fontSize: 60,
