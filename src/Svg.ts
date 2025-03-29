@@ -528,7 +528,7 @@ export class SVGDrawing {
             canvasHeight += 200;
         }
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize;
-        const finalCanvas = SVG().size(canvasWidth, canvasHeight).viewbox(0, 0, canvasWidth, canvasHeight);
+        const finalCanvas = SVG().size(canvasWidth, canvasHeight);
         const color = this.config.backgroundColor?this.config.backgroundColor:'none' ;
         const width = this.config.moduleSize;
 
