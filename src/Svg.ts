@@ -528,7 +528,7 @@ export class SVGDrawing {
             canvasHeight += 200;
         }
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize;
-        const finalCanvas = SVG().size(canvasWidth, canvasHeight);
+        const finalCanvas = SVG().size(canvasWidth, canvasHeight).viewbox(0, 0, canvasWidth, canvasHeight);
         const color = this.config.backgroundColor?this.config.backgroundColor:'none' ;
         const width = this.config.moduleSize;
 
@@ -2502,11 +2502,15 @@ export class SVGDrawing {
         }
         
         if ( this.config.showBarcodeValue ) {
+            // @ts-ignore
+            mainCanvas.defs().style(`
+                @import url('https://fonts.googleapis.com/css?family=Roboto:400');
+            `);
             overallYPosition += 100;
             let barcodeValueXPosition = this.config.size / 2 + this.shiftX;
             const barcodeValueYPosition = overallYPosition;
             const textRef = mainCanvas.plain(this.config.primaryIdentifierValue);
-            const fontSize = 70;
+            const fontSize = 75;
             textRef.move(barcodeValueXPosition, barcodeValueYPosition)
                 .font({ fill: "#000000", family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
         }
@@ -2522,9 +2526,9 @@ export class SVGDrawing {
                 text: this.config.barcodeText,
                 xmlDocument: document,
                 displayValue: true,
-                fontSize: 60,
-                width: 5.5,
-                height : 150,
+                fontSize: 50,
+                width: 6,
+                height : 180,
                 margin: 0,
             });
             const barcodeCanvasWidth = parseInt(barcodeCanvas.width(),10);
