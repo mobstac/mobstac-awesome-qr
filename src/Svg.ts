@@ -2486,6 +2486,38 @@ export class SVGDrawing {
         this.TwoDArray = TwoDArrayOfDataDots;
     }
 
+    /**
+     * Draws a barcode and optionally its value on the provided canvas.
+     * 
+     * This method handles the rendering of a barcode and its associated value
+     * (if configured) on the main canvas. It adjusts the positioning dynamically
+     * based on the configuration settings such as frame style, barcode visibility,
+     * and barcode value visibility.
+     * 
+     * @param mainCanvas - The canvas object where the barcode and its value will be drawn.
+     * 
+     * Configuration properties used:
+     * - `this.config.size`: The size of the QR code canvas.
+     * - `this.config.frameStyle`: The style of the QR code frame (e.g., NONE, CIRCULAR, FOCUS).
+     * - `this.config.showBarcodeValue`: A boolean indicating whether to display the barcode value.
+     * - `this.config.primaryIdentifierValue`: The text value to display as the barcode value.
+     * - `this.config.showBarcode`: A boolean indicating whether to display the barcode.
+     * - `this.config.barcodeValue`: The value to encode in the barcode.
+     * - `this.config.barcodeType`: The type/format of the barcode (e.g., CODE128, EAN).
+     * - `this.config.barcodeText`: The text to display below the barcode.
+     * - `this.config.margin`: The margin around the barcode.
+     * - `this.shiftX`: The horizontal shift applied to the barcode and its value.
+     * 
+     * External dependencies:
+     * - `JsBarcode`: A library used to generate the barcode.
+     * - `SVG`: A library used to create and manipulate SVG elements.
+     * 
+     * Notes:
+     * - The method imports the Roboto font for rendering the barcode value text.
+     * - The barcode and its value are dynamically positioned based on the frame style
+     *   and other configuration settings.
+     * - The barcode is rendered as an SVG element and added to the main canvas.
+     */
     drawBarcode(mainCanvas: any){
         let overallYPosition = this.config.size + this.multiLineHeight;
         if ( this.config.frameStyle !== QRCodeFrame.NONE ){
