@@ -760,10 +760,15 @@ export class SVGDrawing {
         const coordinateX = this.logoCordinateX ;
         const coordinateY = this.logoCordinateY ;
         if(this.config.logoImage){
-            await this.getImageBase64Data(this.config.logoImage).then( result =>{
-                let image = context.image(result);
+            if (this.config.skipImageValidation) {
+                let image = context.image(this.config.logoImage);
                 image.size(logoWidth , logoHeight).move(coordinateX , coordinateY)
-            });
+            } else {
+                await this.getImageBase64Data(this.config.logoImage).then( result =>{
+                    let image = context.image(result);
+                    image.size(logoWidth , logoHeight).move(coordinateX , coordinateY)
+                });
+            }
         }
         return ;
     }

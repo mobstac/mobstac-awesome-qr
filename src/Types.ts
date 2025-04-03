@@ -92,4 +92,5 @@ export interface QRDrawingConfig {
     barcodeType?: string;
     barcodeText?: string;
     primaryIdentifierValue?: string;
+    skipImageValidation?: boolean;
 }
