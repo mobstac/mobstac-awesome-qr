@@ -261,12 +261,12 @@ export class SVGDrawing {
             .then(() => {
                 return this.drawLogoImage(mainCanvas);
             })
+            .then(() => {
+                return this.addWatermark(mainCanvas);
+            })
             .then(()=>{
                 // @ts-ignore
                 return this.addDesign(mainCanvas,gradient);
-            })
-            .then(() => {
-                return this.addWatermark(mainCanvas);
             })
             .then((canvas: object) => {
                 if(!isNode){
@@ -300,8 +300,6 @@ export class SVGDrawing {
         // @ts-ignore
         const watermark = context.image(watermarkData);
         watermark.size(size, size).move(xPosition, yPosition);
-
-        return context;
     }
 
     private checkCircle(x: number, y: number, r: number , cx: number) {
