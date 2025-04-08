@@ -1,6 +1,6 @@
 {
     "name": "mobstac-awesome-qr",
-    "version": "2.5.5-beta.1",
+    "version": "2.5.5-beta.21",
     "description": "MobStac Awesome QR code library",
     "homepage": "https://github.com/mobstac/mobstac-awesome-qr",
     "bugs": "https://github.com/mobstac/mobstac-awesome-qr/issues",
@@ -59,7 +59,7 @@
         "ts-node": "8.0.3",
         "tslint": "5.14.0",
         "tslint-config-prettier": "1.18.0",
-        "typescript": "3.4.3",
+        "typescript": "^3.4.3",
         "webpack": "4.29.6",
         "webpack-cli": "3.3.0",
         "webpack-node-externals": "^3.0.0"
