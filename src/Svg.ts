@@ -265,6 +265,9 @@ export class SVGDrawing {
                 // @ts-ignore
                 return this.addDesign(mainCanvas,gradient);
             })
+            .then(() => {
+                return this.addWatermark(mainCanvas);
+            })
             .then((canvas: object) => {
                 if(!isNode){
                     // @ts-ignore
@@ -279,6 +282,24 @@ export class SVGDrawing {
                 // @ts-ignore
                 return canvas.svg();
             });
+    }
+
+    private async addWatermark(context: object) {
+        if (!this.config.addWatermark) {
+            return;
+        }
+
+        const watermarkSize = 0.1; // Default to 10% of QR code size
+        const size = this.config.size * watermarkSize;
+
+        const xPosition = this.config.size - size - this.config.margin;
+        const yPosition = this.config.size - size - this.config.margin;
+
+        const watermarkData = await this.getImageBase64Data('https://s3.amazonaws.com/polo-content-qa/7646/b349d6622f0640a889ac52e3d611e5c3?v=1744099749.208257');
+
+        // @ts-ignore
+        const watermark = context.image(watermarkData);
+        watermark.size(size, size).move(xPosition, yPosition);
     }
 
     private checkCircle(x: number, y: number, r: number , cx: number) {
@@ -797,6 +818,7 @@ export class SVGDrawing {
                 if(backgroundColor === 'rgba(255,255,255,0)' || backgroundColor.includes('rgba')){
                     color = '#ffffff00'
                 }
+                // TODO in case plan to do rounded bg
                 // @ts-ignore
                 context.rect(size,size).fill(color).move(this.shiftX,this.shiftY)
             }
