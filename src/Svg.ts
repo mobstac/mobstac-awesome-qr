@@ -300,6 +300,8 @@ export class SVGDrawing {
         // @ts-ignore
         const watermark = context.image(watermarkData);
         watermark.size(size, size).move(xPosition, yPosition);
+
+        return context;
     }
 
     private checkCircle(x: number, y: number, r: number , cx: number) {
