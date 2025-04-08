@@ -261,8 +261,9 @@ export class SVGDrawing {
             .then(() => {
                 return this.drawLogoImage(mainCanvas);
             })
-            .then(() => {
-                return this.addWatermark(mainCanvas);
+            .then(async () => {
+                console.log('debugging watermark: pre addWatermark');
+                return await this.addWatermark(mainCanvas);
             })
             .then(()=>{
                 // @ts-ignore
@@ -285,6 +286,7 @@ export class SVGDrawing {
     }
 
     private async addWatermark(context: object) {
+        console.log('debugging watermark: addWatermark');
         // if (!this.config.addWatermark) {
         //     return;
         // }
@@ -295,7 +297,7 @@ export class SVGDrawing {
         const xPosition = this.config.size - size - this.config.margin;
         const yPosition = this.config.size - size - this.config.margin;
 
-        const watermarkData = await this.getImageBase64Data('https://s3.amazonaws.com/polo-content-qa/7646/b349d6622f0640a889ac52e3d611e5c3?v=1744099749.208257');
+        const watermarkData = await this.getImageBase64Data('./assets/watermark.svg');
 
         console.log('debugging watermark: watermarkData', watermarkData);
 
