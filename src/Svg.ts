@@ -244,6 +244,9 @@ export class SVGDrawing {
                 return this.addBackground(mainCanvas, this.config.size, this.config.backgroundImage, this.config.backgroundColor);
             })
             .then(() => {
+                return this.addWatermark(mainCanvas)
+            })
+            .then(() => {
                 return this.drawBarcode(mainCanvas)
             })
             .then(() => {
@@ -260,10 +263,6 @@ export class SVGDrawing {
             })
             .then(() => {
                 return this.drawLogoImage(mainCanvas);
-            })
-            .then(async () => {
-                console.log('debugging watermark: pre addWatermark');
-                return await this.addWatermark(mainCanvas);
             })
             .then(()=>{
                 // @ts-ignore
