@@ -240,9 +240,9 @@ export class SVGDrawing {
         */
 
         return this.drawFrame(mainCanvas, this.config.frameStyle, this.config.frameColor, this.config.frameText)
-            .then(() => {
-                return this.addBackground(mainCanvas, this.config.size, this.config.backgroundImage, this.config.backgroundColor);
-            })
+            // .then(() => {
+            //     return this.addBackground(mainCanvas, this.config.size, this.config.backgroundImage, this.config.backgroundColor);
+            // })
             .then(() => {
                 return this.addWatermark(mainCanvas)
             })
