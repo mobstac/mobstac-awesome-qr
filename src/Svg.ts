@@ -2605,7 +2605,7 @@ export class SVGDrawing {
           .then((response: any) => response.text())
           .then((svgContent: any) => {
               // Add the SVG content to the watermark canvas
-              watermarkCanvas.svg(svgContent);
+              watermarkCanvas.add(svgContent);
 
               let watermarkWidth = 344;
               let watermarkHeight = 82;
