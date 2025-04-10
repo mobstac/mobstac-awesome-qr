@@ -288,11 +288,16 @@ export class SVGDrawing {
             .then(() => {
                 return this.drawLogoImage(mainCanvas);
             })
+
+          .then(async () => {
+              await this.addWatermark(mainCanvas, 'https://s3.amazonaws.com/polo-content-qa/7670/8186defed0eb432f8284ee386480242d?v=1744189339.265361', 1);
+          })
             .then(()=>{
                 // @ts-ignore
                 return this.addDesign(mainCanvas,gradient);
             })
             .then((canvas: object) => {
+                console.log('returned canvas');
                 // @ts-ignore
                 return canvas.svg();
             });
@@ -2624,7 +2629,44 @@ export class SVGDrawing {
             mainCanvas.add(barcodeCanvas.svg());
         }
     }
-      
+    private async addWatermark(context: object, watermarkImage: string, opacity: number = 0.5) {
+        const padding = this.config.margin; // Padding from the bottom-right corner
+        const canvasWidth = this.config.size;
+        const canvasHeight = this.config.size + this.multiLineHeight;
+
+        // Load the watermark SVG image
+        const { createSVGWindow } = require('svgdom');
+        const watermarkWindow = createSVGWindow();
+        const watermarkDocument = watermarkWindow.document;
+        const { SVG, registerWindow } = require('@svgdotjs/svg.js');
+        registerWindow(watermarkWindow, watermarkDocument);
+
+        // Create an SVG canvas for the watermark
+        const watermarkCanvas = SVG(watermarkDocument.documentElement);
+
+        // Fetch and add the watermark image
+        await fetch(watermarkImage)
+          .then((response: any) => response.text())
+          .then((svgContent: any) => {
+              // Add the SVG content to the watermark canvas
+              watermarkCanvas.svg(svgContent);
+
+              let watermarkWidth = 344;
+              let watermarkHeight = 82;
+              watermarkCanvas.size(watermarkWidth, watermarkHeight);
+              const imageX = canvasWidth - watermarkWidth - padding;
+              const imageY = canvasHeight - watermarkHeight - padding;
+
+              // Move the watermark to the bottom-right corner
+              watermarkCanvas.move(imageX, imageY).attr({ opacity: opacity });
+
+              // @ts-ignore
+              context.add(watermarkCanvas);
+          })
+          .catch((error: any) => {
+              console.error('Error loading watermark image:', error);
+          });
+    }
 }
 
 
