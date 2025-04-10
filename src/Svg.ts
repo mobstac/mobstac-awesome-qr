@@ -2634,22 +2634,14 @@ export class SVGDrawing {
         const canvasWidth = this.config.size;
         const canvasHeight = this.config.size + this.multiLineHeight;
 
-        // Load the watermark SVG image
-        const { createSVGWindow } = require('svgdom');
-        const watermarkWindow = createSVGWindow();
-        const watermarkDocument = watermarkWindow.document;
-        const { SVG, registerWindow } = require('@svgdotjs/svg.js');
-        registerWindow(watermarkWindow, watermarkDocument);
-
-        // Create an SVG canvas for the watermark
-        const watermarkCanvas = SVG(watermarkDocument.documentElement);
+        const watermarkCanvas = SVG().size( 344 , 82 ).viewbox(0,0,344 , 82);
 
         // Fetch and add the watermark image
         await fetch(watermarkImage)
           .then((response: any) => response.text())
           .then((svgContent: any) => {
               // Add the SVG content to the watermark canvas
-              watermarkCanvas.svg(svgContent);
+              watermarkCanvas.add(svgContent);
 
               let watermarkWidth = 344;
               let watermarkHeight = 82;
