@@ -2598,9 +2598,7 @@ export class SVGDrawing {
         //
         // eyeFrameCanvas = SVG().size( 7 * this.config.moduleSize , 7 * this.config.moduleSize ).viewbox(0,0,7 * this.config.moduleSize , 7 * this.config.moduleSize);
 
-        let watermarkCanvas : object;
-        watermarkCanvas = SVG()
-        watermarkCanvas.size( 344 , 82 ).viewbox(0,0,344 , 82);
+        const watermarkCanvas = SVG().size( 344 , 82 ).viewbox(0,0,344 , 82);
 
         // Fetch and add the watermark image
         await fetch(watermarkImage)
