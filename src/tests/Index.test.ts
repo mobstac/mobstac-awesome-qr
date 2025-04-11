@@ -24,8 +24,8 @@ REV:2008-04-24T19:52:43Z
 END:VCARD`;
 
 const config = {
-    // text: vCardSampleData,
-    text: "https://qrcodes.pro/scan/p",
+    text: vCardSampleData,
+    // text: "https://qrcodes.pro/scan/p",
     logoBackground: true,
     backgroundColor: "#FFFFFF",
     canvasType: CanvasType.SVG,
@@ -37,7 +37,7 @@ const config = {
     eyeFrameShape: EyeFrameShape.SQUARE,
     eyeFrameColor : '#000000',
     eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.CIRCULAR,
+    frameStyle: QRCodeFrame.NONE,
     frameText: "Frame Text",
     frameColor: "#724DDB",
     frameTextColor: "#FFFFFF",
@@ -47,15 +47,22 @@ const config = {
     logoImage : '',
     size: 1024,
     margin: 80,
-    correctLevel: QRErrorCorrectLevel.Q,
+    correctLevel: QRErrorCorrectLevel.H,
     logoMargin : 0,
-    showBarcodeValue: true,
-    barcodeValue: "42353252353254377777",
-    showBarcode: true,
-    barcodeType: "CODE128",
-    barcodeText: "(401)42353252353254377777",
-    primaryIdentifierValue: "42353252353254377777",
-    // isVCard : true
+    // showBarcodeValue: true,
+    // barcodeValue: "42353252353254377777",
+    // showBarcode: true,
+    // barcodeType: "CODE128",
+    // barcodeText: "(401)42353252353254377777",
+    // primaryIdentifierValue: "42353252353254377777",
+    isVCard : true,
+    watermark: {
+        showWatermark: true,
+        watermark: 'https://s3.amazonaws.com/polo-content-qa/7670/8186defed0eb432f8284ee386480242d?v=1744189339.265361',
+        opacity: 1,
+        width: 344,
+        height: 82
+    }
 };
 
 

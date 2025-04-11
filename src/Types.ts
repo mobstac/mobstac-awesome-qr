@@ -45,6 +45,14 @@ export interface QRCodeConfig {
     [key: string]: any;
 }
 
+export interface Watermark {
+    showWatermark: boolean;
+    watermark: string;
+    opacity: number;
+    width: number;
+    height: number;
+}
+
 export interface QRDrawingConfig {
     size: number;
     text: string;
@@ -92,6 +100,5 @@ export interface QRDrawingConfig {
     barcodeType?: string;
     barcodeText?: string;
     primaryIdentifierValue?: string;
-    showWatermark?: boolean;
-    watermarkUrl?: string;
+    watermark?: Watermark;
 }

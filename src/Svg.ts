@@ -290,7 +290,7 @@ export class SVGDrawing {
             })
 
           .then(async () => {
-              await this.addWatermark(mainCanvas, 'https://s3.amazonaws.com/polo-content-qa/7670/8186defed0eb432f8284ee386480242d?v=1744189339.265361', 1);
+              await this.addWatermark(mainCanvas);
           })
             .then(()=>{
                 // @ts-ignore
@@ -2629,28 +2629,69 @@ export class SVGDrawing {
             mainCanvas.add(barcodeCanvas.svg());
         }
     }
-    private async addWatermark(context: object, watermarkImage: string, opacity: number = 0.5) {
+    private async addWatermark(context: object) {
+
+        function validateWatermarkConfig(watermark: any): boolean {
+            if (!watermark) {
+                console.error('Watermark config is missing.');
+                return false;
+            }
+
+            if (!watermark.width) {
+                console.error('Watermark width is missing or invalid.');
+                return false;
+            }
+
+            if (!watermark.height) {
+                console.error('Watermark height is missing or invalid.');
+                return false;
+            }
+
+            if (!watermark.watermark) {
+                console.error('Watermark image (data or URL) is missing.');
+                return false;
+            }
+
+            if (typeof watermark.opacity !== 'number') {
+                console.error('Watermark opacity is missing or not a number.');
+                return false;
+            }
+
+            return true;
+        }
+
+        if (!(this.config.watermark && this.config.watermark.showWatermark
+          && validateWatermarkConfig(this.config.watermark))) {
+            return;
+        }
+
         const padding = this.config.margin; // Padding from the bottom-right corner
         const canvasWidth = this.config.size;
         const canvasHeight = this.config.size + this.multiLineHeight;
 
-        const watermarkCanvas = SVG().size( 344 , 82 ).viewbox(0,0,344 , 82);
+        const multiplier = this.config.size / 1024;
+
+        // Check if this can be used
+        // console.log('this.config.moduleSize', this.config.moduleSize);
+
+        let watermarkWidth = this.config.watermark.width * multiplier;
+        let watermarkHeight = this.config.watermark.height * multiplier;
+        const watermarkCanvas = SVG().size( this.config.watermark.width , this.config.watermark.height )
+          .viewbox(0,0,this.config.watermark.width , this.config.watermark.height);
 
         // Fetch and add the watermark image
-        await fetch(watermarkImage)
+        await fetch(this.config.watermark.watermark)
           .then((response: any) => response.text())
           .then((svgContent: any) => {
               // Add the SVG content to the watermark canvas
               watermarkCanvas.add(svgContent);
 
-              let watermarkWidth = 344;
-              let watermarkHeight = 82;
               watermarkCanvas.size(watermarkWidth, watermarkHeight);
               const imageX = canvasWidth - watermarkWidth - padding;
               const imageY = canvasHeight - watermarkHeight - padding;
 
               // Move the watermark to the bottom-right corner
-              watermarkCanvas.move(imageX, imageY).attr({ opacity: opacity });
+              watermarkCanvas.move(imageX, imageY).attr({ opacity: this.config.watermark ? this.config.watermark.opacity : 1 });
 
               // @ts-ignore
               context.add(watermarkCanvas);
