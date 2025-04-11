@@ -262,7 +262,7 @@ export class SVGDrawing {
                 return this.drawLogoImage(mainCanvas);
             })
               .then(async () => {
-                  await this.addWatermark(mainCanvas, 'https://s3.amazonaws.com/polo-content-qa/7670/8186defed0eb432f8284ee386480242d?v=1744189339.265361', 1);
+                  await this.addWatermark(mainCanvas);
               })
             .then(()=>{
                 // @ts-ignore
