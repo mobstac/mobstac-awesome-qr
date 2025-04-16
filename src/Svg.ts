@@ -272,8 +272,16 @@ export class SVGDrawing {
                     // @ts-ignore
                     canvas.height(null);
                     if(frameStyle === QRCodeFrame.CIRCULAR){
+                        // Using canvasWidth since canvasWidth and canvasHeight are same 
+                        let viewBoxHeight = canvasWidth;
+                        if( this.config.showBarcode) {
+                            viewBoxHeight = viewBoxHeight + 400;
+                        }   
+                        if( this.config.showBarcodeValue ) {
+                            viewBoxHeight = viewBoxHeight + 200;
+                        }
                         //@ts-ignore
-                        canvas.viewbox(0, 0, canvasWidth + 190, canvasWidth + 190)
+                        canvas.viewbox(0, 0, canvasWidth + 190, viewBoxHeight + 190)
                     }
                 }
                 // @ts-ignore
