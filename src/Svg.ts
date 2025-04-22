@@ -81,6 +81,7 @@ export class SVGDrawing {
     public TwoDArray: any;
     public isSmoothPattern: boolean = false;
     public multiLineHeight: number = 0;
+    private sizeRatio:  number = 1
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -120,6 +121,7 @@ export class SVGDrawing {
         let mainCanvas: object;
         let canvasHeight: number;
         let canvasWidth: number;
+        this.sizeRatio = this.config.size / 1024;
 
         if (isNode) {
             const { createSVGWindow } = eval('require')('svgdom');
@@ -152,10 +154,10 @@ export class SVGDrawing {
             }
 
             if ( this.config.showBarcodeValue ) {
-               canvasHeight += 150; 
+               canvasHeight += ( 150 * this.sizeRatio ); 
             }
             if ( this.config.showBarcode ) {
-                canvasHeight += 350;
+                canvasHeight += ( 350 * this.sizeRatio );
             } 
 
             if (frameStyle === QRCodeFrame.CIRCULAR) {
@@ -223,10 +225,10 @@ export class SVGDrawing {
             canvasWidth = this.config.size;
 
             if ( this.config.showBarcodeValue ) {
-                canvasHeight += 150; 
+                canvasHeight += ( 150 * this.sizeRatio );
              }
              if ( this.config.showBarcode ) {
-                 canvasHeight += 350;
+                 canvasHeight += ( 350 * this.sizeRatio );
              } 
 
             // @ts-ignore
@@ -545,10 +547,10 @@ export class SVGDrawing {
         const { SVG, registerWindow } = require('@svgdotjs/svg.js');
         let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize
         if ( this.config.showBarcode ){
-            canvasHeight += 350;
+            canvasHeight += ( 350 * this.sizeRatio );
         }
         if ( this.config.showBarcodeValue ){
-            canvasHeight += 150;
+            canvasHeight += ( 150 * this.sizeRatio );
         }
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize;
         const finalCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight)
@@ -2574,28 +2576,28 @@ export class SVGDrawing {
         let overallYPosition = this.config.size + this.multiLineHeight;
         if ( this.config.frameStyle !== QRCodeFrame.NONE ){
             if ( this.config.frameStyle !== QRCodeFrame.CIRCULAR && this.config.frameStyle !== QRCodeFrame.FOCUS ){
-                overallYPosition += 350;
+                overallYPosition += ( 350 * this.sizeRatio );
             } else {
                 if ( this.config.frameStyle === QRCodeFrame.FOCUS ){
-                    overallYPosition += 250;
+                    overallYPosition += ( 250 * this.sizeRatio );
                 }
                 if ( this.config.frameStyle === QRCodeFrame.CIRCULAR ){
-                    overallYPosition += 200;
+                    overallYPosition += ( 200 * this.sizeRatio );
                 }
             }
         }
 
         // Add White rectangle for barcode and barcode value 
-        if( this.config.frameStyle !== QRCodeFrame.CIRCULAR && this.config.backgroundColor && !this.config.backgroundColor.includes('rgba') ){
+        if( this.config.frameStyle !== QRCodeFrame.CIRCULAR && this.config.frameStyle !== QRCodeFrame.FOCUS && this.config.backgroundColor && !this.config.backgroundColor.includes('rgba') ){
             let tempOverallYPosition = overallYPosition;
             if ( this.config.showBarcodeValue ) {
                 // @ts-ignore
-                mainCanvas.rect(this.config.size, 150).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
-                tempOverallYPosition += 100;
+                mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
+                tempOverallYPosition += (100 * this.sizeRatio);
             }
             if ( this.config.showBarcode ) {
                 // @ts-ignore
-                mainCanvas.rect(this.config.size, 350).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition + 50);
+                mainCanvas.rect(this.config.size, ( 350 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition + (50 * this.sizeRatio));
             }
         }
 
@@ -2605,17 +2607,17 @@ export class SVGDrawing {
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
             `);
-            overallYPosition += 100;
+            overallYPosition += ( 100 * this.sizeRatio );
             let barcodeValueXPosition = this.config.size / 2 + this.shiftX;
             const barcodeValueYPosition = overallYPosition;
             const textRef = mainCanvas.plain(this.config.primaryIdentifierValue);
-            const fontSize = 75;
+            const fontSize = 75 * this.sizeRatio;
             textRef.move(barcodeValueXPosition, barcodeValueYPosition)
                 .font({ fill: "#000000", family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
         }
 
         if( this.config.showBarcode ) {
-            overallYPosition += 100;
+            overallYPosition += ( 100 * this.sizeRatio );
             let barcodeXPosition = this.shiftX + this.config.margin;
             const barcodeYPosition = overallYPosition;
             const { createSVGWindow } = eval('require')('svgdom');
@@ -2623,16 +2625,16 @@ export class SVGDrawing {
             const barcodeDocument = barcodeWindow.document;
             registerWindow(barcodeWindow, barcodeDocument);
             // @ts-ignore
-            let barcodeCanvas = SVG(barcodeDocument.documentElement).size( this.config.size - this.config.margin * 2, 150 ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150);
+            let barcodeCanvas = SVG(barcodeDocument.documentElement).size( this.config.size - this.config.margin * 2, 150 * this.sizeRatio ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150 * this.sizeRatio);
             JsBarcode(barcodeCanvas.node, this.config.barcodeValue, {
                 format: this.config.barcodeType,
                 text: this.getBarcodeText(),
                 xmlDocument: barcodeDocument,
                 displayValue: true,
-                fontSize: 50,
-                width: 6,
-                height : 180,
-                margin: 0,
+                fontSize: 50 * this.sizeRatio,
+                width: 6 * this.sizeRatio,
+                height : 180 * this.sizeRatio,
+                margin: 10,
                 background: '#ffffff00',
             });
             const barcodeCanvasWidth = parseInt(barcodeCanvas.width(),10);
