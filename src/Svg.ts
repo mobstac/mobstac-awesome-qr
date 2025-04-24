@@ -2588,7 +2588,14 @@ export class SVGDrawing {
         }
 
         // Add White rectangle for barcode and barcode value 
-        if( this.config.frameStyle !== QRCodeFrame.CIRCULAR && this.config.frameStyle !== QRCodeFrame.FOCUS && ( this.config.backgroundColor && !this.config.backgroundColor.includes('rgba') ) || ( this.config.backgroundImage?.length ) ){
+        if( 
+            this.config.frameStyle !== QRCodeFrame.CIRCULAR && 
+            this.config.frameStyle !== QRCodeFrame.FOCUS && 
+            ( 
+                ( this.config.backgroundColor && !this.config.backgroundColor.includes('rgba') ) || 
+                ( this.config.backgroundImage?.length )
+            ) 
+        ){
             let tempOverallYPosition = overallYPosition;
             if ( this.config.showBarcodeValue ) {
                 // @ts-ignore
