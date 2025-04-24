@@ -2593,7 +2593,7 @@ export class SVGDrawing {
             this.config.frameStyle !== QRCodeFrame.FOCUS && 
             ( 
                 ( this.config.backgroundColor && !this.config.backgroundColor.includes('rgba') ) || 
-                ( this.config.backgroundImage?.length )
+                ( this.config.backgroundImage && this.config.backgroundImage.length > 0 )
             ) 
         ){
             let tempOverallYPosition = overallYPosition;
