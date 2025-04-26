@@ -125,12 +125,12 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if ( this.config.showBarcodeValue ) {
-                canvasHeight += 200; 
-             }
-             if ( this.config.showBarcode ) {
-                 canvasHeight += 400;
-             } 
+            if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
+               canvasHeight += 200; 
+            }
+            if ( this.config.showBarcode ) {
+                canvasHeight += 400;
+            } 
 
             if (frameStyle === QRCodeFrame.CIRCULAR) {
                 if(this.config.size >= 1024) {
@@ -195,7 +195,7 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            if ( this.config.showBarcodeValue ) {
+            if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
                 canvasHeight += 200; 
              }
              if ( this.config.showBarcode ) {
@@ -277,7 +277,7 @@ export class SVGDrawing {
                         if( this.config.showBarcode) {
                             viewBoxHeight = viewBoxHeight + 400;
                         }   
-                        if( this.config.showBarcodeValue ) {
+                        if( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
                             viewBoxHeight = viewBoxHeight + 200;
                         }
                         //@ts-ignore
@@ -2546,7 +2546,7 @@ export class SVGDrawing {
             }
         }
         
-        if ( this.config.showBarcodeValue ) {
+        if ( this.config.showBarcodeValue  && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
             // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
