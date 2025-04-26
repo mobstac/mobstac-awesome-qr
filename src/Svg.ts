@@ -2583,8 +2583,10 @@ export class SVGDrawing {
                 }
             }
         }
-        
+        console.log('adding barcode value');
         if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
+            console.log("showBarcodeValue", this.config.showBarcodeValue);
+            console.log('frame style', this.config.frameStyle);
             // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
