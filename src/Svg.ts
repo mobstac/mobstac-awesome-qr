@@ -153,8 +153,8 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if ( this.config.showBarcodeValue ) {
-               canvasHeight += ( 150 * this.sizeRatio ); 
+            if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
+               canvasHeight += 200; 
             }
             if ( this.config.showBarcode ) {
                 canvasHeight += ( 350 * this.sizeRatio );
@@ -224,8 +224,8 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            if ( this.config.showBarcodeValue ) {
-                canvasHeight += ( 150 * this.sizeRatio );
+            if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
+                canvasHeight += 200; 
              }
              if ( this.config.showBarcode ) {
                  canvasHeight += ( 350 * this.sizeRatio );
@@ -2597,7 +2597,7 @@ export class SVGDrawing {
             ) 
         ){
             let tempOverallYPosition = overallYPosition;
-            if ( this.config.showBarcodeValue ) {
+            if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE) ) {
                 // @ts-ignore
                 mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
                 tempOverallYPosition += (100 * this.sizeRatio);
@@ -2609,7 +2609,7 @@ export class SVGDrawing {
         }
 
         
-        if ( this.config.showBarcodeValue ) {
+        if ( this.config.showBarcodeValue  && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR) ) {
             // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
