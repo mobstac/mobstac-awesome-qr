@@ -2568,7 +2568,7 @@ export class SVGDrawing {
             barcodeCanvas = SVG().size( this.config.size - this.config.margin * 2, 150 ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150);
             JsBarcode(barcodeCanvas.node, this.config.barcodeValue, {
                 format: this.config.barcodeType,
-                text: this.config.barcodeText,
+                text: this.getBarcodeText(),
                 xmlDocument: document,
                 displayValue: true,
                 fontSize: 50,
@@ -2583,6 +2583,12 @@ export class SVGDrawing {
         }
     }
 
+    getBarcodeText() {
+        if( this.config.barcodeType !== 'CODE128' ){
+            return this.config.barcodeValue ? this.config.barcodeValue : this.config.primaryIdentifierValue ;
+        }
+        return this.config.barcodeText ? this.config.barcodeText : this.config.primaryIdentifierValue ;
+    }
 
 }
 
