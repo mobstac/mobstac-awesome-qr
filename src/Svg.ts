@@ -2597,7 +2597,7 @@ export class SVGDrawing {
             ) 
         ){
             let tempOverallYPosition = overallYPosition;
-            if ( this.config.showBarcodeValue) {
+            if ( this.config.showBarcodeValue  && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR)) {
                 // @ts-ignore
                 mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
                 tempOverallYPosition += (100 * this.sizeRatio);
@@ -2609,7 +2609,13 @@ export class SVGDrawing {
         }
 
         
-        if ( this.config.showBarcodeValue && (this.config.frameStyle === QRCodeFrame.NONE || this.config.frameStyle === QRCodeFrame.CIRCULAR)) {
+        if (
+            this.config.showBarcodeValue &&
+            (
+              (this.config.frameStyle as QRCodeFrame) === QRCodeFrame.NONE ||
+              (this.config.frameStyle as QRCodeFrame) === QRCodeFrame.CIRCULAR
+            )
+          ) {
             // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
