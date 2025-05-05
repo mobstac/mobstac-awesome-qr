@@ -2597,7 +2597,7 @@ export class SVGDrawing {
             ) 
         ){
             let tempOverallYPosition = overallYPosition;
-            if ( this.config.showBarcodeValue  && (this.config.frameStyle === QRCodeFrame.NONE) ) {
+            if ( this.config.showBarcodeValue) {
                 // @ts-ignore
                 mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
                 tempOverallYPosition += (100 * this.sizeRatio);
