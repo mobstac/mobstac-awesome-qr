@@ -76,6 +76,7 @@ export class SVGDrawing {
     public TwoDArray: any;
     public isSmoothPattern: boolean = false;
     public multiLineHeight: number = 0;
+    public isFrameCircularOrNone: boolean = false;
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -99,6 +100,7 @@ export class SVGDrawing {
         let mainCanvas: object;
         let canvasHeight: number;
         let canvasWidth: number;
+        this.isFrameCircularOrNone = (frameStyle === QRCodeFrame.CIRCULAR || frameStyle === QRCodeFrame.NONE);
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
 
@@ -125,7 +127,7 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if ( this.config.showBarcodeValue ) {
+            if ( this.config.showBarcodeValue  && this.isFrameCircularOrNone) {
                 canvasHeight += 200; 
              }
              if ( this.config.showBarcode ) {
@@ -195,7 +197,7 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            if ( this.config.showBarcodeValue ) {
+            if ( this.config.showBarcodeValue  && this.isFrameCircularOrNone) {
                 canvasHeight += 200; 
              }
              if ( this.config.showBarcode ) {
@@ -277,7 +279,7 @@ export class SVGDrawing {
                         if( this.config.showBarcode) {
                             viewBoxHeight = viewBoxHeight + 400;
                         }   
-                        if( this.config.showBarcodeValue ) {
+                        if( this.config.showBarcodeValue  && this.isFrameCircularOrNone) {
                             viewBoxHeight = viewBoxHeight + 200;
                         }
                         //@ts-ignore
@@ -2546,7 +2548,7 @@ export class SVGDrawing {
             }
         }
         
-        if ( this.config.showBarcodeValue ) {
+        if ( this.config.showBarcodeValue  && this.isFrameCircularOrNone) {
             // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
