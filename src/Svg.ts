@@ -81,7 +81,9 @@ export class SVGDrawing {
     public TwoDArray: any;
     public isSmoothPattern: boolean = false;
     public multiLineHeight: number = 0;
-    private sizeRatio:  number = 1
+    private sizeRatio:  number = 1;
+    // checking if the qr code frame is circular or none.
+    public isFrameCircularOrNone: boolean = false;
 
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
@@ -122,6 +124,7 @@ export class SVGDrawing {
         let canvasHeight: number;
         let canvasWidth: number;
         this.sizeRatio = this.config.size / 1024;
+        this.isFrameCircularOrNone = (frameStyle === QRCodeFrame.CIRCULAR || frameStyle === QRCodeFrame.NONE);
 
         if (isNode) {
             const { createSVGWindow } = eval('require')('svgdom');
@@ -153,8 +156,8 @@ export class SVGDrawing {
                 canvasHeight = canvasHeight + multiLineHeight ;
             }
 
-            if ( this.config.showBarcodeValue ) {
-               canvasHeight += ( 150 * this.sizeRatio ); 
+            if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
+               canvasHeight += 200; 
             }
             if ( this.config.showBarcode ) {
                 canvasHeight += ( 350 * this.sizeRatio );
@@ -224,8 +227,8 @@ export class SVGDrawing {
             canvasHeight = this.config.size;
             canvasWidth = this.config.size;
 
-            if ( this.config.showBarcodeValue ) {
-                canvasHeight += ( 150 * this.sizeRatio );
+            if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
+                canvasHeight += 200; 
              }
              if ( this.config.showBarcode ) {
                  canvasHeight += ( 350 * this.sizeRatio );
@@ -2597,7 +2600,7 @@ export class SVGDrawing {
             ) 
         ){
             let tempOverallYPosition = overallYPosition;
-            if ( this.config.showBarcodeValue ) {
+            if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
                 // @ts-ignore
                 mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
                 tempOverallYPosition += (100 * this.sizeRatio);
@@ -2609,7 +2612,7 @@ export class SVGDrawing {
         }
 
         
-        if ( this.config.showBarcodeValue ) {
+        if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
             // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
