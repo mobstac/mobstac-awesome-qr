@@ -2,17 +2,21 @@
 
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 
- export const loadImage = (src: string, imageServerURL?: string | undefined | RequestInfo, imageServerRequestHeaders?: object | undefined) => {
+ export const loadImage = (src: string) => {
     // @ts-ignore
-    imageServerRequestHeaders['Content-type'] = 'application/json'
+    //  let imageServerRequestHeaders
+    //  imageServerRequestHeaders['Content-type'] = 'image/svg+xml'
     return new Promise<Response>((resolve , reject) =>{
-        fetch(<any>imageServerURL, {
-            method :'POST',
-            headers : <any>imageServerRequestHeaders,
-            body : JSON.stringify( {
-                url : src
-            })
+        fetch(<any>src, {
+            method :'GET',
+            headers : {
+                'Content-type' : 'image/svg+xml'
+            }
+            // body : JSON.stringify( {
+            //     url : src
+            // })
         }).then( (data : Response) => resolve(data))
+
         .catch( (err : Error ) => reject(err))
     })
  };
