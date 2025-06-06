@@ -788,7 +788,7 @@ export class SVGDrawing {
 
 
     private async getImageBase64Data(imgSrc: string) {
-        const data = await loadImage(imgSrc ,this.config.imageServerURL , this.config.imageServerRequestHeaders )
+        const data =  await loadImage(imgSrc)
         const blob = await data.blob();
         return new Promise<string | ArrayBuffer | null>((resolve, reject) => {
             const reader = new FileReader();
