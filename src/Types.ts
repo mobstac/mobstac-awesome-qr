@@ -1,5 +1,13 @@
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
 
+export interface Watermark {
+    showWatermark: boolean;
+    watermark: string;
+    opacity: number;
+    width: number;
+    height: number;
+}
+
 export interface QRCodeConfig {
     binarizeThreshold?: string;
     binarize?: boolean;
@@ -92,4 +100,5 @@ export interface QRDrawingConfig {
     barcodeType?: string;
     barcodeText?: string;
     primaryIdentifierValue?: string;
+    watermark?: Watermark;
 }
