@@ -2704,14 +2704,22 @@ export class SVGDrawing {
         }
 
         const padding = this.config.margin; // Padding from the bottom-right corner
-        const canvasWidth = this.config.size;
-        const canvasHeight = this.config.size + this.multiLineHeight;
         const positionCorrectionIndex = 2; // Can be configured
 
         const multiplier = this.config.size / 1024;
-
         const watermarkWidth = this.config.watermark.width * multiplier;
         const watermarkHeight = this.config.watermark.height * multiplier;
+        
+        // Calculate watermark position relative to the QR code area, not the full canvas
+        // Use the QR code size and position shifts to determine the correct placement
+        const qrCodeSize = this.config.size;
+        const qrCodeBottomRightX = this.shiftX + qrCodeSize;
+        const qrCodeBottomRightY = this.shiftY + qrCodeSize;
+        
+        // Position watermark at the bottom-right of the QR code area
+        const imageX = qrCodeBottomRightX - watermarkWidth - padding + positionCorrectionIndex;
+        const imageY = qrCodeBottomRightY - watermarkHeight - padding + positionCorrectionIndex;
+
         const watermarkCanvas = SVG().size( this.config.watermark.width , this.config.watermark.height )
             .viewbox(0,0,this.config.watermark.width , this.config.watermark.height);
 
@@ -2723,10 +2731,8 @@ export class SVGDrawing {
                 watermarkCanvas.add(svgContent);
 
                 watermarkCanvas.size(watermarkWidth, watermarkHeight);
-                const imageX = canvasWidth - watermarkWidth - padding + positionCorrectionIndex;
-                const imageY = canvasHeight - watermarkHeight - padding + positionCorrectionIndex;
 
-                // Move the watermark to the bottom-right corner
+                // Move the watermark to the calculated position relative to QR code
                 watermarkCanvas.move(imageX, imageY).attr({ opacity: this.config.watermark ? this.config.watermark.opacity : 1 });
 
                 // @ts-ignore
