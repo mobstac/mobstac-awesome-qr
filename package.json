@@ -5,11 +5,56 @@
     "homepage": "https://github.com/mobstac/mobstac-awesome-qr",
     "bugs": "https://github.com/mobstac/mobstac-awesome-qr/issues",
     "main": "lib/index.js",
+    "module": "lib/index.esm.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./lib/index.esm.js",
+            "require": "./lib/index.js",
+            "types": "./lib/index.d.ts"
+        },
+        "./lib/Enums": {
+            "import": "./lib/Enums.esm.js",
+            "require": "./lib/Enums.js",
+            "types": "./lib/Enums.d.ts"
+        },
+        "./lib/Types": {
+            "import": "./lib/Types.esm.js",
+            "require": "./lib/Types.js",
+            "types": "./lib/Types.d.ts"
+        },
+        "./lib/Models": {
+            "import": "./lib/Models.esm.js",
+            "require": "./lib/Models.js",
+            "types": "./lib/Models.d.ts"
+        },
+        "./lib/Common": {
+            "import": "./lib/Common.esm.js",
+            "require": "./lib/Common.js",
+            "types": "./lib/Common.d.ts"
+        },
+        "./lib/Constants": {
+            "import": "./lib/Constants.esm.js",
+            "require": "./lib/Constants.js",
+            "types": "./lib/Constants.d.ts"
+        },
+        "./lib/Util": {
+            "import": "./lib/Util.esm.js",
+            "require": "./lib/Util.js",
+            "types": "./lib/Util.d.ts"
+        },
+        "./lib/Svg": {
+            "import": "./lib/Svg.esm.js",
+            "require": "./lib/Svg.js",
+            "types": "./lib/Svg.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
     "scripts": {
         "test": "nyc mocha",
         "testMain": "nyc mocha -g 'QR code main test'",
         "build": "tsc && webpack",
+        "build:esm": "tsc && NODE_OPTIONS=\"--openssl-legacy-provider\" webpack && node scripts/create-esm.js",
         "coverage": "nyc --reporter=text npm run test",
         "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
         "lint": "tslint -p tsconfig.json",
