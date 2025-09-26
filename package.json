@@ -24,7 +24,8 @@
         "testEyes": "nyc mocha -g 'QR Code Eye Test'",
         "testDataPattern": "nyc mocha -g 'QR Code Data Pattern test'",
         "testBackground": "nyc mocha -g 'QR Code Background test'",
-        "testFrames": "nyc mocha -g 'QR Code Frame Test'"
+        "testFrames": "nyc mocha -g 'QR Code Frame Test'",
+        "demo": "node demo/server.js"
     },
     "nyc": {
         "include": [
@@ -73,6 +74,7 @@
         "src/assets/**/*"
     ],
     "dependencies": {
+        "express": "^4.18.2",
         "@svgdotjs/svg.js": "3.0.16",
         "@types/node": "11.13.0",
         "filereader": "^0.10.3",

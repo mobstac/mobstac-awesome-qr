@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MobStac Awesome QR - Demo</title>
+  <style>
+    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: #f6f7fb; color: #111; }
+    header { padding: 16px 24px; background: #724DDB; color: #fff; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; }
+    .panel { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; display: flex; flex-direction: column; }
+    .panel header { background: #fafafa; color: #333; border-bottom: 1px solid #eee; }
+    .panel header h2 { margin: 0; font-size: 16px; }
+    .panel .content { padding: 16px; flex: 1; }
+    form { display: grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap: 12px 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; color: #555; }
+    .row-inline { display: flex; gap: 8px; align-items: center; }
+    input[type="text"], input[type="number"], select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fcfcfc; }
+    input[type="range"] { width: 100%; }
+    input[type="color"] { width: 44px; height: 32px; padding: 0; border: 1px solid #ddd; border-radius: 4px; }
+    .controls { display: flex; gap: 8px; margin-top: 12px; grid-column: 1 / -1; }
+    button { appearance: none; border: 0; border-radius: 6px; padding: 10px 14px; background: #724DDB; color: #fff; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #eaeaea; color: #111; }
+    .row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+    .row input[type="text"] { flex: 1; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; }
+    #preview { display: block; min-height: 520px; background: #fafafa; border: 1px dashed #ddd; border-radius: 8px; padding: 12px; overflow: auto; }
+    #svgHost { width: 100%; height: auto; display: flex; align-items: center; justify-content: center; }
+    #svgHost svg { max-width: 100%; height: auto; }
+    .small { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MobStac Awesome QR – Interactive Demo</h1>
+  </header>
+  <main>
+    <section class="panel">
+      <header class="row" style="padding: 12px 16px; justify-content: space-between;">
+        <h2>Config</h2>
+        <div class="row">
+          <label class="small">Text/URL</label>
+          <input type="text" id="text" placeholder="https://example.com" style="min-width: 340px;" />
+        </div>
+      </header>
+      <div class="content">
+        <form id="configForm">
+          <div class="field">
+            <label>Size <span class="small" id="sizeVal"></span></label>
+            <input type="range" id="size" min="128" max="2048" step="16" />
+          </div>
+          <div class="field">
+            <label>Margin <span class="small" id="marginVal"></span></label>
+            <input type="range" id="margin" min="0" max="200" step="1" />
+          </div>
+
+          <div class="field">
+            <label>Error correction</label>
+            <select id="correctLevel">
+              <option value="0">M</option>
+              <option value="1">L</option>
+              <option value="2">H</option>
+              <option value="3" selected>Q</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Dot scale <span class="small" id="dotScaleVal"></span></label>
+            <input type="range" id="dotScale" min="0.05" max="1" step="0.01" />
+          </div>
+
+          <div class="field">
+            <label>Data pattern</label>
+            <select id="dataPattern">
+              <option value="square">square</option>
+              <option value="circle">circle</option>
+              <option value="kite">kite</option>
+              <option value="left-diamond">left-diamond</option>
+              <option value="right-diamond">right-diamond</option>
+              <option value="thin-square">thin-square</option>
+              <option value="smooth-round">smooth-round</option>
+              <option value="smooth-sharp">smooth-sharp</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Gradient</label>
+            <select id="gradientType">
+              <option value="none">none</option>
+              <option value="linear">linear</option>
+              <option value="radial">radial</option>
+              <option value="vertical">vertical</option>
+              <option value="horizontal">horizontal</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Frame style</label>
+            <select id="frameStyle">
+              <option value="none">none</option>
+              <option value="banner-bottom">banner-bottom</option>
+              <option value="banner-top">banner-top</option>
+              <option value="box-bottom">box-bottom</option>
+              <option value="box-top">box-top</option>
+              <option value="balloon-bottom">balloon-bottom</option>
+              <option value="balloon-top">balloon-top</option>
+              <option value="text-only">text-only</option>
+              <option value="focus">focus</option>
+              <option value="circular">circular</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Frame text</label>
+            <input type="text" id="frameText" placeholder="SCAN ME" />
+          </div>
+
+          <div class="field">
+            <label>Eye frame shape</label>
+            <select id="eyeFrameShape">
+              <option value="square">square</option>
+              <option value="circle">circle</option>
+              <option value="rounded">rounded</option>
+              <option value="left-leaf">left-leaf</option>
+              <option value="right-leaf">right-leaf</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Eye ball shape</label>
+            <select id="eyeBallShape">
+              <option value="square">square</option>
+              <option value="circle">circle</option>
+              <option value="rounded">rounded</option>
+              <option value="left-leaf">left-leaf</option>
+              <option value="right-leaf">right-leaf</option>
+              <option value="left-diamond">left-diamond</option>
+              <option value="right-diamond">right-diamond</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Logo scale <span class="small" id="logoScaleVal"></span></label>
+            <input type="range" id="logoScale" min="0" max="0.5" step="0.01" />
+          </div>
+          <div class="field">
+            <label>Logo margin <span class="small" id="logoMarginVal"></span></label>
+            <input type="range" id="logoMargin" min="0" max="100" step="1" />
+          </div>
+
+          <div class="field">
+            <label>Logo URL</label>
+            <input type="text" id="logoImage" placeholder="https://.../logo.svg or .png" />
+          </div>
+          <div class="field">
+            <label>Background image URL</label>
+            <input type="text" id="backgroundImage" placeholder="https://.../bg.jpg" />
+          </div>
+
+          <div class="field">
+            <label>Foreground color</label>
+            <div class="row-inline">
+              <input type="color" id="colorDarkPicker" />
+              <input type="text" id="colorDark" placeholder="#000000" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Light color</label>
+            <div class="row-inline">
+              <input type="color" id="colorLightPicker" />
+              <input type="text" id="colorLight" placeholder="#ffffff" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Background color</label>
+            <div class="row-inline">
+              <input type="color" id="backgroundColorPicker" />
+              <input type="text" id="backgroundColor" placeholder="#FFFFFF" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Frame color</label>
+            <div class="row-inline">
+              <input type="color" id="frameColorPicker" />
+              <input type="text" id="frameColor" placeholder="#724DDB" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Eye frame color</label>
+            <div class="row-inline">
+              <input type="color" id="eyeFrameColorPicker" />
+              <input type="text" id="eyeFrameColor" placeholder="#000000" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Eye ball color</label>
+            <div class="row-inline">
+              <input type="color" id="eyeBallColorPicker" />
+              <input type="text" id="eyeBallColor" placeholder="#000000" />
+            </div>
+          </div>
+
+          <div class="field"><label><input type="checkbox" id="whiteMargin" /> White margin</label></div>
+          <div class="field"><label><input type="checkbox" id="logoBackground" /> Logo background</label></div>
+          <div class="field"><label><input type="checkbox" id="showBarcode" /> Show barcode</label></div>
+          <div class="field"><label><input type="checkbox" id="showBarcodeValue" /> Show barcode value</label></div>
+          <div class="field"><label><input type="checkbox" id="useOpacity" /> Use opacity</label></div>
+
+          <div class="field">
+            <label>Barcode type</label>
+            <select id="barcodeType">
+              <option value="">(none)</option>
+              <option value="EAN13">EAN13</option>
+              <option value="CODE128">CODE128</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Barcode value</label>
+            <input type="text" id="barcodeValue" placeholder="4006381333931" />
+          </div>
+          <div class="field">
+            <label>Barcode text</label>
+            <input type="text" id="barcodeText" placeholder="(401)4006381333931" />
+          </div>
+          <div class="field">
+            <label>Primary identifier value</label>
+            <input type="text" id="primaryIdentifierValue" />
+          </div>
+
+          <div class="controls">
+            <button id="renderBtn" type="button">Render QR</button>
+            <button class="secondary" id="resetBtn" type="button">Reset</button>
+          </div>
+        </form>
+        <p class="small">Change any field to re-render. Colors sync with their pickers.</p>
+      </div>
+    </section>
+    <section class="panel">
+      <header style="padding: 12px 16px;"><h2>Preview</h2></header>
+      <div class="content">
+        <div id="preview"><div id="svgHost"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const defaultConfig = {
+      text: "https://qrcodes.pro/scan/p",
+      size: 512,
+      margin: 512/12,
+      typeNumber: 4,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: 3,
+      backgroundDimming: "rgba(0,0,0,0)",
+      logoScale: 0.15,
+      logoMargin: 512/12/4,
+      logoCornerRadius: 8,
+      rectangular: false,
+      logoWidth: 0,
+      logoHeight: 0,
+      dotScale: 0.35,
+      logoBackground: true,
+      maskedDots: false,
+      isVCard: false,
+      useCanvas: false,
+      useOpacity: true,
+      dataPattern: "square",
+      gradientType: "none",
+      frameStyle: "banner-bottom",
+      frameText: "SCAN ME",
+      frameColor: "#724DDB",
+      frameTextColor: "#000000",
+      eyeBallShape: "square",
+      eyeFrameShape: "square",
+      eyeBallColor: "#000000",
+      eyeFrameColor: "#000000",
+      showBarcode: false,
+      showBarcodeValue: false,
+      barcodeType: "CODE128",
+      barcodeValue: "",
+      barcodeText: "",
+      whiteMargin: true,
+      backgroundColor: "#FFFFFF"
+    };
+
+    const renderBtn = document.getElementById('renderBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const svgHost = document.getElementById('svgHost');
+
+    const inputs = {
+      text: document.getElementById('text'),
+      size: document.getElementById('size'),
+      margin: document.getElementById('margin'),
+      correctLevel: document.getElementById('correctLevel'),
+      dotScale: document.getElementById('dotScale'),
+      dataPattern: document.getElementById('dataPattern'),
+      gradientType: document.getElementById('gradientType'),
+      frameStyle: document.getElementById('frameStyle'),
+      frameText: document.getElementById('frameText'),
+      eyeFrameShape: document.getElementById('eyeFrameShape'),
+      eyeBallShape: document.getElementById('eyeBallShape'),
+      logoScale: document.getElementById('logoScale'),
+      logoMargin: document.getElementById('logoMargin'),
+      logoImage: document.getElementById('logoImage'),
+      backgroundImage: document.getElementById('backgroundImage'),
+      colorDark: document.getElementById('colorDark'),
+      colorLight: document.getElementById('colorLight'),
+      backgroundColor: document.getElementById('backgroundColor'),
+      frameColor: document.getElementById('frameColor'),
+      eyeFrameColor: document.getElementById('eyeFrameColor'),
+      eyeBallColor: document.getElementById('eyeBallColor'),
+      whiteMargin: document.getElementById('whiteMargin'),
+      logoBackground: document.getElementById('logoBackground'),
+      showBarcode: document.getElementById('showBarcode'),
+      showBarcodeValue: document.getElementById('showBarcodeValue'),
+      useOpacity: document.getElementById('useOpacity'),
+      barcodeType: document.getElementById('barcodeType'),
+      barcodeValue: document.getElementById('barcodeValue'),
+      barcodeText: document.getElementById('barcodeText'),
+      primaryIdentifierValue: document.getElementById('primaryIdentifierValue')
+    };
+
+    const pickers = {
+      colorDarkPicker: document.getElementById('colorDarkPicker'),
+      colorLightPicker: document.getElementById('colorLightPicker'),
+      backgroundColorPicker: document.getElementById('backgroundColorPicker'),
+      frameColorPicker: document.getElementById('frameColorPicker'),
+      eyeFrameColorPicker: document.getElementById('eyeFrameColorPicker'),
+      eyeBallColorPicker: document.getElementById('eyeBallColorPicker')
+    };
+
+    const valueLabels = {
+      sizeVal: document.getElementById('sizeVal'),
+      marginVal: document.getElementById('marginVal'),
+      dotScaleVal: document.getElementById('dotScaleVal'),
+      logoScaleVal: document.getElementById('logoScaleVal'),
+      logoMarginVal: document.getElementById('logoMarginVal')
+    };
+
+    function buildConfig() {
+      return {
+        text: inputs.text.value.trim(),
+        size: Number(inputs.size.value),
+        margin: Number(inputs.margin.value),
+        correctLevel: Number(inputs.correctLevel.value),
+        dotScale: Number(inputs.dotScale.value),
+        dataPattern: inputs.dataPattern.value,
+        gradientType: inputs.gradientType.value,
+        frameStyle: inputs.frameStyle.value,
+        frameText: inputs.frameText.value,
+        eyeFrameShape: inputs.eyeFrameShape.value,
+        eyeBallShape: inputs.eyeBallShape.value,
+        logoScale: Number(inputs.logoScale.value),
+        logoMargin: Number(inputs.logoMargin.value),
+        logoImage: inputs.logoImage.value.trim(),
+        backgroundImage: inputs.backgroundImage.value.trim(),
+        colorDark: inputs.colorDark.value.trim(),
+        colorLight: inputs.colorLight.value.trim(),
+        backgroundColor: inputs.backgroundColor.value.trim(),
+        frameColor: inputs.frameColor.value.trim(),
+        eyeFrameColor: inputs.eyeFrameColor.value.trim(),
+        eyeBallColor: inputs.eyeBallColor.value.trim(),
+        whiteMargin: inputs.whiteMargin.checked,
+        logoBackground: inputs.logoBackground.checked,
+        showBarcode: inputs.showBarcode.checked,
+        showBarcodeValue: inputs.showBarcodeValue.checked,
+        useOpacity: inputs.useOpacity.checked,
+        barcodeType: inputs.barcodeType.value,
+        barcodeValue: inputs.barcodeValue.value,
+        barcodeText: inputs.barcodeText.value,
+        primaryIdentifierValue: inputs.primaryIdentifierValue.value
+      };
+    }
+
+    function syncPickersFromInputs() {
+      pickers.colorDarkPicker.value = inputs.colorDark.value;
+      pickers.colorLightPicker.value = inputs.colorLight.value;
+      pickers.backgroundColorPicker.value = inputs.backgroundColor.value;
+      pickers.frameColorPicker.value = inputs.frameColor.value;
+      pickers.eyeFrameColorPicker.value = inputs.eyeFrameColor.value;
+      pickers.eyeBallColorPicker.value = inputs.eyeBallColor.value;
+    }
+
+    function syncInputsFromPickers() {
+      inputs.colorDark.value = pickers.colorDarkPicker.value;
+      inputs.colorLight.value = pickers.colorLightPicker.value;
+      inputs.backgroundColor.value = pickers.backgroundColorPicker.value;
+      inputs.frameColor.value = pickers.frameColorPicker.value;
+      inputs.eyeFrameColor.value = pickers.eyeFrameColorPicker.value;
+      inputs.eyeBallColor.value = pickers.eyeBallColorPicker.value;
+    }
+
+    function updateValueLabels() {
+      valueLabels.sizeVal.textContent = inputs.size.value + 'px';
+      valueLabels.marginVal.textContent = inputs.margin.value + 'px';
+      valueLabels.dotScaleVal.textContent = inputs.dotScale.value;
+      valueLabels.logoScaleVal.textContent = inputs.logoScale.value;
+      valueLabels.logoMarginVal.textContent = inputs.logoMargin.value;
+    }
+
+    async function render() {
+      const cfg = buildConfig();
+      const url = '/render?config=' + encodeURIComponent(JSON.stringify(cfg));
+      try {
+        const res = await fetch(url);
+        const svg = await res.text();
+        svgHost.innerHTML = svg;
+      } catch (e) {
+        svgHost.innerHTML = '<div class="small">Failed to render</div>';
+      }
+    }
+
+    // Defaults
+    const defaults = {
+      text: 'https://qrcodes.pro/scan/p',
+      size: 512,
+      margin: Math.round(512/12),
+      correctLevel: 3,
+      dotScale: 0.35,
+      dataPattern: 'square',
+      gradientType: 'none',
+      frameStyle: 'banner-bottom',
+      frameText: 'SCAN ME',
+      eyeFrameShape: 'square',
+      eyeBallShape: 'square',
+      logoScale: 0.15,
+      logoMargin: Math.round(512/12/4),
+      logoImage: '',
+      backgroundImage: '',
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      backgroundColor: '#FFFFFF',
+      frameColor: '#724DDB',
+      eyeFrameColor: '#000000',
+      eyeBallColor: '#000000',
+      whiteMargin: true,
+      logoBackground: true,
+      showBarcode: false,
+      showBarcodeValue: false,
+      useOpacity: true,
+      barcodeType: '',
+      barcodeValue: '',
+      barcodeText: '',
+      primaryIdentifierValue: ''
+    };
+
+    function setDefaults() {
+      Object.entries(defaults).forEach(([k,v]) => {
+        if (k in inputs) {
+          if (typeof v === 'boolean') inputs[k].checked = v;
+          else inputs[k].value = v;
+        }
+      });
+      syncPickersFromInputs();
+      updateValueLabels();
+    }
+
+    // Wire events
+    Object.values(inputs).forEach(el => {
+      const evt = el.type === 'text' ? 'input' : 'change';
+      el.addEventListener(evt, () => { updateValueLabels(); render(); });
+    });
+    Object.values(pickers).forEach(el => {
+      el.addEventListener('input', () => { syncInputsFromPickers(); render(); });
+    });
+    inputs.size.addEventListener('change', () => {
+      // keep default margin as ~1/12 of size when user hasn't touched margin yet
+      if (Number(inputs.margin.value) === Math.round(defaults.size/12)) {
+        inputs.margin.value = Math.round(Number(inputs.size.value)/12);
+        updateValueLabels();
+      }
+    });
+
+    renderBtn.addEventListener('click', render);
+    resetBtn.addEventListener('click', () => { setDefaults(); render(); });
+
+    setDefaults();
+    render();
+  </script>
+</body>
+</html>
+
