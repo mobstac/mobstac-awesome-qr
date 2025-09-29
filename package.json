@@ -53,7 +53,7 @@
     "scripts": {
         "test": "nyc mocha",
         "testMain": "nyc mocha -g 'QR code main test'",
-        "build": "tsc && webpack",
+        "build": "tsc && NODE_OPTIONS=\"--openssl-legacy-provider\" webpack",
         "build:esm": "tsc && NODE_OPTIONS=\"--openssl-legacy-provider\" webpack && node scripts/create-esm.js",
         "coverage": "nyc --reporter=text npm run test",
         "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
