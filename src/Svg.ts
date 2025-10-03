@@ -272,22 +272,14 @@ export class SVGDrawing {
             })
             .then((canvas: object) => {
                 if(!isNode){
+                    if(frameStyle === QRCodeFrame.CIRCULAR){
+                        // @ts-ignore
+                        canvas.viewbox(0, 0, canvas.width(), canvas.height())
+                    }
                     // @ts-ignore
                     canvas.width(null);
                     // @ts-ignore
                     canvas.height(null);
-                    if(frameStyle === QRCodeFrame.CIRCULAR){
-                        // Using canvasWidth since canvasWidth and canvasHeight are same 
-                        let viewBoxHeight = canvasWidth;
-                        if( this.config.showBarcode) {
-                            viewBoxHeight = viewBoxHeight + 400;
-                        }   
-                        if( this.config.showBarcodeValue  && this.isFrameCircularOrNone) {
-                            viewBoxHeight = viewBoxHeight + 200;
-                        }
-                        //@ts-ignore
-                        canvas.viewbox(0, 0, canvasWidth + 190, viewBoxHeight + 190)
-                    }
                 }
                 // @ts-ignore
                 return canvas.svg();
@@ -322,13 +314,16 @@ export class SVGDrawing {
 
     private async addDesignHelper(finalCanvas: object, canvas: object, gradient: string) {
         const size = this.config.size;
-        const pos = Math.sqrt(2) * size / 2 + this.config.moduleSize;
+        // Add padding to prevent stroke overflow at canvas edges
+        // Half of moduleSize provides adequate buffer for stroke width
+        const padding = this.config.moduleSize / 2;
+        const pos = Math.sqrt(2) * size / 2 + this.config.moduleSize + padding;
         const radius = (size) / Math.sqrt(2) + this.config.moduleSize / 2;
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
         const moduleSize = this.config.dotScale * this.config.moduleSize;
         const increment  = this.config.nSize + ( 1 - this.config.dotScale ) * 0.5 * this.config.nSize;
-        const shift = (Math.sqrt(2) * size + 2 * this.config.moduleSize-size) / 2 ;
-        const limit  = Math.sqrt(2) * size + 2 * this.config.moduleSize;
+        const shift = (Math.sqrt(2) * size + 2 * this.config.moduleSize + padding - size) / 2 ;
+        const limit  = Math.sqrt(2) * size + 2 * this.config.moduleSize + padding;
         const str = this.config.text;
         const len = str.length;
         let num = str.charCodeAt(0) + str.charCodeAt(len-1);
@@ -533,14 +528,17 @@ export class SVGDrawing {
         }
 
         const size = this.config.size;
-        let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize
+        // Add padding to prevent stroke overflow at canvas edges
+        // Half of moduleSize provides adequate buffer for stroke width
+        const padding = this.config.moduleSize / 2;
+        let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize + padding
         if ( this.config.showBarcode ){
             canvasHeight += 400;
         }
         if ( this.config.showBarcodeValue ){
             canvasHeight += 200;
         }
-        const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize;
+        const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         const finalCanvas = SVG().size(canvasWidth, canvasHeight);
         const color = this.config.backgroundColor?this.config.backgroundColor:'none' ;
         const width = this.config.moduleSize;
@@ -574,7 +572,7 @@ export class SVGDrawing {
             default:
                 grad =gradient;
         }
-        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
+        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize + padding;
         const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
         if (this.config.backgroundImage) {
             return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
@@ -834,8 +832,11 @@ export class SVGDrawing {
     }
 
     private async addCircularBackgroundImage(context: object, size: number, backgroundImage: string, pos: number, grad: string, width: number, radius: number) {
+        const circleDiameter = radius * 2;
+        const circlePosition = {cx: pos, cy: pos};
+        
         // @ts-ignore
-        context.circle(size).fill('#ffffff')
+        context.circle(circleDiameter).attr(circlePosition).fill('#ffffff')
         let imageBase64 = await this.getImageBase64Data(backgroundImage);
 
         //@ts-ignore
@@ -844,7 +845,7 @@ export class SVGDrawing {
         image.size(size , size).move(this.shiftX , this.shiftY)
 
         //@ts-ignore
-        let circle = context.circle(size)
+        let circle = context.circle(circleDiameter).attr(circlePosition)
 
         image.clipWith(circle)
          return ;
