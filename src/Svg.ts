@@ -2511,13 +2511,13 @@ export class SVGDrawing {
             // Mr. Hollow → Sticker 2
             mr_hollow: { x: 169, y: 170, scale: 0.2965 },
             // The Mischief Twins → Sticker 3
-            the_mischief_twins: { x: 1328, y: 1596, scale: 0.2645 },
+            the_mischief_twins: { x: 1930, y: 2250, scale: 0.25 },
             // Witchy Whiskers → Sticker 4
             witchy_whiskers: { x: 1600, y: 2320, scale: 0.25 },
             // Phantom Puff → Sticker 5
-            phantom_puff: { x: 1250, y: 1600, scale: 0.30 },
+            phantom_puff: { x: 1250, y: 1600, scale: 0.30, rotate: -2 },
             // Midnight Paws → Sticker 6
-            midnight_paws: { x: 195, y: 1823, scale: 0.2245 },
+            midnight_paws: { x: 1160, y: 850, scale: 0.39 },
             // Feline Sorcerer → Sticker 7
             feline_sorcerer: { x: 1150, y: 2990, scale: 0.20 },
             // Hazy Hopper → Sticker 8 (no placeholder detected; will fallback)
@@ -2548,18 +2548,19 @@ export class SVGDrawing {
         type StickerNames = keyof typeof StickerSizeTable;
         const rawName = String(this.config.stickerImageName);
         const normalizedName = normalizeStickerName(rawName) as StickerNames;
-        const preset = (StickerSizeTable as Record<string, { x: number; y: number; scale: number }>)[normalizedName];
+        const preset = (StickerSizeTable as Record<string, { x: number; y: number; scale: number, rotate?: number }>)[normalizedName];
 
         // Centered fallback if no preset defined
         const fallbackScale = 0.3;
         const scale = preset ? preset.scale : fallbackScale;
         const moveX = preset ? preset.x : (size - size * scale) / 2;
         const moveY = preset ? preset.y : (size - size * scale) / 2;
+        const rotate = preset && preset.rotate ? preset.rotate : 0;
 
         // Create a <g> tag inside the mainCanvas
         const group = stickerCanvas.group();
         group.attr({
-            transform: `scale(${scale}) translate(${moveX}, ${moveY})`,
+            transform: `scale(${scale}) translate(${moveX}, ${moveY}) rotate(${rotate})`,
         });
 
         // Move all children from mainCanvas to group
