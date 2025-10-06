@@ -27,7 +27,7 @@ const config = {
     // text: vCardSampleData,
     text: "hAPPYHAPPYHAPPYHAPYHAYJ",
     logoBackground: true,
-    backgroundColor: "#ffff0060",
+    backgroundColor: "rgba(255,255,255,0.38)",
     canvasType: CanvasType.SVG,
     dataPattern: DataPattern.SMOOTH_SHARP,
     dotScale: 1,
@@ -50,8 +50,28 @@ const config = {
     correctLevel: QRErrorCorrectLevel.H,
     logoMargin : 0,
     // isVCard : true
-    stickerImage: 'https://cdn.uniqode.com/1697/ea6cbef3e5074c63873222b352a8fca3',
-    stickerImageName: 'winter_cheer'
+    // stickerImage: 'https://cdn.uniqode.com/1697/ea6cbef3e5074c63873222b352a8fca3',
+    // stickerImageName: 'winter_cheer'
+
+
+    // stickerImage: 'https://cdn.uniqode.com/1697/6ab0680e24ca4e24a543577bdbbb9c87',
+    // stickerImageName: 'pumpkin_duke'
+
+    // stickerImage: 'https://cdn.uniqode.com/1697/9b803899c52845cc9db15fcfb64d5d7e',
+    // stickerImageName: 'the_mischief_twins'
+
+    stickerImage: 'https://cdn.uniqode.com/1697/6f42719560e648b58d41b30dcd9c5159',
+    stickerImageName: 'midnight_paws'
+
+    // stickerImage: 'https://cdn.uniqode.com/1697/10403ff63a9a4e428ec82dc98c9916ef',
+    // stickerImageName: 'phantom_puff'
+
+    // stickerImage: 'https://cdn.uniqode.com/1697/19c20de6c6b04236bf42a6e777700ee0',
+    // stickerImageName: 'witchy_whiskers'
+
+    // stickerImage: 'https://cdn.uniqode.com/1697/cee14c970ac1434c88092e56b2bc8aa0',
+    // stickerImageName: 'feline_sorcerer'
+
 
 };
 
