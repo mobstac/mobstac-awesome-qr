@@ -2,8 +2,11 @@
 
 export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 
- export const loadImage = (src: string, imageServerURL?: string | undefined | RequestInfo, imageServerRequestHeaders?: object | undefined) => {
+ export const loadImage = (src: string, imageServerURL?: string | undefined | RequestInfo, imageServerRequestHeaders?: Record<string, any> | undefined) => {
     // @ts-ignore
+    if (!imageServerRequestHeaders) {
+        imageServerRequestHeaders = {};
+    }
     imageServerRequestHeaders['Content-type'] = 'application/json'
     return new Promise<Response>((resolve , reject) =>{
         fetch(<any>imageServerURL, {

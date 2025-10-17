@@ -39,8 +39,9 @@ export interface QRCodeConfig {
     isVCard?: boolean;
     useCanvas?: boolean;
     useOpacity?: boolean;
-    imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerURL?: string;
+    imageServerRequestHeaders?: object;
+    sticker?: Sticker;
 
     [key: string]: any;
 }
@@ -51,6 +52,49 @@ export interface Watermark {
     opacity: number;
     width: number;
     height: number;
+}
+
+/**
+ * Configuration interface for adding stickers to QR codes.
+ * Note: Stickers are not displayed when the QR code has a frame, barcode, or barcode value.
+ */
+export interface Sticker {
+    /** 
+     * URL or path to the sticker image file.
+     * Supports common image formats: PNG, JPEG, SVG, etc.
+     */
+    imageUrl: string;
+    
+    /** 
+     * X coordinate position of the QR code within the sticker.
+     * If not provided, defaults to centered position.
+     * @default (stickerSize - qrCodeSize) / 2
+     */
+    qrCodeX?: number;
+    
+    /** 
+     * Y coordinate position of the QR code within the sticker.
+     * If not provided, defaults to centered position.
+     * @default (stickerSize - qrCodeSize) / 2
+     */
+    qrCodeY?: number;
+    
+    /** 
+     * Scale factor for the QR code size within the sticker.
+     * Value between 0 and 1, where 1 = full sticker size, 0.5 = half size, etc.
+     * @default 0.3
+     * @minimum 0
+     * @maximum 1
+     */
+    qrCodeScale?: number;
+    
+    /** 
+     * Rotation angle for the QR code within the sticker in degrees.
+     * Positive values rotate clockwise, negative values rotate counter-clockwise.
+     * Any numeric value is accepted (e.g., 45, -90, 720 for 2 full rotations).
+     * @default 0
+     */
+    qrCodeRotate?: number;
 }
 
 export interface QRDrawingConfig {
@@ -102,4 +146,5 @@ export interface QRDrawingConfig {
     primaryIdentifierValue?: string;
     skipImageValidation?: boolean;
     watermark?: Watermark;
+    sticker?: Sticker;
 }
