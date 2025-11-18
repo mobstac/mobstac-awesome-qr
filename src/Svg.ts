@@ -4,7 +4,7 @@ import { Gradient, SVG , registerWindow} from '@svgdotjs/svg.js';
 import { CanvasUtil, maxLogoScale } from './Common';
 import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
-import { QRCodeConfig, QRDrawingConfig } from './Types';
+import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
 import { isNode, isSvgFile, getFrameTextSize, getLengthOfLongestText } from './Util';
 const fetch = require('node-fetch');
 const sharp = require("sharp")
@@ -297,6 +297,9 @@ export class SVGDrawing {
             .then(()=>{
                 // @ts-ignore
                 return this.addDesign(mainCanvas,gradient);
+            })
+            .then(async (canvas: any) => {
+                return this.addSticker(canvas);
             })
             .then((canvas: object) => {
                 // @ts-ignore
@@ -2742,6 +2745,89 @@ export class SVGDrawing {
                 // tslint:disable-next-line:no-console
                 console.error('Error loading watermark image:', error);
             });
+    }
+
+    async addSticker(mainCanvas: any) {
+        if (!this.config.sticker || !this.config.sticker.imageUrl) {
+            console.log('No sticker found');
+            return mainCanvas;
+        }
+
+        // Don't show stickers if QR code has a frame
+        if (this.config.frameStyle && this.config.frameStyle !== QRCodeFrame.NONE) {
+            return mainCanvas;
+        }
+
+        // Don't show stickers if barcode is present
+        if (this.config.showBarcode || this.config.showBarcodeValue) {
+            return mainCanvas;
+        }
+
+        const fallbackScale = 0.3;
+        const scale = this.config.sticker.qrCodeScale || fallbackScale;
+        const centeredX = (this.config.size - this.config.size * scale) / 2;
+        const centeredY = (this.config.size - this.config.size * scale) / 2;
+        
+        // Scale sticker coordinates based on actual canvas size
+        // The sticker canvas uses this.config.size, so coordinates must match that coordinate system  
+        // Reference size 800 works for default - coordinates align at size 800
+        // For other sizes, scale proportionally based on actual canvas size
+        const referenceSize = 800;
+        const sizeRatio = this.config.size / referenceSize;
+        
+        let qrCodeX = centeredX;
+        let qrCodeY = centeredY;
+        
+        if (this.config.sticker.qrCodeX !== undefined) {
+            qrCodeX = this.config.sticker.qrCodeX * sizeRatio;
+        }
+        if (this.config.sticker.qrCodeY !== undefined) {
+            qrCodeY = this.config.sticker.qrCodeY * sizeRatio;
+        }
+        
+        const stickerConfig: Sticker = {
+            imageUrl: this.config.sticker.imageUrl,
+            qrCodeX: qrCodeX,
+            qrCodeY: qrCodeY,
+            qrCodeScale: scale,
+            qrCodeRotate: this.config.sticker.qrCodeRotate || 0
+        };
+
+        return this.addStickerWithConfig(mainCanvas, stickerConfig);
+    }
+
+    private async addStickerWithConfig(mainCanvas: any, stickerConfig: Sticker) {
+        const size = this.config.size;
+
+        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+
+        // Always validate and convert images to base64 for Lambda/server-side usage
+        const imageBase64 = await this.getImageBase64Data(stickerConfig.imageUrl);
+        stickerCanvas.image('')
+            .size(size, size)
+            .move(0, 0)
+            .attr({ 
+                'xlink:href': imageBase64, 
+                opacity: 1, 
+                'preserveAspectRatio': 'xMidYMid meet'
+            });
+
+        const qrGroup = stickerCanvas.group();
+        qrGroup.attr({
+            transform: `translate(${stickerConfig.qrCodeX}, ${stickerConfig.qrCodeY}) scale(${stickerConfig.qrCodeScale}) rotate(${stickerConfig.qrCodeRotate || 0})`,                                                  
+        });
+
+        // Collect child nodes into a static array to avoid mutation during iteration
+        const children = Array.from(mainCanvas.node.childNodes) as Node[];
+        children.forEach((child: Node) => {
+            qrGroup.node.appendChild(child);
+        });
+        // Clear the original parent to ensure no residual nodes remain
+        while (mainCanvas.node.firstChild) {
+            mainCanvas.node.removeChild(mainCanvas.node.firstChild);
+        }
+
+        return stickerCanvas;
     }
 }
 
