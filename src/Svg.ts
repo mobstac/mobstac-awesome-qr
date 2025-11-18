@@ -2701,11 +2701,28 @@ export class SVGDrawing {
         const scale = this.config.sticker.qrCodeScale || fallbackScale;
         const centeredX = (this.config.size - this.config.size * scale) / 2;
         const centeredY = (this.config.size - this.config.size * scale) / 2;
+
+        // Scale sticker coordinates based on actual canvas size
+        // The sticker canvas uses this.config.size, so coordinates must match that coordinate system  
+        // Reference size 800 works for default - coordinates align at size 800
+        // For other sizes, scale proportionally based on actual canvas size
+        const referenceSize = 800;
+        const sizeRatio = this.config.size / referenceSize;
+
+        let qrCodeX = centeredX;
+        let qrCodeY = centeredY;
+
+        if (this.config.sticker.qrCodeX !== undefined) {
+            qrCodeX = this.config.sticker.qrCodeX * sizeRatio;
+        }
+        if (this.config.sticker.qrCodeY !== undefined) {
+            qrCodeY = this.config.sticker.qrCodeY * sizeRatio;
+        }
         
         const stickerConfig: Sticker = {
             imageUrl: this.config.sticker.imageUrl,
-            qrCodeX: this.config.sticker.qrCodeX !== undefined ? this.config.sticker.qrCodeX : centeredX,
-            qrCodeY: this.config.sticker.qrCodeY !== undefined ? this.config.sticker.qrCodeY : centeredY,
+            qrCodeX: qrCodeX,
+            qrCodeY: qrCodeY,
             qrCodeScale: scale,
             qrCodeRotate: this.config.sticker.qrCodeRotate || 0
         };
