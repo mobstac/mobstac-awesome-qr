@@ -1,6 +1,6 @@
 import { Gradient } from '@svgdotjs/svg.js';
 import 'mocha';
-import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from '../Enums';
 import { QRCodeBuilder } from '../index';
 import { QRCode } from '../Models';
 
@@ -48,6 +48,10 @@ const config = {
     margin: 80,
     correctLevel: QRErrorCorrectLevel.Q,
     logoMargin : 0,
+    textTag: "123456789123",
+    textTagColor: "#0000FF",
+    textTagFontSize: 30,
+    textTagPosition: TextTagPosition.LEFT_CENTER,
     // isVCard : true
 };
 

@@ -2,8 +2,8 @@
 // @ts-ignore
 import { Gradient, SVG, registerWindow } from '@svgdotjs/svg.js';
 import { CanvasUtil, maxLogoScale } from './Common';
-import { LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
-import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
+import { DEFAULT_CANVAS_SIZE, DEFAULT_TEXT_TAG_FONT_SIZE, LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
+import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
 import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
 import { isNode, loadImage, getFrameTextSize, getLengthOfLongestText } from './Util';
 import JsBarcode = require('jsbarcode');
@@ -258,6 +258,9 @@ export class SVGDrawing {
                 return this.drawPositionPatterns(mainCanvas, gradient);
             })
             .then(() => {
+                return this.addTextTag(mainCanvas);
+            })
+            .then(() => {
                 return this.fillMargin(mainCanvas);
             })
             .then(() => {
@@ -289,13 +292,116 @@ export class SVGDrawing {
             });
     }
 
+    
+    addTextTag(mainCanvas: object): any {
+        if (!this.config.textTag || !this.config.textTag.length) {
+            return;
+        }
+
+        this.config.textTagColor = this.config.textTagColor || '#000000';
+        this.config.textTagFontSize = this.config.textTagFontSize || DEFAULT_TEXT_TAG_FONT_SIZE;
+        this.config.textTagPosition = this.config.textTagPosition || TextTagPosition.TOP_CENTER;
+
+        // Load Roboto font
+        // @ts-ignore
+        mainCanvas.defs().style(`
+            @import url('https://fonts.googleapis.com/css?family=Roboto:400');
+        `);
+
+        // @ts-ignore
+        const textTagRef = mainCanvas.plain(this.config.textTag)
+
+        // Scale font size to rawSize
+        this.config.textTagFontSize = ( this.config.textTagFontSize || DEFAULT_TEXT_TAG_FONT_SIZE ) * (this.config.rawSize / DEFAULT_CANVAS_SIZE);
+        
+        // Set font properties
+        textTagRef.font({ 
+            family: 'Roboto',
+            size: this.config.textTagFontSize, 
+            fill: this.config.textTagColor
+        })
+
+        // Calculate position and rotation
+        const transform = this.getTextTagTransform();
+
+        // Position and rotate around the anchor point
+        // @ts-ignore
+        textTagRef.move(transform.x, transform.y)
+            .rotate(transform.rotation, transform.x, transform.y)
+            .font({ anchor: transform.anchor })
+    }
+
+    /**
+     * IMPORTANT: THE VALUES CALCULATED HERE ARE FOR THE TEXT TAG TO BE PLACED CORRECTLY IN THE QR CODE DURING DOWNLOADING
+     * TO SEE THE QR CODE LOCALLY, INCREASE THE SPACING VALUE
+     * @returns {x: number, y: number, rotation: number, anchor: string}
+     */
+    getTextTagTransform(): { x: number, y: number, rotation: number, anchor: string } {
+        const margin = this.config.margin || 0;
+        const spacing = 10; // Space between text and QR frame
+        const qrLeft = this.shiftX + margin;
+        const qrRight = this.shiftX + this.config.size - margin;
+        const qrTop = this.shiftY + margin;
+        const qrBottom = this.shiftY + this.config.size - margin;
+        const qrCenterX = this.shiftX + this.config.size / 2;
+        const qrCenterY = this.shiftY + this.config.size / 2;
+        const fontSize = this.config.textTagFontSize || 30;
+       
+
+        switch (this.config.textTagPosition) {
+            // Top positions (no rotation)
+            case TextTagPosition.TOP_LEFT:
+                return { x: qrLeft, y: qrTop - spacing - fontSize, rotation: 0, anchor: 'start' };
+            
+            case TextTagPosition.TOP_CENTER:
+                return { x: qrCenterX, y: qrTop - spacing - fontSize, rotation: 0, anchor: 'middle' };
+            
+            case TextTagPosition.TOP_RIGHT:
+                return { x: qrRight, y: qrTop - spacing - fontSize, rotation: 0, anchor: 'end' };
+
+            // Right positions (90° rotation)
+            // After 90° rotation, text extends upward, so we need to offset by textHeight
+            case TextTagPosition.RIGHT_UPPER:
+                return { x: qrRight + spacing + fontSize, y: qrTop, rotation: 90, anchor: 'start' };
+            
+            case TextTagPosition.RIGHT_CENTER:
+                return { x: qrRight + spacing + fontSize, y: qrCenterY, rotation: 90, anchor: 'middle' };
+            
+            case TextTagPosition.RIGHT_LOWER:
+                return { x: qrRight + spacing + fontSize, y: qrBottom, rotation: 90, anchor: 'end' };
+
+            // Bottom positions (no rotation)
+            case TextTagPosition.BOTTOM_LEFT:
+                return { x: qrLeft, y: qrBottom + spacing, rotation: 0, anchor: 'start' };
+            
+            case TextTagPosition.BOTTOM_CENTER:
+                return { x: qrCenterX, y: qrBottom + spacing, rotation: 0, anchor: 'middle' };
+            
+            case TextTagPosition.BOTTOM_RIGHT:
+                return { x: qrRight, y: qrBottom + spacing, rotation: 0, anchor: 'end' };
+
+            // Left positions (-90° rotation)
+            case TextTagPosition.LEFT_UPPER:
+                return { x: qrLeft - spacing - fontSize, y: qrTop, rotation: -90, anchor: 'end' };
+            
+            case TextTagPosition.LEFT_CENTER:
+                return { x: qrLeft - spacing - fontSize, y: qrCenterY, rotation: -90, anchor: 'middle' };
+            
+            case TextTagPosition.LEFT_LOWER:
+                return { x: qrLeft - spacing - fontSize, y: qrBottom, rotation: -90, anchor: 'start' };
+
+            default:
+                return { x: qrLeft, y: qrTop - spacing - fontSize, rotation: 0, anchor: 'start' };
+        }
+    }
+
     private checkCircle(x: number, y: number, r: number , cx: number) {
         if((x-cx)*(x-cx) + (y-cx) * (y-cx) <= r*r) {
             return true;
         }
         return false;
-    }
-    
+    }    
+
 
     private middleSquare(seed: number) {
         let result = (seed * seed).toString();

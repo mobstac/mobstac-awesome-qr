@@ -80,3 +80,18 @@ export enum QRCodeFrame {
     FOCUS = 'focus'
     // BOX_LIGHT = 'box-light',
 }
+
+export enum TextTagPosition {
+    TOP_CENTER    = 'top-center',
+    TOP_RIGHT     = 'top-right',
+    RIGHT_UPPER   = 'right-upper',
+    RIGHT_CENTER  = 'right-center',
+    RIGHT_LOWER   = 'right-lower',
+    BOTTOM_RIGHT  = 'bottom-right',
+    BOTTOM_CENTER = 'bottom-center',
+    BOTTOM_LEFT   = 'bottom-left',
+    LEFT_LOWER    = 'left-lower',
+    LEFT_CENTER   = 'left-center',
+    LEFT_UPPER    = 'left-upper',
+    TOP_LEFT      = 'top-left'
+}
