@@ -1,6 +1,6 @@
 import { Gradient } from '@svgdotjs/svg.js';
 import 'mocha';
-import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from '../Enums';
 import { QRCodeBuilder } from '../index';
 import { QRCode } from '../Models';
 const sharp = require("sharp")
@@ -23,41 +23,51 @@ URL:mobstac.com
 REV:2008-04-24T19:52:43Z
 END:VCARD`;
 
-const config = {
-    // text: vCardSampleData,
-    text: "https://qrcodes.pro/scan/p",
-    logoBackground: true,
-    backgroundColor: "#FFFFFF",
-    canvasType: CanvasType.SVG,
-    dataPattern: DataPattern.SQUARE,
-    dotScale: 1,
-    colorDark: "#000000",
-    colorLight : '#00FFFF',
-    eyeBallShape: EyeBallShape.SQUARE,
-    eyeFrameShape: EyeFrameShape.SQUARE,
-    eyeFrameColor : '#000000',
-    eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.BANNER_BOTTOM,
-    frameText: "SCAN ME",
-    frameColor: "#724DDB",
-    frameTextColor: "#000000",
-    gradientType: GradientType.NONE,
-    logoScale: 0.3,
-    backgroundImage :'',
-    logoImage : '',
-    size: 1024,
-    margin: 80,
-    correctLevel: QRErrorCorrectLevel.Q,
-    logoMargin : 0,
-    showBarcodeValue: true,
-    barcodeValue: "4006381333931",
-    showBarcode: true,
-    barcodeType: "EAN13",
-    barcodeText: "(401)4006381333931",
-    primaryIdentifierValue: "4006381333931",
-    // isVCard : true
-};
 
+
+const config = {
+    "text" : "https://q.qrcodes.pro/kUnfwz",
+    // "text" : vCardSampleData,
+    "color": "#000000",
+    "margin": 80,
+    "isVCard": false,
+    "textTag": "ADITYAAAAAAAA",
+    "dotScale": 1,
+    "colorDark": "#000000",
+    "frameText": "",
+    "logoImage": "",
+    "logoScale": 0.2,
+    "logoWidth": 0,
+    "watermark": {
+        "showWatermark": false
+    },
+    "colorLight": "#8f00ff",
+    "frameColor": "#000000",
+    "frameStyle": QRCodeFrame.NONE,
+    "logoHeight": 0,
+    "logoMargin": 10,
+    "barcodeText": "",
+    "barcodeType": "CODE128",
+    "dataPattern": DataPattern.SQUARE,
+    "rectangular": true,
+    "showBarcode": false,
+    "barcodeValue": "",
+    "eyeBallColor": "#000000",
+    "eyeBallShape": EyeBallShape.SQUARE,
+    "gradientType": GradientType.NONE,
+    "textTagColor": "#000000",
+    "eyeFrameColor": "#000000",
+    "eyeFrameShape": EyeFrameShape.SQUARE,
+    "frameTextColor": "#000000",
+    "logoBackground": true,
+    "backgroundColor": "#ffffff",
+    "backgroundImage": "",
+    "textTagFontSize": 40,
+    "textTagPosition": TextTagPosition.TOP_CENTER,
+    "showBarcodeValue": false,
+    "primaryIdentifierValue": "",
+    "size": 1024
+}
 
 describe('QR code main tests', () => {
     it('QR main test SVG', done => {
