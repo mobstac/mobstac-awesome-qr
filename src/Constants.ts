@@ -149,3 +149,6 @@ export let maxLogoSizeConfigERH = new Map<number, LogoSize>([
     [2, ERH_QR2],
     [1, ERH_QR1]
 ]) ;
+
+export const DEFAULT_TEXT_TAG_FONT_SIZE = 30;
+export const DEFAULT_CANVAS_SIZE = 1024;
