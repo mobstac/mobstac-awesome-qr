@@ -172,3 +172,26 @@ qRCodeGenerator.build(CanvasType.SVG).then(
 ```
 
 Build function returns a promise which when resolved returns the generated QR code in SVG format as a string.
+
+## Browser Build
+To generate a build that can directly run in a browser (with vanilla JS)
+1. Switch to the `browser-version` branch 
+2. Run build command
+```bash
+  npm run build
+```
+3. A `dist` folder with `bundle.js` will be generated. Use this file directly as a script with vanilla JS code.
+
+
+```HTML
+<script src="[path_to_the_file]/bundle.js"></script>
+```
+
+```javascript
+
+const qRCodeGenerator = new QRCodeBuilder(<QR_CONFIG>);
+    qRCodeGenerator.build(CanvasType.SVG).then(
+    svgText => {
+        console.log(svgText);
+    })
+```
