@@ -1,4 +1,4 @@
-import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from './Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
 
 export interface Watermark {
     showWatermark: boolean;
@@ -93,6 +93,10 @@ export interface QRCodeConfig {
     imageServerURL?: string,
     imageServerRequestHeaders?: object,
     sticker?: Sticker;
+    textTag?: string;
+    textTagColor?: string;
+    textTagFontSize?: number;
+    textTagPosition?: TextTagPosition;
 
     [key: string]: any;
 }
@@ -147,4 +151,8 @@ export interface QRDrawingConfig {
     watermark?: Watermark;
     sticker?: Sticker;
     skipImageValidation?: boolean;
+    textTag?: string;
+    textTagColor?: string;
+    textTagFontSize?: number;
+    textTagPosition?: TextTagPosition;
 }
