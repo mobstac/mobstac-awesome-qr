@@ -1,5 +1,6 @@
 import {
     CanvasType,
+    QRCodeFrame,
     QRErrorCorrectLevel,
 } from './Enums';
 import { QRCode } from './Models';
@@ -53,6 +54,12 @@ export class QRCodeBuilder {
         }
         if (this.config.logoMargin > 100) {
             this.config.logoMargin = 50;
+        }
+        if ( this.config.textTag && this.config.textTag.length > 30) {
+            return Promise.reject('Identification text length exceeded 30 characters');
+        }
+        if ( this.config.frameStyle === QRCodeFrame.CIRCULAR) {
+            this.config.textTag = '';
         }
         const qrCode: QRCode = new QRCode(-1, this.config);
 
