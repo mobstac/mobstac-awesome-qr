@@ -1,4 +1,5 @@
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
+import { ImageIO } from './io/ImageIO';
 
 export interface Watermark {
     showWatermark: boolean;
@@ -97,6 +98,8 @@ export interface QRCodeConfig {
     textTagColor?: string;
     textTagFontSize?: number;
     textTagPosition?: TextTagPosition;
+    skipImageValidation?: boolean;
+    imageIO?: ImageIO;
 
     [key: string]: any;
 }
@@ -155,4 +158,5 @@ export interface QRDrawingConfig {
     textTagColor?: string;
     textTagFontSize?: number;
     textTagPosition?: TextTagPosition;
+    imageIO?: ImageIO;
 }

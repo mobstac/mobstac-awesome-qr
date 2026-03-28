@@ -7,16 +7,8 @@ import {
     QRMode,
 } from './Enums';
 import { QRCodeConfig } from './Types';
-import { isNode } from './Util';
 
 import { SVGDrawing } from './Svg';
-
-if (isNode) {
-    // uncomment these for node
-
-    const path = require('path');
-    const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto/Roboto-Regular.ttf');
-}
 
 
 export class QRPolynomial {

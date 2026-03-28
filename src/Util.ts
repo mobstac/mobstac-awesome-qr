@@ -1,21 +1,3 @@
-/* global document */
-export const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-
-export const isSvgFile = (src: string) => {
-        return new Promise((resolve, reject) => {
-            const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-            const http = new XMLHttpRequest();
-            http.open('HEAD', src);
-            http.onreadystatechange = function() {
-                if (this.readyState === this.DONE) {
-                    resolve(this.getResponseHeader('content-type').indexOf('svg') !== -1)
-                }
-            };
-            http.send();
-        });
-};
-
-
 export const getFrameTextSize = (configSize: number, textLength: number) => {
     let factor;
 

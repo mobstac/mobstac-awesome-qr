@@ -1,7 +1,7 @@
-// import { CanvasRenderingContext2D, createCanvas, Image } from 'canvas';
 import * as constants from './Constants';
 import { QRMaskPattern, QRMode } from './Enums';
 import { QRCode, QRPolynomial } from './Models';
+import { SvgCanvas } from './svg/SvgCanvas';
 
 export const maxLogoScale = 0.27 ;
 export const BCH = {
@@ -72,7 +72,7 @@ export const QRMath = new _QRMath();
 export const CanvasUtil = {
 
     drawSVGAlignProtector(
-        context: object,
+        context: SvgCanvas,
         centerX: number,
         centerY: number,
         nWidth: number,
@@ -84,24 +84,14 @@ export const CanvasUtil = {
         useOpacity = true
     ) {
         if (useOpacity) {
-            // @ts-ignore
             context.rect(5 * nWidth, 5 * nHeight).fill(color)
                 .move((centerX - 2) * nWidth + margin + shiftX, (centerY - 2) * nHeight + margin + shiftY)
                 .attr({opacity: 0.6});
         } else {
-            // @ts-ignore
             context.rect(5 * nWidth, 5 * nHeight).fill(color)
                 .move((centerX - 2) * nWidth + margin + shiftX, (centerY - 2) * nHeight + margin + shiftY);
         }
 
-    },
-
-    drawAlign(context: CanvasRenderingContext2D, centerX: number, centerY: number, nWidth: number, nHeight: number) {
-        context.fillRect((centerX - 2) * nWidth, (centerY - 2) * nHeight, nWidth, 4 * nHeight);
-        context.fillRect((centerX + 2) * nWidth, (centerY - 2 + 1) * nHeight, nWidth, 4 * nHeight);
-        context.fillRect((centerX - 2 + 1) * nWidth, (centerY - 2) * nHeight, 4 * nWidth, nHeight);
-        context.fillRect((centerX - 2) * nWidth, (centerY + 2) * nHeight, 4 * nWidth, nHeight);
-        context.fillRect(centerX * nWidth, centerY * nHeight, nWidth, nHeight);
     },
 };
 

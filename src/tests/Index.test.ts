@@ -1,4 +1,3 @@
-import { Gradient } from '@svgdotjs/svg.js';
 import 'mocha';
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from '../Enums';
 import { QRCodeBuilder } from '../index';

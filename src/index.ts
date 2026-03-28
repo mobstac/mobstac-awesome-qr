@@ -31,7 +31,8 @@ export class QRCodeBuilder {
             maskedDots: false,
             isVCard: false,
             useCanvas: false,
-            useOpacity: true
+            useOpacity: true,
+            logoBackground: true
         };
         this.config = Object.assign({}, defaultConfig, config);
     }
