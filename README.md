@@ -1,174 +1,273 @@
 
 # Mobstac Awesome QR
 
-
-This GitHub repository is a TypeScript library for generating QR codes. It is a comprehensive library with a wide range of features and customizations for generating QR code.
-
+A TypeScript library for generating customizable QR codes as SVG. Supports logos, custom eye shapes, data patterns, gradients, frames, barcodes, stickers, text tags, and more.
 
 ## Installation
 
-Clone the repo
-
 ```bash
-  git clone git@github.com:mobstac/mobstac-awesome-qr.git
+npm install mobstac-awesome-qr
 ```
 
-Change the directory
+**Node.js requirements:** Node 14+ (Node 18+ recommended for native `fetch`).
 
-```bash
-  cd mobstac-awesome-qr
+Optional peer dependencies for Node.js (installed automatically if available):
+
+- `sharp` — image resizing and format conversion for logos/backgrounds
+- `probe-image-size` — image dimension probing for logo sizing
+- `node-fetch` — HTTP fetching on Node < 18 (Node 18+ uses native `fetch`)
+
+These are not needed in browser environments.
+
+## Quick start
+
+```typescript
+import { QRCodeBuilder } from 'mobstac-awesome-qr';
+import { CanvasType } from 'mobstac-awesome-qr/lib/Enums';
+
+const builder = new QRCodeBuilder({
+    text: 'https://example.com',
+    size: 1024,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+});
+
+const qrCode = await builder.build(CanvasType.SVG);
+console.log(qrCode.svg); // SVG string
 ```
 
-Before installing npm packages please switch to node version 14.
+## Configuration
 
-```bash
-  nvm use 14
+Pass a config object to `QRCodeBuilder`. All fields except `text` have sensible defaults.
+
+### Core options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `text` | `string` | (required) | Data to encode. URL, plain text, or vCard string. |
+| `size` | `number` | `800` | Output size in pixels. Recommended: 512, 800, 1024, 2048, 4096. |
+| `margin` | `number` | `size/12` | Quiet zone margin in pixels. |
+| `correctLevel` | `QRErrorCorrectLevel` | `H` | Error correction: `L`, `M`, `Q`, `H`. |
+| `typeNumber` | `number` | `4` | QR version (1-40). Higher = more data capacity. |
+
+### Colors and gradients
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `colorDark` | `string` | `'#000000'` | Foreground (dark module) color. |
+| `colorLight` | `string` | `'#ffffff'` | Background (light module) color. |
+| `backgroundColor` | `string` | — | Overall background color. |
+| `gradientType` | `GradientType` | `NONE` | `NONE`, `LINEAR`, `RADIAL`, `VERTICAL`, `HORIZONTAL`. |
+
+### Data pattern
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `dataPattern` | `DataPattern` | `SQUARE` | Module shape: `SQUARE`, `CIRCLE`, `KITE`, `LEFT_DIAMOND`, `RIGHT_DIAMOND`, `THIN_SQUARE`, `SMOOTH_ROUND`, `SMOOTH_SHARP`. |
+| `dotScale` | `number` | `0.35` | Scale of each data module (0-1). |
+
+### Eye customization
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `eyeFrameShape` | `EyeFrameShape` | — | Frame shape: `SQUARE`, `CIRCLE`, `ROUNDED`, `LEFT_LEAF`, `RIGHT_LEAF`. |
+| `eyeBallShape` | `EyeBallShape` | — | Ball shape: `SQUARE`, `CIRCLE`, `ROUNDED`, `LEFT_LEAF`, `RIGHT_LEAF`, `LEFT_DIAMOND`, `RIGHT_DIAMOND`. |
+| `eyeFrameColor` | `string` | — | Eye frame color (hex). |
+| `eyeBallColor` | `string` | — | Eye ball color (hex). |
+
+### Logo
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `logoImage` | `string` | — | URL to logo image. |
+| `logoScale` | `number` | `0.15` | Logo size relative to QR code (max 0.27). |
+| `logoMargin` | `number` | `size/48` | Margin around logo in pixels. |
+| `logoCornerRadius` | `number` | `8` | Logo background corner radius. |
+| `logoBackground` | `boolean` | `true` | Show white background behind logo. |
+| `logoWidth` | `number` | `0` | Override logo width (0 = auto). |
+| `logoHeight` | `number` | `0` | Override logo height (0 = auto). |
+
+### Background image
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `backgroundImage` | `string` | — | URL to background image. |
+| `backgroundDimming` | `string` | `'rgba(0,0,0,0)'` | Dimming overlay color on background. |
+
+### Frame
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `frameStyle` | `QRCodeFrame` | `NONE` | `NONE`, `BOX_BOTTOM`, `BOX_TOP`, `BANNER_TOP`, `BANNER_BOTTOM`, `BALLOON_BOTTOM`, `BALLOON_TOP`, `CIRCULAR`, `TEXT_ONLY`, `FOCUS`. |
+| `frameColor` | `string` | — | Frame color (hex). |
+| `frameText` | `string` | — | Text displayed in frame (max 30 chars). |
+| `frameTextColor` | `string` | — | Frame text color (hex). |
+
+### Text tag
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `textTag` | `string` | — | Identification text label (max 30 chars). |
+| `textTagColor` | `string` | — | Text tag color. |
+| `textTagFontSize` | `number` | — | Text tag font size. |
+| `textTagPosition` | `TextTagPosition` | — | Position: `TOP_CENTER`, `TOP_RIGHT`, `RIGHT_UPPER`, `RIGHT_CENTER`, `RIGHT_LOWER`, `BOTTOM_RIGHT`, `BOTTOM_CENTER`, `BOTTOM_LEFT`, `LEFT_LOWER`, `LEFT_CENTER`, `LEFT_UPPER`, `TOP_LEFT`. |
+
+### Barcode
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `showBarcode` | `boolean` | `false` | Show barcode below QR code. |
+| `barcodeValue` | `string` | — | Barcode data value. |
+| `barcodeType` | `string` | `'CODE128'` | Barcode format (any JsBarcode-supported type). |
+| `showBarcodeValue` | `boolean` | `false` | Show human-readable barcode value. |
+
+### Sticker
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `sticker` | `Sticker` | — | Sticker overlay config (see below). |
+
+```typescript
+interface Sticker {
+    imageUrl: string;        // URL to sticker image
+    qrCodeX?: number;        // QR code X position within sticker
+    qrCodeY?: number;        // QR code Y position within sticker
+    qrCodeScale?: number;    // QR code scale within sticker (0-1)
+    qrCodeRotate?: number;   // QR code rotation in degrees
+}
 ```
 
-Install requied packages
+### Advanced
 
-```bash
-  npm install
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `isVCard` | `boolean` | `false` | Set `true` when `text` is a vCard string. |
+| `maskedDots` | `boolean` | `false` | Apply mask to data dots. |
+| `useOpacity` | `boolean` | `true` | Use opacity for overlapping elements. |
+| `rectangular` | `boolean` | `false` | Use rectangular logo dimensions. |
+| `skipImageValidation` | `boolean` | — | Skip image dimension probing for logos. |
+| `imageIO` | `ImageIO` | auto | Custom image I/O adapter (advanced). |
+
+### Browser usage
+
+In browser environments, the package automatically uses `BrowserImageIO` instead of `NodeImageIO` (via the `browser` field in `package.json`). If your logos/backgrounds are on a different origin, provide an image proxy:
+
+```typescript
+import { BrowserImageIO } from 'mobstac-awesome-qr/lib/io/BrowserImageIO';
+
+const builder = new QRCodeBuilder({
+    text: 'https://example.com',
+    imageIO: new BrowserImageIO(
+        'https://your-proxy.example.com/image',  // proxy URL
+        { Authorization: 'Bearer ...' }           // optional headers
+    ),
+});
 ```
 
-Switch to develop branch
+## Full example
 
-```bash
-  git checkout develop
-```
-## Dependecies
+```typescript
+import { QRCodeBuilder } from 'mobstac-awesome-qr';
+import {
+    CanvasType,
+    DataPattern,
+    EyeBallShape,
+    EyeFrameShape,
+    GradientType,
+    QRCodeFrame,
+    QRErrorCorrectLevel,
+} from 'mobstac-awesome-qr/lib/Enums';
 
-**@svgdotjs/svg.js** : Helper library for working with SVG\
-**node-fetch** : Fetching images for logo and background\
-**sharp** : Converting images between different formats ( SVG, JPEG, PNG)\
-**probe-image-size**: Retrive meta data of images.
-
-## Run Locally
-
-Once the packages are installed we can start generating QR code locally.
-Open the `index.test.ts` file and edit the QR attributes ( config ) as needed.
-
-Sample config 
-
-```bash
-  const config = {
-    text: "Sample Data",
-    logoBackground: true,
-    backgroundColor: "#ffffff",
-    canvasType: CanvasType.SVG,
-    dataPattern: DataPattern.SQUARE,
-    dotScale: 1,
-    colorDark: "#000000",
-    colorLight : '#00FFFF',
-    eyeBallShape: EyeBallShape.SQUARE,
-    eyeFrameShape: EyeFrameShape.SQUARE,
-    eyeFrameColor : '#000000',
-    eyeBallColor : '#000000',
-    frameStyle: QRCodeFrame.NONE,
-    frameText: "",
-    frameColor: "#724DDB",
-    frameTextColor: "#FFFFFF",
-    gradientType: GradientType.NONE,
-    logoScale: 0.27,
-    backgroundImage :'https://s3.amazonaws.com/beaconstac-content-qa/5118/890b88c1e2c2406cafa6f6eec5240287',
-    logoImage : 'https://images.freeimages.com/images/previews/ac9/railway-hdr-1361893.jpg',
+const builder = new QRCodeBuilder({
+    text: 'https://example.com',
     size: 1024,
     margin: 80,
     correctLevel: QRErrorCorrectLevel.H,
-    logoMargin : 0,
-    isVCard : false
+    colorDark: '#1a1a2e',
+    colorLight: '#e94560',
+    backgroundColor: '#ffffff',
+    gradientType: GradientType.LINEAR,
+    dataPattern: DataPattern.SMOOTH_ROUND,
+    eyeFrameShape: EyeFrameShape.ROUNDED,
+    eyeBallShape: EyeBallShape.CIRCLE,
+    eyeFrameColor: '#1a1a2e',
+    eyeBallColor: '#e94560',
+    logoImage: 'https://example.com/logo.png',
+    logoScale: 0.2,
+    logoBackground: true,
+    frameStyle: QRCodeFrame.BANNER_BOTTOM,
+    frameColor: '#1a1a2e',
+    frameText: 'SCAN ME',
+    frameTextColor: '#ffffff',
+});
 
-};
+const qrCode = await builder.build(CanvasType.SVG);
+
+// qrCode.svg contains the SVG string
+// qrCode.toBuffer() returns a Buffer for file writing
 ```
 
-Once you have edited the config according to your requirement, run the following command
+## Enums reference
+
+Import from `mobstac-awesome-qr/lib/Enums`:
+
+| Enum | Values |
+|------|--------|
+| `CanvasType` | `SVG`, `PNG`, `JPEG`, `PDF` |
+| `QRErrorCorrectLevel` | `L`, `M`, `Q`, `H` |
+| `DataPattern` | `SQUARE`, `CIRCLE`, `KITE`, `LEFT_DIAMOND`, `RIGHT_DIAMOND`, `THIN_SQUARE`, `SMOOTH_ROUND`, `SMOOTH_SHARP` |
+| `EyeFrameShape` | `SQUARE`, `CIRCLE`, `ROUNDED`, `LEFT_LEAF`, `RIGHT_LEAF` |
+| `EyeBallShape` | `SQUARE`, `CIRCLE`, `ROUNDED`, `LEFT_LEAF`, `RIGHT_LEAF`, `LEFT_DIAMOND`, `RIGHT_DIAMOND` |
+| `GradientType` | `NONE`, `LINEAR`, `RADIAL`, `VERTICAL`, `HORIZONTAL` |
+| `QRCodeFrame` | `NONE`, `BOX_BOTTOM`, `BOX_TOP`, `BANNER_TOP`, `BANNER_BOTTOM`, `BALLOON_BOTTOM`, `BALLOON_TOP`, `CIRCULAR`, `TEXT_ONLY`, `FOCUS` |
+| `TextTagPosition` | `TOP_CENTER`, `TOP_RIGHT`, `RIGHT_UPPER`, `RIGHT_CENTER`, `RIGHT_LOWER`, `BOTTOM_RIGHT`, `BOTTOM_CENTER`, `BOTTOM_LEFT`, `LEFT_LOWER`, `LEFT_CENTER`, `LEFT_UPPER`, `TOP_LEFT` |
+
+## Development
 
 ```bash
-  npm run testMain
+git clone git@github.com:mobstac/mobstac-awesome-qr.git
+cd mobstac-awesome-qr
+npm install
 ```
 
-This will generate 3 files inside the same folder as `index.test.ts` ( `mobstac-awesome-qr/src/test/index.test.ts`). The files generated will be `test.svg`, `test.jpeg`, `test.png`. These files contain the QR code generated with the given config.
-
-
-
-
-
-## Qr Code Config Details
-
-```
-    {
-        text: String || JSON 
-        logoBackground: Boolean
-        backgroundColor: String ( Color in Hex )
-        canvasType: CanvasType 
-        dataPattern: DataPattern
-        dotScale: Number between 0 to 1 ( e.g 0.1, 0.3, 1)
-        colorDark: String ( Color in Hex )
-        colorLight : String ( Color in Hex )
-        eyeBallShape: EyeBallShape,
-        eyeFrameShape: EyeFrameShape
-        eyeFrameColor : String ( Color in Hex )
-        eyeBallColor : String ( Color in Hex )
-        frameStyle: QRCodeFrame
-        frameText: String
-        frameColor: String ( Color in Hex )
-        frameTextColor: String ( Color in Hex )
-        gradientType: GradientType
-        logoScale: Ranges from 0.12 - 0.27
-        backgroundImage : String ( URL to image or empty)
-        logoImage : String ( URL to image or empty)
-        size: 512, 1024, 2048, 4096 
-        margin: Number ( Default 80)
-        correctLevel: QRErrorCorrectLevel
-        logoMargin : Number ( Default 10)
-        isVCard : Boolean ( This is true when we set `text` as JSON )
-};
-```
-
-Enums used above can be found in `enums.ts` file
-
-```
-CanvasType
-DataPattern
-EyeBallShape
-EyeFrameShape
-QRCodeFrame
-GradientType
-QRErrorCorrectLevel
-```
-## Running Tests
-
-To run tests, run the following command
+### Build
 
 ```bash
-  npm run test
+npm run build     # tsc + webpack
 ```
 
-To run tests specific to different component of the QR code
+### Test
 
 ```bash
-  npm run testCircular    // Tests for circular QR codes
-  npm run testLogos       // QR Code Logo Test
-  npm run testEyes        // QR Code Eye Test
-  npm run testDataPattern // QR Code Data Pattern test
-  npm run testBackground  // QR Code Background test
-  npm run testFrames      // QR Code Frame Test
+npm test              # full suite (61 tests)
+npm run testMain      # basic SVG generation
+npm run testCircular  # circular frame variants
+npm run testFrame     # frame style tests
+npm run testLogos     # logo tests
 ```
 
-The generated QR codes after testing can be found in `tests` folder.
-## Usage/Examples
+Generated test SVGs are written to `src/tests/qrTests/` — open them in a browser to visually inspect.
 
-```javascript
-import {QRCodeBuilder} from 'mobstac-awesome-qr';
-import {CanvasType} from 'mobstac-awesome-qr/lib/Enums';
+## Architecture (v5.0.0)
 
-const qRCodeGenerator = new QRCodeBuilder(<QR_CONFIG>);
-qRCodeGenerator.build(CanvasType.SVG).then(
-    svgText => {
-        console.log(svgText);
-    }
-)
+v5.0.0 replaced the `svg.js` + `svgdom` dependency with a custom deterministic SVG builder:
 
 ```
+src/
+  svg/
+    SvgElement.ts       # Base element — deterministic attribute serialization
+    SvgCanvas.ts        # Chainable drawing API (<svg> root)
+    SvgGradient.ts      # Content-addressable gradient <defs>
+    SvgTextMetrics.ts   # Pre-computed Roboto 400 width table
+    SvgNodeProxy.ts     # Minimal DOM proxy for JsBarcode
+  io/
+    ImageIO.ts          # Environment-agnostic image I/O interface
+    NodeImageIO.ts      # Node.js: sharp + probe-image-size + fetch
+    BrowserImageIO.ts   # Browser: canvas + Image + proxy pattern
+```
 
-Build function returns a promise which when resolved returns the generated QR code in SVG format as a string.
+This produces byte-for-byte identical SVG output in both Node.js and browser environments.
+
+## License
+
+Apache-2.0
