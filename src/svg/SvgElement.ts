@@ -209,3 +209,18 @@ function escapeAttr(value: string): string {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 }
+
+/**
+ * Sanitize raw SVG strings by stripping dangerous elements and event handlers.
+ * Removes: <script>, <iframe>, <object>, <embed>, <foreignObject>, and on* attributes.
+ */
+export function sanitizeSvg(svg: string): string {
+    if (!svg) return '';
+    // Strip dangerous elements (with their content)
+    let clean = svg.replace(/<\s*(script|iframe|object|embed|foreignObject)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '');
+    // Strip self-closing dangerous elements
+    clean = clean.replace(/<\s*(script|iframe|object|embed|foreignObject)\b[^>]*\/?\s*>/gi, '');
+    // Strip on* event handler attributes
+    clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+    return clean;
+}

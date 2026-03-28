@@ -5,6 +5,10 @@ _Last updated: 2026-03-28_
 - [ ] Phase 5: Node 24 upgrade, dep updates, branch merge
 
 ## Completed this session
+- [x] Unit tests for all v5 modules: SvgElement, SvgCanvas, SvgGradient, SvgTextMetrics, SvgNodeProxy, NodeImageIO (~100 new tests) — 2026-03-28
+- [x] B-1 fix: SVG injection sanitization — added sanitizeSvg() to strip script/iframe/object/embed/foreignObject/on* handlers — 2026-03-28
+- [x] B-3 fix: Eye frame stroke-width now scales by sizeRatio — 2026-03-28
+- [x] All 191 tests passing, svg/ coverage >97%, io/ coverage 76% — 2026-03-28
 - [x] Phase 1: SvgBuilder scaffolding (SvgElement, SvgCanvas, SvgGradient, SvgTextMetrics, SvgNodeProxy) — 2026-03-28
 - [x] Phase 1: ImageIO adapter (interface + NodeImageIO + BrowserImageIO) — 2026-03-28
 - [x] Phase 2: Unified Types.ts, Constants.ts, Util.ts, Common.ts, index.ts — 2026-03-28
@@ -14,7 +18,6 @@ _Last updated: 2026-03-28_
 - [x] TypeScript compilation verified clean — 2026-03-28
 
 ## Pending / not started
-- [ ] Unit tests for SvgElement, SvgCanvas, SvgGradient, SvgTextMetrics, SvgNodeProxy
 - [ ] SVG snapshot tests for QR code variants
 - [ ] Node 24 compatibility testing
 - [ ] TypeScript 5.x upgrade
@@ -27,9 +30,7 @@ _Last updated: 2026-03-28_
 - [ ] Svg.ts rewrite — verify feature parity with original
 
 ## Blockers / open questions
-- B-1 from review: SVG injection risk (raw SVG logos injected without sanitization) — pre-existing, needs sanitization layer
-- B-3 from review: Hard-coded stroke-width=10 on eye frame — pre-existing, needs sizeRatio scaling
-- B-6 from review: Zero unit tests on new modules — must add before v5.0.0 release
+- (none — B-1, B-3, B-6 all resolved)
 
 ## Notes for next session
 - Branch: feat/v5-svgbuilder-unification (cut from master)

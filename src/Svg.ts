@@ -5,7 +5,7 @@ import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QR
 import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
 import { getFrameTextSize, getLengthOfLongestText } from './Util';
 import { SvgCanvas } from './svg/SvgCanvas';
-import { SvgElement } from './svg/SvgElement';
+import { SvgElement, sanitizeSvg } from './svg/SvgElement';
 import { SvgGradient } from './svg/SvgGradient';
 import { SvgTextMetrics } from './svg/SvgTextMetrics';
 import { SvgNodeProxy } from './svg/SvgNodeProxy';
@@ -889,6 +889,7 @@ export class SVGDrawing {
 
                 text = text.substring(text.indexOf('<svg'));
                 text = text.substring(0, text.indexOf('</svg>') + 6);
+                text = sanitizeSvg(text);
                 let extraText = '';
                 const headSvg = text.substring(0, text.indexOf('>') + 1);
                 if (headSvg.indexOf(' viewBox') === -1) {
@@ -1650,7 +1651,7 @@ export class SVGDrawing {
         }
 
         // ----- Step 2.2 : Add Generated path to eyeFrame Canvas
-        eyeFrameCanvas.path(framePath).fill(eyeFrameColor).stroke({ width : 10})
+        eyeFrameCanvas.path(framePath).fill(eyeFrameColor).stroke({ width : 10 * this.sizeRatio})
 
         // --- Step 3 : Add eyeFrame canvas to main Canvas for 3 eyes
 
@@ -2663,7 +2664,7 @@ export class SVGDrawing {
                 svgContent = String.fromCharCode(...new Uint8Array(imageBuffer as ArrayBuffer));
             }
 
-            watermarkCanvas.add(svgContent);
+            watermarkCanvas.add(sanitizeSvg(svgContent));
             watermarkCanvas.size(watermarkWidth, watermarkHeight);
             watermarkCanvas.move(imageX, imageY).attr({ opacity: this.config.watermark ? this.config.watermark.opacity : 1 });
             (context as SvgCanvas).add(watermarkCanvas.root);
