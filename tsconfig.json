@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
-        "target": "es2019",
+        "target": "es2022",
         "module": "commonjs",
         "declaration": true,
         "outDir": "./lib",
         "strict": true,
-        "lib": ["es2019"],
+        "lib": ["es2022"],
         "types": ["node"],
         "esModuleInterop": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "skipLibCheck": true
     },
     "include": ["src"],
     "exclude": ["node_modules", "**/tests/*"]

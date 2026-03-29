@@ -19,11 +19,13 @@ module.exports = {
     externals: [
         { fs: "commonjs fs" },
         { sharp: "commonjs sharp" },
-        { "probe-image-size": "commonjs probe-image-size" },
-        { "node-fetch": "commonjs node-fetch" }
+        { "probe-image-size": "commonjs probe-image-size" }
     ],
     output: {
-        library: 'QRCodeGenerator',
+        library: {
+            name: 'QRCodeGenerator',
+            type: 'var'
+        },
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist')
     }
