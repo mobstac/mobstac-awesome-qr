@@ -9,13 +9,12 @@ A TypeScript library for generating customizable QR codes as SVG. Supports logos
 npm install mobstac-awesome-qr
 ```
 
-**Node.js requirements:** Node 14+ (Node 18+ recommended for native `fetch`).
+**Node.js requirements:** Node 18+ (uses native `fetch`).
 
 Optional peer dependencies for Node.js (installed automatically if available):
 
 - `sharp` — image resizing and format conversion for logos/backgrounds
 - `probe-image-size` — image dimension probing for logo sizing
-- `node-fetch` — HTTP fetching on Node < 18 (Node 18+ uses native `fetch`)
 
 These are not needed in browser environments.
 
@@ -204,7 +203,6 @@ const builder = new QRCodeBuilder({
 const qrCode = await builder.build(CanvasType.SVG);
 
 // qrCode.svg contains the SVG string
-// qrCode.toBuffer() returns a Buffer for file writing
 ```
 
 ## Enums reference
@@ -239,7 +237,8 @@ npm run build     # tsc + webpack
 ### Test
 
 ```bash
-npm test              # full suite (61 tests)
+npm test              # full suite (266 tests)
+npm run coverage      # with detailed text coverage report (~88% statements)
 npm run testMain      # basic SVG generation
 npm run testCircular  # circular frame variants
 npm run testFrame     # frame style tests
@@ -266,7 +265,13 @@ src/
     BrowserImageIO.ts   # Browser: canvas + Image + proxy pattern
 ```
 
+**Toolchain:** TypeScript 5.7, webpack 5, mocha 10 — target `es2022`. `node-fetch` fully removed (native `fetch` only). Image processing via `sharp` 0.33.x.
+
 This produces byte-for-byte identical SVG output in both Node.js and browser environments.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 ## License
 
