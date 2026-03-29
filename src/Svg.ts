@@ -433,14 +433,16 @@ export class SVGDrawing {
 
     private async addDesignHelper(finalCanvas: SvgCanvas, canvas: SvgCanvas, gradient: string) {
         const size = this.config.size;
-        const pos = Math.sqrt(2) * size / 2 + this.config.moduleSize;
+        // Padding prevents stroke overflow at circular frame canvas edges
+        const padding = this.config.moduleSize / 2;
+        const pos = Math.sqrt(2) * size / 2 + this.config.moduleSize + padding;
         const radius = size / Math.sqrt(2) + this.config.moduleSize / 2;
 
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
         const moduleSize = this.config.dotScale * this.config.moduleSize;
         const increment  = this.config.nSize + ( 1 - this.config.dotScale ) * 0.5 * this.config.nSize;
-        const shift = ( Math.sqrt(2) * size + 2 * this.config.moduleSize - size) / 2 ;
-        const limit  = Math.sqrt(2) * size + 2 * this.config.moduleSize;
+        const shift = ( Math.sqrt(2) * size + 2 * this.config.moduleSize + padding - size) / 2 ;
+        const limit  = Math.sqrt(2) * size + 2 * this.config.moduleSize + padding;
         const str = this.config.text;
         const len = str.length;
         let num = str.charCodeAt(0) + str.charCodeAt(len-1);
@@ -638,14 +640,16 @@ export class SVGDrawing {
         }
 
         const size = this.config.size;
-        let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize
+        // Padding prevents stroke overflow at circular frame canvas edges
+        const padding = this.config.moduleSize / 2;
+        let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         if ( this.config.showBarcode ){
             canvasHeight += ( 400 * this.sizeRatio );
         }
         if ( this.config.showBarcodeValue ){
             canvasHeight += ( 150 * this.sizeRatio );
         }
-        const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize;
+        const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         const finalCanvas = new SvgCanvas(canvasWidth, canvasHeight);
         const color = this.config.backgroundColor ? this.config.backgroundColor : 'none' ;
         const width = this.config.moduleSize;
@@ -674,12 +678,11 @@ export class SVGDrawing {
             default:
                 grad =gradient;
         }
-        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
+        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize + padding;
         const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
         if (this.config.backgroundImage) {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(grad);
-            finalCanvas.circle(Math.sqrt(2)*size + 2*this.config.moduleSize - width * 2).attr({cx : pos , cy : pos}).fill('#ffffff')
-            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
+            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
                 this.addDesignHelper(finalCanvas, canvas, gradient);
                 return finalCanvas;
             });
@@ -689,8 +692,8 @@ export class SVGDrawing {
             this.addDesignHelper(finalCanvas, canvas, gradient);
             return finalCanvas;
         } else {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(grad);
-            finalCanvas.circle(Math.sqrt(2)*size + 2*this.config.moduleSize - width * 2).attr({cx : pos , cy : pos}).fill(color);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
+            finalCanvas.circle(size).attr({cx : pos , cy : pos}).radius(radius - width/2).fill(color);
             this.addDesignHelper(finalCanvas , canvas, gradient);
             return finalCanvas;
         }
@@ -865,6 +868,14 @@ export class SVGDrawing {
         const coordinateX = this.logoCordinateX ;
         const coordinateY = this.logoCordinateY ;
         if(!this.config.logoImage) return;
+
+        // When skipImageValidation is true (browser), use the URL directly
+        if (this.config.skipImageValidation) {
+            context.image('').size(logoWidth, logoHeight)
+                .attr({ 'xlink:href': this.config.logoImage, 'preserveAspectRatio': 'none' })
+                .move(coordinateX, coordinateY);
+            return;
+        }
 
         try {
             const isSvg = this.imageIO.isSvgUrl
@@ -2727,16 +2738,28 @@ export class SVGDrawing {
         let stickerCanvas = new SvgCanvas(size, size);
         stickerCanvas.viewbox(0, 0, size, size);
 
-        // Always validate and convert images to base64 for Lambda/server-side usage
-        const imageBase64 = await this.getImageBase64Data(stickerConfig.imageUrl);
-        stickerCanvas.image('')
-            .size(size, size)
-            .move(0, 0)
-            .attr({
-                'xlink:href': imageBase64,
-                opacity: 1,
-                'preserveAspectRatio': 'xMidYMid meet'
-            });
+        if (this.config.skipImageValidation) {
+            // Browser: use URL directly without base64 conversion
+            stickerCanvas.image('')
+                .size(size, size)
+                .move(0, 0)
+                .attr({
+                    'xlink:href': stickerConfig.imageUrl,
+                    opacity: 1,
+                    'preserveAspectRatio': 'xMidYMid meet'
+                });
+        } else {
+            // Server/Lambda: convert to base64
+            const imageBase64 = await this.getImageBase64Data(stickerConfig.imageUrl);
+            stickerCanvas.image('')
+                .size(size, size)
+                .move(0, 0)
+                .attr({
+                    'xlink:href': imageBase64,
+                    opacity: 1,
+                    'preserveAspectRatio': 'xMidYMid meet'
+                });
+        }
 
         const qrGroup = stickerCanvas.group();
         qrGroup.attr({

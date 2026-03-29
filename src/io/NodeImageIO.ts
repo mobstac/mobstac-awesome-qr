@@ -3,18 +3,17 @@ import { ImageIO, TranscodeOptions } from './ImageIO';
 /**
  * NodeImageIO — Node.js/Lambda implementation using sharp + fetch.
  *
- * Uses native fetch (Node 18+) with fallback to node-fetch.
+ * Uses native fetch (Node 18+).
  * Uses sharp for image resizing/transcoding.
  * Uses probe-image-size for dimension probing.
  */
 export class NodeImageIO implements ImageIO {
 
     async fetchImage(url: string): Promise<Buffer> {
-        const g = globalThis as any;
-        const fetchFn = typeof g.fetch === 'function'
-            ? g.fetch
-            : require('node-fetch');
-        const response = await fetchFn(url);
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} (${url})`);
+        }
         const arrayBuffer = await response.arrayBuffer();
         return Buffer.from(arrayBuffer);
     }
@@ -73,11 +72,7 @@ export class NodeImageIO implements ImageIO {
 
     async isSvgUrl(url: string): Promise<boolean> {
         try {
-            const g = globalThis as any;
-            const fetchFn = typeof g.fetch === 'function'
-                ? g.fetch
-                : require('node-fetch');
-            const response = await fetchFn(url, { method: 'HEAD' });
+            const response = await fetch(url, { method: 'HEAD' });
             const contentType = response.headers.get('content-type') || '';
             return contentType.indexOf('svg') !== -1;
         } catch {
@@ -86,11 +81,10 @@ export class NodeImageIO implements ImageIO {
     }
 
     async toBase64DataUri(url: string): Promise<string> {
-        const g = globalThis as any;
-        const fetchFn = typeof g.fetch === 'function'
-            ? g.fetch
-            : require('node-fetch');
-        const response = await fetchFn(url);
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} (${url})`);
+        }
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         let contentType = (response.headers.get('content-type') || 'image/png').split(';')[0].trim();
