@@ -159,7 +159,7 @@ export class SVGDrawing {
             }
 
             if ( this.config.showBarcodeValue && this.isFrameCircularOrNone ) {
-               canvasHeight += ( 150 * this.sizeRatio ); 
+               canvasHeight += ( 200 * this.sizeRatio );
             }
             if ( this.config.showBarcode ) {
                 canvasHeight += ( 400 * this.sizeRatio );
@@ -226,7 +226,7 @@ export class SVGDrawing {
             canvasWidth = this.config.size;
 
             if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
-                canvasHeight += ( 150 * this.sizeRatio );
+                canvasHeight += ( 200 * this.sizeRatio );
              }
              if ( this.config.showBarcode ) {
                  canvasHeight += ( 400 * this.sizeRatio );
@@ -647,7 +647,7 @@ export class SVGDrawing {
             canvasHeight += ( 400 * this.sizeRatio );
         }
         if ( this.config.showBarcodeValue ){
-            canvasHeight += ( 150 * this.sizeRatio );
+            canvasHeight += ( 200 * this.sizeRatio );
         }
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         const finalCanvas = new SvgCanvas(canvasWidth, canvasHeight);
@@ -2548,7 +2548,7 @@ export class SVGDrawing {
         ){
             let tempOverallYPosition = overallYPosition;
             if ( this.config.showBarcodeValue && this.isFrameCircularOrNone ) {
-                    mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
+                    mainCanvas.rect(this.config.size, (200 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
                 tempOverallYPosition += (100 * this.sizeRatio);
             }
             if ( this.config.showBarcode ) {
@@ -2585,7 +2585,7 @@ export class SVGDrawing {
                 fontSize: 50 * this.sizeRatio,
                 width: 6 * this.sizeRatio,
                 height : 180 * this.sizeRatio,
-                margin: 10,
+                margin: 0,
                 background: '#ffffff00',
             });
             const barcodeCanvasWidth = barcodeWidth;
