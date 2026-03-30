@@ -119,7 +119,17 @@ export class SVGDrawing {
         this.typeNumber = config.typeNumber;
         this.correctLevel = config.correctLevel;
         this.isPainted = false;
-        this.imageIO = config.imageIO || new NodeImageIO();
+        if (config.imageIO) {
+            this.imageIO = config.imageIO;
+        } else if (config.imageServerURL) {
+            const { BrowserImageIO } = require('./io/BrowserImageIO');
+            this.imageIO = new BrowserImageIO(
+                config.imageServerURL,
+                config.imageServerRequestHeaders as Record<string, string>
+            );
+        } else {
+            this.imageIO = new NodeImageIO();
+        }
 
         this.QrSvg = new SvgCanvas(config.size, config.size);
         this.canvas = new SvgCanvas(config.size, config.size);

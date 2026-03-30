@@ -3,7 +3,7 @@ import { ImageIO, TranscodeOptions } from './ImageIO';
 // Browser globals — declared here so TypeScript does not require "dom" in tsconfig lib.
 // This file is only ever executed in a browser environment; these declarations simply
 // inform the compiler that the globals exist at runtime.
-declare function fetch(input: string, init?: { headers?: Record<string, string> }): Promise<{ arrayBuffer(): Promise<ArrayBuffer> }>;
+declare function fetch(input: string, init?: { method?: string; headers?: Record<string, string>; body?: string }): Promise<{ arrayBuffer(): Promise<ArrayBuffer> }>;
 declare function btoa(data: string): string;
 declare class Image {
     naturalWidth: number;
@@ -54,11 +54,19 @@ export class BrowserImageIO implements ImageIO {
     }
 
     async fetchImage(url: string): Promise<ArrayBuffer> {
-        const fetchUrl = this.imageServerURL
-            ? `${this.imageServerURL}?url=${encodeURIComponent(url)}`
-            : url;
-        const headers = this.imageServerRequestHeaders || {};
-        const response = await fetch(fetchUrl, { headers });
+        if (this.imageServerURL) {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                ...(this.imageServerRequestHeaders || {}),
+            };
+            const response = await fetch(this.imageServerURL, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ url }),
+            });
+            return response.arrayBuffer();
+        }
+        const response = await fetch(url);
         return response.arrayBuffer();
     }
 
@@ -69,15 +77,30 @@ export class BrowserImageIO implements ImageIO {
             img.onerror = () => reject(new Error('Failed to load image for dimension probing'));
 
             if (typeof input === 'string') {
-                // URL
+                // URL — fetch via proxy if configured, then use blob URL
                 img.crossOrigin = 'anonymous';
-                img.src = this.imageServerURL
-                    ? `${this.imageServerURL}?url=${encodeURIComponent(input)}`
-                    : input;
+                if (this.imageServerURL) {
+                    this.fetchImage(input).then(ab => {
+                        const blob = new Blob([ab]);
+                        const blobUrl = URL.createObjectURL(blob);
+                        const origOnload = img.onload;
+                        img.onload = () => { URL.revokeObjectURL(blobUrl); if (origOnload) origOnload(); };
+                        const origOnerror = img.onerror;
+                        img.onerror = () => { URL.revokeObjectURL(blobUrl); if (origOnerror) origOnerror(); };
+                        img.src = blobUrl;
+                    }).catch(reject);
+                } else {
+                    img.src = input;
+                }
             } else {
                 // ArrayBuffer — convert to blob URL
                 const blob = new Blob([input]);
-                img.src = URL.createObjectURL(blob);
+                const blobUrl = URL.createObjectURL(blob);
+                const origOnload = img.onload;
+                img.onload = () => { URL.revokeObjectURL(blobUrl); if (origOnload) origOnload(); };
+                const origOnerror = img.onerror;
+                img.onerror = () => { URL.revokeObjectURL(blobUrl); if (origOnerror) origOnerror(); };
+                img.src = blobUrl;
             }
         });
     }

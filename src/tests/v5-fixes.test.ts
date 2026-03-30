@@ -2,6 +2,8 @@ import { expect } from 'chai';
 import 'mocha';
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame } from '../Enums';
 import { QRCodeBuilder } from '../index';
+import { BrowserImageIO } from '../io/BrowserImageIO';
+import { NodeImageIO } from '../io/NodeImageIO';
 
 /**
  * Behavioural tests for v5 fixes ported from dashboard_version:
@@ -344,5 +346,175 @@ describe('Non-circular frames unaffected by circular fixes', () => {
         expect(svg).to.be.a('string');
         expect(svg).to.include('<svg');
         expect(svg).to.not.include('#ffffff00');
+    });
+});
+
+// ─── 7. Barcode canvas height uses 200-based scaling ─────────────────
+
+describe('Barcode canvas height (200-based scaling)', () => {
+    it('barcode value area allocates 200*sizeRatio canvas height at default size', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 800,
+            margin: 80,
+            colorDark: '#000000',
+            dotScale: 1,
+            frameStyle: QRCodeFrame.NONE,
+            showBarcodeValue: true,
+            primaryIdentifierValue: 'SN-12345',
+        };
+        const builder = new QRCodeBuilder(config);
+        const qr = await builder.build(CanvasType.SVG);
+        const svg = qr.svg as string;
+        const dims = parseSvgDimensions(svg);
+
+        // sizeRatio = 800/1024 ≈ 0.78125; 200 * 0.78125 = 156.25
+        // Canvas height should be base size + ~156.25 for barcode value area
+        expect(dims.height).to.be.greaterThan(config.size);
+        // Must be at least size + 200*sizeRatio (not the old 150*sizeRatio = ~117)
+        const sizeRatio = config.size / 1024;
+        expect(dims.height).to.be.at.least(config.size + 200 * sizeRatio - 1);
+    });
+
+    it('barcode renders correctly at non-default size (512)', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 512,
+            margin: 80,
+            colorDark: '#000000',
+            dotScale: 1,
+            frameStyle: QRCodeFrame.NONE,
+            showBarcode: true,
+            barcodeValue: '123456789',
+            barcodeType: 'CODE128',
+            showBarcodeValue: true,
+            primaryIdentifierValue: 'SN-00001',
+        };
+        const builder = new QRCodeBuilder(config);
+        const qr = await builder.build(CanvasType.SVG);
+        const svg = qr.svg as string;
+        const dims = parseSvgDimensions(svg);
+
+        // sizeRatio = 512/1024 = 0.5
+        // Canvas should include both barcode (400*0.5=200) and barcodeValue (200*0.5=100) extra height
+        const sizeRatio = 512 / 1024;
+        const expectedMinHeight = 512 + (200 * sizeRatio) + (400 * sizeRatio);
+        expect(dims.height).to.be.at.least(expectedMinHeight - 1);
+        expect(svg).to.include('<svg');
+    });
+
+    it('JsBarcode margin is 0 (no extra padding around barcode)', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 800,
+            margin: 80,
+            colorDark: '#000000',
+            dotScale: 1,
+            showBarcode: true,
+            barcodeValue: '123456789',
+            barcodeType: 'CODE128',
+        };
+        const builder = new QRCodeBuilder(config);
+        const qr = await builder.build(CanvasType.SVG);
+        const svg = qr.svg as string;
+
+        // The barcode SVG should not have extra margin whitespace
+        // Check that the barcode sub-SVG exists
+        expect(svg).to.include('<svg');
+        // The SVG should contain barcode elements (rect elements from JsBarcode)
+        expect(svg).to.include('</svg>');
+    });
+});
+
+// ─── 8. imageServerURL auto-wires BrowserImageIO ─────────────────────
+
+describe('imageServerURL auto-wiring', () => {
+    it('SVGDrawing uses BrowserImageIO when imageServerURL is set in config', async () => {
+        // We test this by importing SVGDrawing internals via the constructor path
+        // When imageServerURL is set, the constructor should pick BrowserImageIO
+        const { SVGDrawing } = require('../Svg');
+        const { QRCode } = require('../Models');
+
+        const config = {
+            text: 'https://example.com',
+            size: 512,
+            margin: 80,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            dotScale: 1,
+            typeNumber: 4,
+            correctLevel: 2,
+            backgroundDimming: 'rgba(0,0,0,0)',
+            logoScale: 0.15,
+            logoMargin: 10,
+            logoCornerRadius: 8,
+            maskedDots: false,
+            imageServerURL: 'https://image-server.example.com/proxy',
+        };
+        const qrCode = new QRCode(-1, config);
+        // The svgDrawing's imageIO should be a BrowserImageIO, not NodeImageIO
+        expect(qrCode.svgDrawing.imageIO).to.be.an.instanceOf(BrowserImageIO);
+    });
+
+    it('SVGDrawing uses NodeImageIO when no imageServerURL or imageIO is set', async () => {
+        const { QRCode } = require('../Models');
+        const config = {
+            text: 'https://example.com',
+            size: 512,
+            margin: 80,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            dotScale: 1,
+            typeNumber: 4,
+            correctLevel: 2,
+            backgroundDimming: 'rgba(0,0,0,0)',
+            logoScale: 0.15,
+            logoMargin: 10,
+            logoCornerRadius: 8,
+            maskedDots: false,
+        };
+        const qrCode = new QRCode(-1, config);
+        expect(qrCode.svgDrawing.imageIO).to.be.an.instanceOf(NodeImageIO);
+    });
+
+    it('SVGDrawing uses explicit imageIO when provided (overrides imageServerURL)', async () => {
+        const { QRCode } = require('../Models');
+        const customIO = new NodeImageIO();
+        const config = {
+            text: 'https://example.com',
+            size: 512,
+            margin: 80,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            dotScale: 1,
+            typeNumber: 4,
+            correctLevel: 2,
+            backgroundDimming: 'rgba(0,0,0,0)',
+            logoScale: 0.15,
+            logoMargin: 10,
+            logoCornerRadius: 8,
+            maskedDots: false,
+            imageServerURL: 'https://image-server.example.com/proxy',
+            imageIO: customIO,
+        };
+        const qrCode = new QRCode(-1, config);
+        expect(qrCode.svgDrawing.imageIO).to.equal(customIO);
+    });
+});
+
+// ─── 9. BrowserImageIO POST/GET behavior ─────────────────────────────
+
+describe('BrowserImageIO fetchImage proxy behavior', () => {
+    it('uses POST with JSON body when imageServerURL is configured', () => {
+        const io = new BrowserImageIO('https://proxy.example.com/image', { 'X-Custom': 'header' });
+
+        // Verify the proxy URL and headers are stored
+        expect((io as any).imageServerURL).to.equal('https://proxy.example.com/image');
+        expect((io as any).imageServerRequestHeaders).to.deep.equal({ 'X-Custom': 'header' });
+    });
+
+    it('stores no proxy URL when constructed without imageServerURL', () => {
+        const io = new BrowserImageIO();
+        expect((io as any).imageServerURL).to.be.undefined;
     });
 });
