@@ -125,7 +125,7 @@ export class SVGDrawing {
             const { BrowserImageIO } = require('./io/BrowserImageIO');
             this.imageIO = new BrowserImageIO(
                 config.imageServerURL,
-                config.imageServerRequestHeaders as Record<string, string>
+                config.imageServerRequestHeaders
             );
         } else {
             this.imageIO = new NodeImageIO();

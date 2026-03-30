@@ -92,7 +92,7 @@ export interface QRCodeConfig {
     useCanvas?: boolean;
     useOpacity?: boolean;
     imageServerURL?: string,
-    imageServerRequestHeaders?: object,
+    imageServerRequestHeaders?: Record<string, string>,
     sticker?: Sticker;
     textTag?: string;
     textTagColor?: string;
@@ -144,7 +144,7 @@ export interface QRDrawingConfig {
     useCanvas?: boolean;
     useOpacity?: boolean;
     imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerRequestHeaders?: Record<string, string>
     showBarcodeValue?: boolean;
     barcodeValue?: string;
     showBarcode?: boolean;
