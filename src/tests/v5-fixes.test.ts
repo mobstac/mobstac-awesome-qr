@@ -429,10 +429,7 @@ describe('Barcode canvas height (200-based scaling)', () => {
 // ─── 8. imageServerURL auto-wires BrowserImageIO ─────────────────────
 
 describe('imageServerURL auto-wiring', () => {
-    it('SVGDrawing uses BrowserImageIO when imageServerURL is set in config', async () => {
-        // We test this by importing SVGDrawing internals via the constructor path
-        // When imageServerURL is set, the constructor should pick BrowserImageIO
-        const { SVGDrawing } = require('../Svg');
+    it('throws in Node when imageServerURL is set without explicit imageIO', () => {
         const { QRCode } = require('../Models');
 
         const config = {
@@ -451,9 +448,7 @@ describe('imageServerURL auto-wiring', () => {
             maskedDots: false,
             imageServerURL: 'https://image-server.example.com/proxy',
         };
-        const qrCode = new QRCode(-1, config);
-        // The svgDrawing's imageIO should be a BrowserImageIO, not NodeImageIO
-        expect(qrCode.svgDrawing.imageIO).to.be.an.instanceOf(BrowserImageIO);
+        expect(() => new QRCode(-1, config)).to.throw('imageServerURL requires a browser environment');
     });
 
     it('SVGDrawing uses NodeImageIO when no imageServerURL or imageIO is set', async () => {

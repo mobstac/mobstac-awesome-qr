@@ -122,6 +122,13 @@ export class SVGDrawing {
         if (config.imageIO) {
             this.imageIO = config.imageIO;
         } else if (config.imageServerURL) {
+            const isBrowser = typeof (globalThis as any).window !== 'undefined';
+            if (!isBrowser) {
+                throw new Error(
+                    'imageServerURL requires a browser environment. ' +
+                    'In Node, pass an explicit imageIO instance instead.'
+                );
+            }
             const { BrowserImageIO } = require('./io/BrowserImageIO');
             this.imageIO = new BrowserImageIO(
                 config.imageServerURL,
