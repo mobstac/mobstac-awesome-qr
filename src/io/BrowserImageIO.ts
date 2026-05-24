@@ -14,7 +14,8 @@ declare class Image {
     onerror: (() => void) | null;
 }
 declare class Blob {
-    constructor(parts: ArrayLike<ArrayBuffer | ArrayBufferView | string>);
+    constructor(parts: ArrayLike<ArrayBuffer | ArrayBufferView | string>, options?: { type?: string });
+    readonly type: string;
     arrayBuffer(): Promise<ArrayBuffer>;
 }
 declare class TextDecoder {
@@ -71,43 +72,55 @@ export class BrowserImageIO implements ImageIO {
     }
 
     async probeSize(input: Buffer | ArrayBuffer | string): Promise<{ width: number; height: number }> {
+        if (typeof input === 'string' && !this.imageServerURL) {
+            // Direct URL — let the browser fetch it. The server's Content-Type
+            // tells the image decoder what to do; no Blob involved.
+            return this.probeFromUrl(input);
+        }
+        const bytes: Buffer | ArrayBuffer = typeof input === 'string'
+            ? await this.fetchImage(input)
+            : input;
+        return this.probeFromBytes(bytes);
+    }
+
+    private probeFromUrl(url: string): Promise<{ width: number; height: number }> {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = 'anonymous';
             img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-            img.onerror = () => reject(new Error('Failed to load image for dimension probing'));
-
-            if (typeof input === 'string') {
-                // URL — fetch via proxy if configured, then use blob URL
-                img.crossOrigin = 'anonymous';
-                if (this.imageServerURL) {
-                    this.fetchImage(input).then(ab => {
-                        const blob = new Blob([ab]);
-                        const blobUrl = URL.createObjectURL(blob);
-                        const origOnload = img.onload;
-                        img.onload = () => { URL.revokeObjectURL(blobUrl); if (origOnload) origOnload(); };
-                        const origOnerror = img.onerror;
-                        img.onerror = () => { URL.revokeObjectURL(blobUrl); if (origOnerror) origOnerror(); };
-                        img.src = blobUrl;
-                    }).catch(reject);
-                } else {
-                    img.src = input;
-                }
-            } else {
-                // ArrayBuffer — convert to blob URL
-                const blob = new Blob([input]);
-                const blobUrl = URL.createObjectURL(blob);
-                const origOnload = img.onload;
-                img.onload = () => { URL.revokeObjectURL(blobUrl); if (origOnload) origOnload(); };
-                const origOnerror = img.onerror;
-                img.onerror = () => { URL.revokeObjectURL(blobUrl); if (origOnerror) origOnerror(); };
-                img.src = blobUrl;
-            }
+            img.onerror = () => reject(new Error(`Failed to load image for dimension probing: ${url}`));
+            img.src = url;
         });
     }
 
+    private async probeFromBytes(bytes: Buffer | ArrayBuffer): Promise<{ width: number; height: number }> {
+        // Browsers will not render SVG from a Blob URL without an explicit
+        // image/svg+xml MIME type — they content-sniff binary formats but not
+        // SVG. Set the type explicitly via detectFormat so any format works.
+        const blobUrl = await this.toTypedBlobUrl(bytes);
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                URL.revokeObjectURL(blobUrl);
+                resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(blobUrl);
+                reject(new Error('Failed to load image for dimension probing'));
+            };
+            img.src = blobUrl;
+        });
+    }
+
+    private async toTypedBlobUrl(bytes: Buffer | ArrayBuffer): Promise<string> {
+        const format = await this.detectFormat(bytes);
+        const blob = new Blob([bytes], { type: `image/${format}` });
+        return URL.createObjectURL(blob);
+    }
+
     async transcode(input: Buffer | ArrayBuffer, opts: TranscodeOptions): Promise<ArrayBuffer> {
-        const blob = new Blob([input]);
-        const bitmapUrl = URL.createObjectURL(blob);
+        // Set MIME type so SVG (and other formats) decode correctly from the Blob URL.
+        const bitmapUrl = await this.toTypedBlobUrl(input);
 
         return new Promise((resolve, reject) => {
             const img = new Image();

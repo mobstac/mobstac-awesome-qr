@@ -546,3 +546,73 @@ describe('BrowserImageIO fetchImage proxy behavior', () => {
         expect((io as any).imageServerURL).to.be.undefined;
     });
 });
+
+// ─── 10. BrowserImageIO Blob MIME type for SVG ──────────────────────
+//
+// Regression: probeSize() and transcode() wrap fetched bytes in a Blob
+// and load them via an <img> element. Browsers content-sniff binary
+// formats (PNG/JPEG/WebP/GIF) but NOT SVG — if the Blob has no MIME
+// type, <img> refuses to render SVG and onerror fires with the generic
+// "Failed to load image for dimension probing" message.
+//
+// detectFormat() identifies the bytes; toTypedBlobUrl() must set the
+// Blob's `type` so the browser knows the bytes are SVG.
+
+describe('BrowserImageIO detectFormat (parity with NodeImageIO)', () => {
+    const io = new BrowserImageIO();
+
+    it('<?xml prefix → svg+xml', async () => {
+        const ab = new TextEncoder().encode('<?xml version="1.0"?><svg></svg>').buffer;
+        expect(await io.detectFormat(ab)).to.equal('svg+xml');
+    });
+
+    it('<svg prefix → svg+xml', async () => {
+        const ab = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>').buffer;
+        expect(await io.detectFormat(ab)).to.equal('svg+xml');
+    });
+
+    it('PNG magic bytes → png', async () => {
+        const ab = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+        expect(await io.detectFormat(ab)).to.equal('png');
+    });
+});
+
+describe('BrowserImageIO Blob MIME type (regression for SVG logos)', () => {
+    let io: BrowserImageIO;
+    let origCreateObjectURL: typeof URL.createObjectURL;
+    let capturedBlob: Blob | null;
+
+    beforeEach(() => {
+        io = new BrowserImageIO();
+        origCreateObjectURL = URL.createObjectURL;
+        capturedBlob = null;
+        (URL as any).createObjectURL = (blob: Blob) => {
+            capturedBlob = blob;
+            return 'blob:fake';
+        };
+    });
+
+    afterEach(() => {
+        (URL as any).createObjectURL = origCreateObjectURL;
+    });
+
+    it('SVG bytes produce a Blob with type=image/svg+xml', async () => {
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"/>';
+        const ab = new TextEncoder().encode(svg).buffer;
+        await (io as any).toTypedBlobUrl(ab);
+        expect(capturedBlob).to.not.be.null;
+        expect(capturedBlob!.type).to.equal('image/svg+xml');
+    });
+
+    it('PNG bytes produce a Blob with type=image/png', async () => {
+        const ab = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+        await (io as any).toTypedBlobUrl(ab);
+        expect(capturedBlob!.type).to.equal('image/png');
+    });
+
+    it('JPEG bytes produce a Blob with type=image/jpeg', async () => {
+        const ab = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]).buffer;
+        await (io as any).toTypedBlobUrl(ab);
+        expect(capturedBlob!.type).to.equal('image/jpeg');
+    });
+});
