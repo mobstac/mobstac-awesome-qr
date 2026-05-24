@@ -191,7 +191,11 @@ export class SVGDrawing {
                     this.widthView = 38;
                 }
                 mainCanvas = new SvgCanvas(canvasWidth+this.widthSVG, canvasHeight);
-                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
+                // No .fill() here — mainCanvas is nested inside the circular finalCanvas
+                // later, and SvgCanvas.fill() inserts a 100% bg rect that would overflow
+                // the circle and paint over the outer ring stroke. The QR background is
+                // provided by the inner circle drawn in addDesign() instead.
+                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight);
             } else {
                 mainCanvas = new SvgCanvas(canvasWidth, canvasHeight);
                 mainCanvas.viewbox(0, 0, canvasWidth , canvasHeight ).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
@@ -668,7 +672,11 @@ export class SVGDrawing {
         }
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         const finalCanvas = new SvgCanvas(canvasWidth, canvasHeight);
-        const color = this.config.backgroundColor ? this.config.backgroundColor : 'none' ;
+        // Default the inner-circle fill to opaque white. The QR's white background
+        // used to come from mainCanvas.fill() — which had to be removed because its
+        // 100% bg rect overflowed the circular area and painted over the ring stroke.
+        // The inner circle now owns that responsibility, so its default cannot be 'none'.
+        const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
         const width = this.config.moduleSize;
         let grad : any;
         const col1 = this.config.colorDark;

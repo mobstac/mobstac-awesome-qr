@@ -164,6 +164,39 @@ describe('Circular frame transparent fill', () => {
         expect(innerCircle.fill).to.equal('#ff0000');
     });
 
+    // Regression: with v5's SvgCanvas, calling .fill() on a canvas inserts a
+    // <rect width="100%" height="100%"> as its first child. When that canvas
+    // is later embedded as a nested <svg> inside the circular finalCanvas,
+    // the 100%-sized rect overflows the circle and paints over the outer ring
+    // stroke. mainCanvas.fill() must be skipped for CIRCULAR; the inner-fill
+    // circle in addDesign() provides the QR background.
+    it('CIRCULAR output contains no 100%-sized background rect', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 1024,
+            frameStyle: QRCodeFrame.CIRCULAR,
+            frameText: 'Scan',
+        };
+        const qr = await new QRCodeBuilder(config).build(CanvasType.SVG);
+        const svg = qr.svg as string;
+        expect(svg).to.not.match(/<rect[^>]*\bwidth="100%"/);
+        expect(svg).to.not.match(/<rect[^>]*\bheight="100%"/);
+    });
+
+    it('CIRCULAR inner fill circle defaults to opaque white when no backgroundColor', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 1024,
+            frameStyle: QRCodeFrame.CIRCULAR,
+            frameText: 'Scan',
+        };
+        const qr = await new QRCodeBuilder(config).build(CanvasType.SVG);
+        const circles = parseCircles(qr.svg as string);
+        // [0] outer ring (stroke + transparent fill), [1] inner background disc
+        expect(circles[0].fill).to.equal('#ffffff00');
+        expect(circles[1].fill).to.equal('#ffffff');
+    });
+
     it('rgba background skips transparent fill (uses color directly)', async () => {
         const config = {
             text: 'https://example.com',
