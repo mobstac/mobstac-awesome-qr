@@ -141,6 +141,29 @@ describe('SvgCanvas', () => {
             expect(p.getAttr('fill')).to.equal('none');
         });
 
+        // Mirrors the call shape used by drawDiamond / drawSmoothRound /
+        // drawSmoothSharp in Svg.ts — path coords start at the local origin
+        // and rely on .move() to land the dot at the cell's true position.
+        it('path(...).move() emits transform=translate in serialized output', () => {
+            const canvas = new SvgCanvas(100, 100);
+            canvas.path('M0 0 h10 v10 h-10 z').fill('#000').move(40, 60);
+            const out = canvas.serialize();
+            expect(out).to.contain('<path');
+            expect(out).to.contain('transform="translate(40, 60)"');
+            // The serializer must not have written stray x/y attrs on the path.
+            expect(out).to.not.match(/<path[^>]*\sx="/);
+            expect(out).to.not.match(/<path[^>]*\sy="/);
+        });
+
+        it('polygon(...).move() emits transform=translate in serialized output', () => {
+            const canvas = new SvgCanvas(100, 100);
+            canvas.polygon([[0, 0], [10, 0], [5, 10]]).fill('#000').move(20, 30);
+            const out = canvas.serialize();
+            expect(out).to.contain('<polygon');
+            expect(out).to.contain('transform="translate(20, 30)"');
+            expect(out).to.not.match(/<polygon[^>]*\sx="/);
+        });
+
         it('group creates <g> element', () => {
             const canvas = new SvgCanvas(100, 100);
             const g = canvas.group();

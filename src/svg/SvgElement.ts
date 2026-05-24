@@ -5,6 +5,16 @@
  * alphabetically-sorted attributes so output is identical regardless of
  * insertion order.  No DOM dependency — works in Node and browsers.
  */
+
+// SVG element tags that have no x/y attributes per the SVG spec — they
+// must be positioned via the transform attribute.
+const TRANSFORM_POSITIONED_TAGS: ReadonlySet<string> = new Set([
+    'path', 'polygon', 'polyline', 'line', 'g',
+]);
+
+// SVG element tags positioned by their center (cx/cy) offset from a radius.
+const CENTER_POSITIONED_TAGS: ReadonlySet<string> = new Set(['circle', 'ellipse']);
+
 export class SvgElement {
     public tag: string;
     public attrs: Map<string, string>;
@@ -79,21 +89,39 @@ export class SvgElement {
     move(x: number, y: number): this {
         this._x = x;
         this._y = y;
-        if (this.tag === 'circle') {
-            // <circle> uses cx/cy, not x/y
-            const r = parseFloat(this.getAttr('r') || '0');
-            this.setAttr('cx', x + r);
-            this.setAttr('cy', y + r);
-        } else if (this.tag === 'ellipse') {
-            const rx = parseFloat(this.getAttr('rx') || '0');
-            const ry = parseFloat(this.getAttr('ry') || '0');
-            this.setAttr('cx', x + rx);
-            this.setAttr('cy', y + ry);
+
+        if (CENTER_POSITIONED_TAGS.has(this.tag)) {
+            this.moveByCenter(x, y);
+        } else if (TRANSFORM_POSITIONED_TAGS.has(this.tag)) {
+            this.moveByTransform(x, y);
         } else {
             this.setAttr('x', x);
             this.setAttr('y', y);
         }
         return this;
+    }
+
+    private moveByCenter(x: number, y: number): void {
+        // <circle> has only `r`; <ellipse> has `rx`/`ry`. Fall back to `r`
+        // so the same helper serves both without a per-tag branch.
+        const rx = parseFloat(this.getAttr('rx') || this.getAttr('r') || '0');
+        const ry = parseFloat(this.getAttr('ry') || this.getAttr('r') || '0');
+        this.setAttr('cx', x + rx);
+        this.setAttr('cy', y + ry);
+    }
+
+    private moveByTransform(x: number, y: number): void {
+        // Replace any prior translate() so move() stays idempotent, while
+        // preserving rotate/scale/etc. clauses the caller may have set.
+        const others = this.transformWithoutClause('translate');
+        const translate = `translate(${x}, ${y})`;
+        this.setAttr('transform', others ? `${translate} ${others}` : translate);
+    }
+
+    private transformWithoutClause(clause: string): string {
+        const existing = this.getAttr('transform') || '';
+        const pattern = new RegExp(`\\b${clause}\\([^)]*\\)\\s*`, 'g');
+        return existing.replace(pattern, '').trim();
     }
 
     size(w: number, h?: number): this {

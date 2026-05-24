@@ -130,6 +130,69 @@ describe('SvgElement', () => {
             expect(el.getAttr('cy')).to.equal('35');
         });
 
+        // <path>, <polygon>, <polyline>, <line>, <g> have no x/y attributes
+        // — move() must translate via the transform attribute. Regression
+        // guard for LEFT_DIAMOND / RIGHT_DIAMOND / SMOOTH_* data patterns
+        // and balloon-frame polygons, which all build at the local origin
+        // and rely on move() to place them.
+        it('move() translates path via transform', () => {
+            const el = new SvgElement('path');
+            el.setAttr('d', 'M0 0 L10 0 L10 10 Z');
+            el.move(15, 25);
+            expect(el.getAttr('x')).to.equal(undefined);
+            expect(el.getAttr('y')).to.equal(undefined);
+            expect(el.getAttr('transform')).to.equal('translate(15, 25)');
+        });
+
+        it('move() translates polygon via transform', () => {
+            const el = new SvgElement('polygon');
+            el.setAttr('points', '0,0 5,10 -5,10');
+            el.move(50, 60);
+            expect(el.getAttr('x')).to.equal(undefined);
+            expect(el.getAttr('transform')).to.equal('translate(50, 60)');
+        });
+
+        it('move() translates polyline via transform', () => {
+            const el = new SvgElement('polyline');
+            el.setAttr('points', '0,0 10,0 10,10');
+            el.move(7, 8);
+            expect(el.getAttr('transform')).to.equal('translate(7, 8)');
+        });
+
+        it('move() translates line via transform', () => {
+            const el = new SvgElement('line');
+            el.setAttrs({ x1: '0', y1: '0', x2: '10', y2: '10' });
+            el.move(3, 4);
+            expect(el.getAttr('transform')).to.equal('translate(3, 4)');
+        });
+
+        it('move() translates <g> via transform', () => {
+            const el = new SvgElement('g');
+            el.move(11, 22);
+            expect(el.getAttr('transform')).to.equal('translate(11, 22)');
+        });
+
+        it('move() is idempotent on path — replaces prior translate', () => {
+            const el = new SvgElement('path');
+            el.move(5, 5);
+            el.move(15, 25);
+            expect(el.getAttr('transform')).to.equal('translate(15, 25)');
+        });
+
+        it('move() preserves an existing rotate() on path', () => {
+            const el = new SvgElement('path');
+            el.rotate(45);
+            el.move(10, 20);
+            expect(el.getAttr('transform')).to.equal('translate(10, 20) rotate(45)');
+        });
+
+        it('move() composes with an existing translate+rotate', () => {
+            const el = new SvgElement('path');
+            el.setAttr('transform', 'translate(1, 2) rotate(30)');
+            el.move(7, 8);
+            expect(el.getAttr('transform')).to.equal('translate(7, 8) rotate(30)');
+        });
+
         it('size() sets width and height', () => {
             const el = new SvgElement('rect');
             el.size(100, 50);
