@@ -12,14 +12,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
       - name: Install dependencies
         run: npm install
-      - name: Login to npm
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
       - name: Publish to npm
-        run: npm publish --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --tag beta --access public
       - name: Publish Beta Failure
         if: ${{ failure() }}
         shell: bash
