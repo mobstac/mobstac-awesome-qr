@@ -672,6 +672,7 @@ export class SVGDrawing {
         }
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         const finalCanvas = new SvgCanvas(canvasWidth, canvasHeight);
+        finalCanvas.viewbox(0, 0, canvasWidth, canvasHeight);
         // Default the inner-circle fill to opaque white. The QR's white background
         // used to come from mainCanvas.fill() — which had to be removed because its
         // 100% bg rect overflowed the circular area and painted over the ring stroke.
