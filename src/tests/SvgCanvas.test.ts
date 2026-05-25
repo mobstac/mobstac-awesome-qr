@@ -155,6 +155,19 @@ describe('SvgCanvas', () => {
             expect(out).to.not.match(/<path[^>]*\sy="/);
         });
 
+        // Regression: svg.js positions paths by bbox-top-left, not raw translate.
+        // The smooth-sharp/smooth-round outer-corner fillers emit paths with
+        // negative coords (e.g. `L -size/4 0`); a plain translate(x, y) would
+        // render them offset by the negative extent. The builder must shift
+        // the translate so the path's leftmost-topmost extent lands at (x, y).
+        it('path(...).move() with negative coords shifts translate by bbox-min', () => {
+            const canvas = new SvgCanvas(100, 100);
+            canvas.path('M 0 0 L -4 0 A 4 4 0 0 1 0 4 L 0 0').fill('#000').move(20, 30);
+            const out = canvas.serialize();
+            // bbox-min is (-4, 0), so translate must be (20 - (-4), 30 - 0) = (24, 30).
+            expect(out).to.contain('transform="translate(24, 30)"');
+        });
+
         it('polygon(...).move() emits transform=translate in serialized output', () => {
             const canvas = new SvgCanvas(100, 100);
             canvas.polygon([[0, 0], [10, 0], [5, 10]]).fill('#000').move(20, 30);

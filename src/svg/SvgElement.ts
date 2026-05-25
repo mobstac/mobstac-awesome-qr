@@ -111,10 +111,34 @@ export class SvgElement {
     }
 
     private moveByTransform(x: number, y: number): void {
+        // svg.js positions elements by bounding-box top-left, not by raw
+        // translate. Paths whose `d` extends into negative space (e.g. the
+        // smooth-sharp/smooth-round outer-corner fillers, which use commands
+        // like `L -size/4 0`) and polygons with negative point coords (e.g. the
+        // balloon-frame triangle: `[[0, 0], [size/24, …], [-size/24, …]]`) get
+        // visibly offset if we translate by (x, y) directly. Match svg.js by
+        // shifting the translate so the element's bbox-min lands at (x, y).
+        let translateX = x;
+        let translateY = y;
+        if (this.tag === 'path') {
+            const d = this.getAttr('d');
+            if (d) {
+                const { minX, minY } = computePathBboxMin(d);
+                translateX = x - minX;
+                translateY = y - minY;
+            }
+        } else if (this.tag === 'polygon' || this.tag === 'polyline') {
+            const points = this.getAttr('points');
+            if (points) {
+                const { minX, minY } = computePointsBboxMin(points);
+                translateX = x - minX;
+                translateY = y - minY;
+            }
+        }
         // Replace any prior translate() so move() stays idempotent, while
         // preserving rotate/scale/etc. clauses the caller may have set.
         const others = this.transformWithoutClause('translate');
-        const translate = `translate(${x}, ${y})`;
+        const translate = `translate(${translateX}, ${translateY})`;
         this.setAttr('transform', others ? `${translate} ${others}` : translate);
     }
 
@@ -236,6 +260,59 @@ function escapeAttr(value: string): string {
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+/**
+ * Compute the minimum x/y of a path's `d` attribute, considering M, L, and A
+ * endpoints. This is the subset of commands the QR builder emits — paths use
+ * only absolute M, L, and A, and arcs are quarter-circles that bulge inward
+ * toward their chord midpoint, so endpoint-minima capture the bbox tightly.
+ *
+ * Returned origin matches svg.js's bbox-top-left semantics so .move(x, y)
+ * lands the path's leftmost-topmost extent at (x, y).
+ */
+/**
+ * Compute the minimum x/y of a polygon/polyline `points` attribute. Points are
+ * encoded as `x1,y1 x2,y2 …` (commas or whitespace as separators in either
+ * position — SVG accepts both).
+ */
+function computePointsBboxMin(points: string): { minX: number; minY: number } {
+    let minX = Infinity;
+    let minY = Infinity;
+    const nums = points.trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+    for (let i = 0; i + 1 < nums.length; i += 2) {
+        if (nums[i] < minX) minX = nums[i];
+        if (nums[i + 1] < minY) minY = nums[i + 1];
+    }
+    if (!isFinite(minX)) minX = 0;
+    if (!isFinite(minY)) minY = 0;
+    return { minX, minY };
+}
+
+function computePathBboxMin(d: string): { minX: number; minY: number } {
+    let minX = Infinity;
+    let minY = Infinity;
+    const tokens = d.match(/[MLA][^MLAmla]*/gi) || [];
+    for (const tok of tokens) {
+        const cmd = tok[0].toUpperCase();
+        const nums = tok.slice(1).trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (cmd === 'M' || cmd === 'L') {
+            for (let i = 0; i + 1 < nums.length; i += 2) {
+                if (nums[i] < minX) minX = nums[i];
+                if (nums[i + 1] < minY) minY = nums[i + 1];
+            }
+        } else if (cmd === 'A') {
+            // Arc: rx ry x-axis-rot large-arc sweep x y — only the endpoint
+            // contributes to the bbox-min for the paths this builder emits.
+            for (let i = 0; i + 6 < nums.length; i += 7) {
+                if (nums[i + 5] < minX) minX = nums[i + 5];
+                if (nums[i + 6] < minY) minY = nums[i + 6];
+            }
+        }
+    }
+    if (!isFinite(minX)) minX = 0;
+    if (!isFinite(minY)) minY = 0;
+    return { minX, minY };
 }
 
 /**

@@ -2091,7 +2091,13 @@ export class SVGDrawing {
         const textLineMaxLength = getLengthOfLongestText(text);
         const fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
-        const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10); 
+        const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10);
+
+        // Roboto cap-height is ~0.71*fontSize; half (~0.355*fontSize) is the
+        // distance from the alphabetic baseline (which the SVG <text> y attribute
+        // corresponds to) down to the visual midline of capitals. Adding it to
+        // the banner-center y produces a baseline that visually centers all-caps
+        // frame text vertically inside the rectangle.
 
         switch (frameStyle) {
             case QRCodeFrame.BANNER_BOTTOM:
@@ -2101,7 +2107,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize / 2 - 1;
                 textX = size / 3;
-                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 1.5;
                 break;
@@ -2111,7 +2117,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -2121,7 +2127,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2131,7 +2137,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -2141,7 +2147,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 4;
                 break;
@@ -2151,7 +2157,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = this.config.isVCard ? moduleSize * 3 : moduleSize * 2;
                 //this.shiftY = 0.9 * this.shiftY
@@ -2162,7 +2168,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2172,7 +2178,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;

@@ -146,10 +146,21 @@ describe('SvgElement', () => {
 
         it('move() translates polygon via transform', () => {
             const el = new SvgElement('polygon');
-            el.setAttr('points', '0,0 5,10 -5,10');
+            el.setAttr('points', '0,0 5,10 10,10');
             el.move(50, 60);
             expect(el.getAttr('x')).to.equal(undefined);
             expect(el.getAttr('transform')).to.equal('translate(50, 60)');
+        });
+
+        // Regression for balloon-frame triangles: polygons whose points dip
+        // into negative space must be positioned so the bbox-top-left lands at
+        // the move target, matching svg.js semantics.
+        it('move() shifts polygon translate by bbox-min when points go negative', () => {
+            const el = new SvgElement('polygon');
+            el.setAttr('points', '0,0 5,10 -5,10');
+            el.move(50, 60);
+            // bbox-min is (-5, 0), so translate becomes (50 - (-5), 60) = (55, 60).
+            expect(el.getAttr('transform')).to.equal('translate(55, 60)');
         });
 
         it('move() translates polyline via transform', () => {
