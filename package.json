@@ -61,6 +61,8 @@
         "mocha": "^10.8.0",
         "nyc": "^17.1.0",
         "prettier": "^3.4.0",
+        "probe-image-size": "^7.2.3",
+        "sharp": "^0.33.5",
         "source-map-support": "^0.5.21",
         "ts-loader": "^9.5.1",
         "ts-node": "^10.9.2",
@@ -75,9 +77,5 @@
     ],
     "dependencies": {
         "jsbarcode": "^3.11.6"
-    },
-    "optionalDependencies": {
-        "probe-image-size": "^7.2.3",
-        "sharp": "^0.33.5"
     }
 }

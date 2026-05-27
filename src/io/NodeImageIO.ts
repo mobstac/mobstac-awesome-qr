@@ -1,11 +1,11 @@
 import { ImageIO, TranscodeOptions } from './ImageIO';
 
 /**
- * NodeImageIO — Node.js/Lambda implementation using sharp + fetch.
+ * NodeImageIO — Node.js/Lambda implementation.
  *
  * Uses native fetch (Node 18+).
- * Uses sharp for image resizing/transcoding.
- * Uses probe-image-size for dimension probing.
+ * sharp and probe-image-size are optional peer dependencies —
+ * only required if transcode() or probeSize() are called.
  */
 export class NodeImageIO implements ImageIO {
 
@@ -19,7 +19,10 @@ export class NodeImageIO implements ImageIO {
     }
 
     async probeSize(input: Buffer | ArrayBuffer | string): Promise<{ width: number; height: number }> {
-        const probe = require('probe-image-size');
+        let probe: any;
+        try { probe = require('probe-image-size'); } catch {
+            throw new Error('Image dimension probing requires "probe-image-size". Install it with: npm install probe-image-size');
+        }
         if (typeof input === 'string') {
             // URL — probe directly
             const result = await probe(input);
@@ -36,7 +39,10 @@ export class NodeImageIO implements ImageIO {
     }
 
     async transcode(input: Buffer | ArrayBuffer, opts: TranscodeOptions): Promise<Buffer> {
-        const sharp = require('sharp');
+        let sharp: any;
+        try { sharp = require('sharp'); } catch {
+            throw new Error('Image resizing/transcoding requires "sharp". Install it with: npm install sharp — or provide pre-sized images to avoid transcoding.');
+        }
         const buf = input instanceof Buffer ? input : Buffer.from(input);
         let pipeline = sharp(buf);
         if (opts.width || opts.height) {
