@@ -698,7 +698,7 @@ describe('Lazy jsbarcode loading', () => {
 // ─── 14. BrowserImageIO chunked base64 ──────────────────────────────
 
 describe('BrowserImageIO chunked base64 encoding', () => {
-    it('bytesToBinary produces correct output for large arrays', () => {
+    it('bytesToBinary produces correct output for large arrays', async () => {
         // Access the module-level function via a fresh require
         const mod = require('../io/BrowserImageIO');
         const io = new mod.BrowserImageIO();
@@ -707,8 +707,141 @@ describe('BrowserImageIO chunked base64 encoding', () => {
         // large PNG-like header should still detect correctly
         const bytes = new Uint8Array(16384);
         bytes[0] = 0x89; bytes[1] = 0x50; // PNG magic
-        io.detectFormat(bytes.buffer).then((fmt: string) => {
-            expect(fmt).to.equal('png');
-        });
+        const fmt = await io.detectFormat(bytes.buffer);
+        expect(fmt).to.equal('png');
+    });
+});
+
+// ─── FileSystemImageIO ────────────────────────────────────────────
+
+import { FileSystemImageIO } from '../io/FileSystemImageIO';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+
+describe('FileSystemImageIO', () => {
+    let tmpDir: string;
+    let io: FileSystemImageIO;
+
+    before(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fsio-test-'));
+        io = new FileSystemImageIO(tmpDir);
+    });
+
+    after(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('fetchImage reads file from base directory', async () => {
+        const content = Buffer.from('hello');
+        fs.writeFileSync(path.join(tmpDir, 'test.bin'), content);
+        const result = await io.fetchImage('test.bin');
+        expect(Buffer.compare(result as Buffer, content)).to.equal(0);
+    });
+
+    it('fetchImage decodes data URIs', async () => {
+        const data = Buffer.from('test-data').toString('base64');
+        const result = await io.fetchImage(`data:application/octet-stream;base64,${data}`);
+        expect((result as Buffer).toString()).to.equal('test-data');
+    });
+
+    it('probeSize extracts SVG width/height attributes', async () => {
+        const svg = '<svg width="300" height="150" xmlns="http://www.w3.org/2000/svg"></svg>';
+        fs.writeFileSync(path.join(tmpDir, 'test.svg'), svg);
+        const size = await io.probeSize('test.svg');
+        expect(size).to.deep.equal({ width: 300, height: 150 });
+    });
+
+    it('probeSize falls back to viewBox', async () => {
+        const svg = '<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg"></svg>';
+        const size = await io.probeSize(Buffer.from(svg));
+        expect(size).to.deep.equal({ width: 400, height: 250 });
+    });
+
+    it('probeSize returns default for raster images', async () => {
+        const png = Buffer.alloc(64);
+        png[0] = 0x89; png[1] = 0x50;
+        const size = await io.probeSize(png);
+        expect(size).to.deep.equal({ width: 200, height: 200 });
+    });
+
+    it('probeSize uses custom default size', async () => {
+        const customIo = new FileSystemImageIO(tmpDir, { width: 500, height: 500 });
+        const png = Buffer.alloc(64);
+        png[0] = 0x89; png[1] = 0x50;
+        const size = await customIo.probeSize(png);
+        expect(size).to.deep.equal({ width: 500, height: 500 });
+    });
+
+    it('detectFormat identifies PNG, JPEG, SVG', async () => {
+        const png = Buffer.alloc(4); png[0] = 0x89; png[1] = 0x50;
+        expect(await io.detectFormat(png)).to.equal('png');
+
+        const jpg = Buffer.alloc(4); jpg[0] = 0xFF; jpg[1] = 0xD8;
+        expect(await io.detectFormat(jpg)).to.equal('jpeg');
+
+        const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+        expect(await io.detectFormat(svg)).to.equal('svg+xml');
+    });
+
+    it('detectFormat identifies WebP and GIF', async () => {
+        const webp = Buffer.alloc(12);
+        webp.write('RIFF', 0); webp.write('WEBP', 8);
+        expect(await io.detectFormat(webp)).to.equal('webp');
+
+        const gif = Buffer.alloc(4); gif[0] = 0x47; gif[1] = 0x49;
+        expect(await io.detectFormat(gif)).to.equal('gif');
+    });
+
+    it('transcode passes through without resize opts', async () => {
+        const input = Buffer.from('unchanged');
+        const result = await io.transcode(input, { format: 'png' });
+        expect((result as Buffer).toString()).to.equal('unchanged');
+    });
+
+    it('transcode throws when resize dimensions requested', async () => {
+        const input = Buffer.from('data');
+        try {
+            await io.transcode(input, { format: 'png', width: 100, height: 100 });
+            expect.fail('should have thrown');
+        } catch (e: any) {
+            expect(e.message).to.include('does not support image resizing');
+        }
+    });
+
+    it('toBase64DataUri returns data URIs as-is', async () => {
+        const uri = 'data:image/png;base64,abc123';
+        expect(await io.toBase64DataUri(uri)).to.equal(uri);
+    });
+
+    it('toBase64DataUri detects MIME from bytes, not extension', async () => {
+        // Write SVG content with a .png extension — MIME should be svg+xml from bytes
+        const svgContent = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+        fs.writeFileSync(path.join(tmpDir, 'misleading.png'), svgContent);
+        const result = await io.toBase64DataUri('misleading.png');
+        expect(result).to.equal(`data:image/svg+xml;base64,${svgContent.toString('base64')}`);
+    });
+
+    it('toBase64DataUri encodes PNG files correctly', async () => {
+        const pngHeader = Buffer.alloc(16);
+        pngHeader[0] = 0x89; pngHeader[1] = 0x50;
+        fs.writeFileSync(path.join(tmpDir, 'real.png'), pngHeader);
+        const result = await io.toBase64DataUri('real.png');
+        expect(result).to.equal(`data:image/png;base64,${pngHeader.toString('base64')}`);
+    });
+
+    it('resizeToBase64 returns base64 with detected format', async () => {
+        const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+        const result = await io.resizeToBase64(svg, 100, 100);
+        expect(result).to.equal(`data:image/svg+xml;base64,${svg.toString('base64')}`);
+    });
+
+    it('fetchImage throws on non-existent file', async () => {
+        try {
+            await io.fetchImage('nonexistent.png');
+            expect.fail('should have thrown');
+        } catch (e: any) {
+            expect(e.code).to.equal('ENOENT');
+        }
     });
 });
