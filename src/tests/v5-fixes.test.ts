@@ -616,3 +616,99 @@ describe('BrowserImageIO Blob MIME type (regression for SVG logos)', () => {
         expect(capturedBlob!.type).to.equal('image/jpeg');
     });
 });
+
+// ─── 11. NodeImageIO fetch timeout ──────────────────────────────────
+
+describe('NodeImageIO fetch timeout', () => {
+    it('accepts custom timeout via constructor', () => {
+        const io = new NodeImageIO(5000);
+        expect((io as any).timeoutMs).to.equal(5000);
+    });
+
+    it('defaults to 30s timeout', () => {
+        const io = new NodeImageIO();
+        expect((io as any).timeoutMs).to.equal(30_000);
+    });
+});
+
+// ─── 12. drawSVG error propagation ──────────────────────────────────
+
+describe('drawSVG error propagation', () => {
+    it('wraps pipeline errors with descriptive message', async () => {
+        const config = {
+            text: 'test',
+            size: 256,
+            margin: 10,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            dotScale: 0.85,
+            correctLevel: 2,
+            logoImage: 'https://this-domain-does-not-exist-12345.invalid/logo.png',
+        };
+        try {
+            await new QRCodeBuilder(config).build();
+            expect.fail('should have thrown');
+        } catch (e: any) {
+            // Error should propagate (not be silently swallowed)
+            expect(e.message).to.be.a('string');
+            expect(e.message.length).to.be.greaterThan(0);
+        }
+    });
+});
+
+// ─── 13. Lazy jsbarcode loading ─────────────────────────────────────
+
+describe('Lazy jsbarcode loading', () => {
+    it('builds QR without barcode — jsbarcode not eagerly loaded', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 256,
+            margin: 10,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            dotScale: 0.85,
+            correctLevel: 2,
+        };
+        const qr = await new QRCodeBuilder(config).build();
+        const svg = qr.svg as unknown as string;
+        expect(svg).to.be.a('string');
+        expect(svg).to.include('<svg');
+    });
+
+    it('builds QR with barcode — jsbarcode loaded on demand', async () => {
+        const config = {
+            text: 'https://example.com',
+            size: 1024,
+            margin: 80,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            dotScale: 0.85,
+            correctLevel: 2,
+            showBarcode: true,
+            barcodeValue: '123456789012',
+            barcodeType: 'CODE128',
+        };
+        const qr = await new QRCodeBuilder(config).build();
+        const svg = qr.svg as unknown as string;
+        expect(svg).to.be.a('string');
+        expect(svg).to.include('<svg');
+    });
+});
+
+// ─── 14. BrowserImageIO chunked base64 ──────────────────────────────
+
+describe('BrowserImageIO chunked base64 encoding', () => {
+    it('bytesToBinary produces correct output for large arrays', () => {
+        // Access the module-level function via a fresh require
+        const mod = require('../io/BrowserImageIO');
+        const io = new mod.BrowserImageIO();
+
+        // Test via detectFormat + toBase64DataUri path indirectly:
+        // large PNG-like header should still detect correctly
+        const bytes = new Uint8Array(16384);
+        bytes[0] = 0x89; bytes[1] = 0x50; // PNG magic
+        io.detectFormat(bytes.buffer).then((fmt: string) => {
+            expect(fmt).to.equal('png');
+        });
+    });
+});

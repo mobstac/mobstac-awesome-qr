@@ -1,5 +1,7 @@
 import { ImageIO, TranscodeOptions } from './ImageIO';
 
+const DEFAULT_TIMEOUT_MS = 30_000;
+
 /**
  * NodeImageIO — Node.js/Lambda implementation.
  *
@@ -8,9 +10,14 @@ import { ImageIO, TranscodeOptions } from './ImageIO';
  * only required if transcode() or probeSize() are called.
  */
 export class NodeImageIO implements ImageIO {
+    private timeoutMs: number;
+
+    constructor(timeoutMs: number = DEFAULT_TIMEOUT_MS) {
+        this.timeoutMs = timeoutMs;
+    }
 
     async fetchImage(url: string): Promise<Buffer> {
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: AbortSignal.timeout(this.timeoutMs) });
         if (!response.ok) {
             throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} (${url})`);
         }
@@ -78,7 +85,7 @@ export class NodeImageIO implements ImageIO {
 
     async isSvgUrl(url: string): Promise<boolean> {
         try {
-            const response = await fetch(url, { method: 'HEAD' });
+            const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(this.timeoutMs) });
             const contentType = response.headers.get('content-type') || '';
             return contentType.indexOf('svg') !== -1;
         } catch {
@@ -87,7 +94,7 @@ export class NodeImageIO implements ImageIO {
     }
 
     async toBase64DataUri(url: string): Promise<string> {
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: AbortSignal.timeout(this.timeoutMs) });
         if (!response.ok) {
             throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} (${url})`);
         }

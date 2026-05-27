@@ -38,6 +38,15 @@ declare interface CanvasRenderingContext2D {
     drawImage(image: Image, dx: number, dy: number, dw: number, dh: number): void;
 }
 
+const CHUNK_SIZE = 8192;
+function bytesToBinary(bytes: Uint8Array): string {
+    const chunks: string[] = [];
+    for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+        chunks.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE) as unknown as number[]));
+    }
+    return chunks.join('');
+}
+
 /**
  * BrowserImageIO — Browser/dashboard implementation.
  *
@@ -174,12 +183,7 @@ export class BrowserImageIO implements ImageIO {
     async toBase64DataUri(url: string): Promise<string> {
         const arrayBuffer = await this.fetchImage(url);
         const format = await this.detectFormat(arrayBuffer);
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = btoa(binary);
+        const base64 = btoa(bytesToBinary(new Uint8Array(arrayBuffer)));
         return `data:image/${format};base64,${base64}`;
     }
 
@@ -189,12 +193,7 @@ export class BrowserImageIO implements ImageIO {
             width,
             height,
         });
-        const bytes = new Uint8Array(transcoded);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = btoa(binary);
+        const base64 = btoa(bytesToBinary(new Uint8Array(transcoded)));
         return `data:image/png;base64,${base64}`;
     }
 }

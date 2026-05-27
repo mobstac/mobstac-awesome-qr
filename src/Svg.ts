@@ -11,7 +11,11 @@ import { SvgTextMetrics } from './svg/SvgTextMetrics';
 import { SvgNodeProxy } from './svg/SvgNodeProxy';
 import { ImageIO } from './io/ImageIO';
 import { NodeImageIO } from './io/NodeImageIO';
-const JsBarcode = require('jsbarcode');
+let _JsBarcode: any = null;
+function getJsBarcode() {
+    if (!_JsBarcode) _JsBarcode = require('jsbarcode');
+    return _JsBarcode;
+}
 
 
 
@@ -296,13 +300,13 @@ export class SVGDrawing {
                 return this.drawBarcode(mainCanvas)
             })
             .then(() => {
-                return this.drawAlignPatterns(mainCanvas, gradient); //TODO Check Plotting of dots for Qr Codes with frame
+                return this.drawAlignPatterns(mainCanvas, gradient);
             })
             .then(() => {
                 return this.drawAlignProtectors(mainCanvas);
             })
             .then(() => {
-                return this.drawPositionPatterns(mainCanvas, gradient); //TODO Check Plotting of dots for Qr Codes with frame
+                return this.drawPositionPatterns(mainCanvas, gradient);
             })
             .then(() => {
                 return this.addTextTag(mainCanvas);
@@ -324,6 +328,11 @@ export class SVGDrawing {
             })
             .then((canvas: any) => {
                 return canvas.svg();
+            })
+            .catch((err: any) => {
+                const wrapped = new Error(`SVG generation failed: ${err?.message || err}`);
+                (wrapped as any).cause = err;
+                throw wrapped;
             });
     }
 
@@ -981,7 +990,7 @@ export class SVGDrawing {
                     .move(coordinateX, coordinateY);
             }
         } catch(error) {
-            console.error('Error loading logo:', error);
+            throw new Error(`Failed to load logo image: ${(error as any)?.message || error}`);
         }
     }
 
@@ -1025,7 +1034,7 @@ export class SVGDrawing {
                     .move(this.shiftX, this.shiftY);
             }
         } catch (error) {
-            console.error('Error loading background image:', error);
+            throw new Error(`Failed to load background image: ${(error as any)?.message || error}`);
         }
     }
 
@@ -1059,7 +1068,7 @@ export class SVGDrawing {
                 })
                 .move(this.shiftX, this.shiftY);
         } catch (error) {
-            console.error(error);
+            throw new Error(`Failed to load circular background image: ${(error as any)?.message || error}`);
         }
     }
 
@@ -1087,76 +1096,48 @@ export class SVGDrawing {
     private async drawAlignPatterns(context: SvgCanvas, gradient: string) {
         const moduleCount = this.moduleCount;
         const xyOffset = (1 - this.config.dotScale) * 0.5;
-
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+        const patternPosition = this.patternPosition;
+        const nSize = this.config.nSize;
+        const dotScale = this.config.dotScale;
+        const isDark = this.isDark.bind(this);
+        const hasLogoBackground = !!(this.config.logoBackground && this.config.logoImage);
+
         for (let row = 0; row < moduleCount; row++) {
             for (let col = 0; col < moduleCount; col++) {
-                const bIsDark = this.isDark.bind(this)(row, col) || false; //  data dot is black or white ( should not be drawn )
+                const bIsDark = isDark(row, col) || false;
 
-                const isBlkPosCtr = (col < 8 && (row < 8 || row >= moduleCount - 8)) || (col >= moduleCount - 8 && row < 8); // data dot is behind an eye
-                let bProtected =  (row === 6 || col === 6 || isBlkPosCtr )  // data dot is in timeline
-
-                const patternPosition = this.patternPosition;
+                const isBlkPosCtr = (col < 8 && (row < 8 || row >= moduleCount - 8)) || (col >= moduleCount - 8 && row < 8);
+                let bProtected =  (row === 6 || col === 6 || isBlkPosCtr )
                 for (let i = 0; i < patternPosition.length - 1; i++) {
                     bProtected = bProtected || (row >= patternPosition[i] - 2 && row <= patternPosition[i] + 2 && col >= patternPosition[i] - 2 && col <= patternPosition[i] + 2);
                 } // data dot is alignment eye
 
 
-                const nLeft = col * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
-                const nTop = row * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
+                const nLeft = col * nSize + (bProtected ? 0 : xyOffset * nSize);
+                const nTop = row * nSize + (bProtected ? 0 : xyOffset * nSize);
 
-                let _isDataDotBehindLogo = false;
-                if( this.config.logoBackground && this.config.logoImage ){
-                    _isDataDotBehindLogo = this.isDataDotBehindLogo(nLeft , nTop );
-                }
-                if(_isDataDotBehindLogo ){
+                if (hasLogoBackground && this.isDataDotBehindLogo(nLeft, nTop)) {
                     continue;
                 }
 
+                const scale = bProtected ? 1 : dotScale;
+                const cellW = scale * nSize;
+                const cellH = cellW;
+
                 if(this.isSmoothPattern){
                     if(this.TwoDArray[row][col]){
-                        this.fillRectWithMask(
-                            context,
-                            nLeft,
-                            nTop,
-                            (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                            (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                            bIsDark,
-                            dataPattern,
-                            row,
-                            col
-                        );
+                        this.fillRectWithMask(context, nLeft, nTop, cellW, cellH, bIsDark, dataPattern, row, col);
                     }
                 } else {
                     if (patternPosition.length === 0) {
-                        // if align pattern list is empty, then it means that we don't need to leave room for the align patterns
                         if (!bProtected ) {
-                            this.fillRectWithMask(
-                                context,
-                                nLeft,
-                                nTop,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                bIsDark,
-                                dataPattern,
-                                row,
-                                col
-                            );
+                            this.fillRectWithMask(context, nLeft, nTop, cellW, cellH, bIsDark, dataPattern, row, col);
                         }
                     } else {
-                        let inAgnRange = col < moduleCount - 4 && col >= moduleCount - 4 - 5 && row < moduleCount - 4 && row >= moduleCount - 4 - 5; // data is major alignment eye
+                        let inAgnRange = col < moduleCount - 4 && col >= moduleCount - 4 - 5 && row < moduleCount - 4 && row >= moduleCount - 4 - 5;
                         if ((!bProtected && !inAgnRange ) ) {
-                            this.fillRectWithMask(
-                                context,
-                                nLeft,
-                                nTop,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                bIsDark,
-                                dataPattern,
-                                row,
-                                col
-                            );
+                            this.fillRectWithMask(context, nLeft, nTop, cellW, cellH, bIsDark, dataPattern, row, col);
                         }
                     }
                 }
@@ -1765,14 +1746,10 @@ export class SVGDrawing {
     private async drawAlign(context: SvgCanvas, centerX: number, centerY: number, nWidth: number, nHeight: number, shape: DataPattern) {
         let drawShape: any;
         let boolFlag: boolean = false;
-        drawShape = this.drawSquare.bind(this);
 
         switch (shape) {
             case DataPattern.CIRCLE:
                 drawShape = this.drawCircle.bind(this);
-                break;
-            case DataPattern.SQUARE:
-                drawShape = this.drawSquare.bind(this);
                 break;
             case DataPattern.KITE:
                 drawShape = this.drawKite.bind(this);
@@ -1787,6 +1764,7 @@ export class SVGDrawing {
             case DataPattern.THIN_SQUARE:
                 drawShape = this.drawThinSquare.bind(this);
                 break;
+            case DataPattern.SQUARE:
             default:
                 drawShape = this.drawSquare.bind(this);
                 break;
@@ -2609,7 +2587,7 @@ export class SVGDrawing {
             const barcodeWidth = this.config.size - this.config.margin * 2;
             const barcodeHeight = 150 * this.sizeRatio;
             const barcodeProxy = new SvgNodeProxy(barcodeWidth, barcodeHeight);
-            JsBarcode(barcodeProxy.node, this.config.barcodeValue, {
+            getJsBarcode()(barcodeProxy.node, this.config.barcodeValue, {
                 format: this.config.barcodeType,
                 text: this.getBarcodeText(),
                 xmlDocument: barcodeProxy.document,
@@ -2712,7 +2690,7 @@ export class SVGDrawing {
             watermarkCanvas.move(imageX, imageY).attr({ opacity: this.config.watermark ? this.config.watermark.opacity : 1 });
             (context as SvgCanvas).add(watermarkCanvas.root);
         } catch (error) {
-            console.error('Error loading watermark image:', error);
+            throw new Error(`Failed to load watermark image: ${(error as any)?.message || error}`);
         }
     }
 
