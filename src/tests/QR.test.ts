@@ -26,7 +26,7 @@ const sampleUrl = 'https://www.beaconstac.com';
 // 1. basic square qr code with size: 1024 and error correction: 2 | type: png
 const config1 = {
     text: sampleUrl,
-    canvasType: CanvasType.PNG,
+    canvasType: CanvasType.SVG,
     dataPattern: DataPattern.SQUARE,
     colorDark: "#000000",
     colorLight: "#ffffff",
@@ -57,7 +57,7 @@ const config2 = {
 // 3. basic square qr code with v-card, with size: 1024 and error correction: 2 | type: png
 const config3 = {
     text: vCardSampleData,
-    canvasType: CanvasType.PNG,
+    canvasType: CanvasType.SVG,
     dataPattern: DataPattern.SQUARE,
     colorDark: "#000000",
     colorLight: "#ffffff",
@@ -89,7 +89,7 @@ const config5 = {
     text: 'https://www.beaconstac.com',
    // backgroundImage: 'https://s3.amazonaws.com/beaconstac-content-qa/1593/9653e5dae58849b9bf523e27142f875e',
     backgroundColor: 'white',
-    canvasType: CanvasType.PNG,
+    canvasType: CanvasType.SVG,
     eyeFrameShape: EyeFrameShape.RIGHT_LEAF,
     eyeBallShape: EyeBallShape.ROUNDED,
     dataPattern: DataPattern.LEFT_DIAMOND,
@@ -142,7 +142,7 @@ const config7 = {
     text: vCardSampleData,
    // backgroundImage: 'https://s3.amazonaws.com/beaconstac-content-qa/1593/9653e5dae58849b9bf523e27142f875e',
     backgroundColor: 'white',
-    canvasType: CanvasType.PNG,
+    canvasType: CanvasType.SVG,
     frameStyle: QRCodeFrame.CIRCULAR,
     dotScale: 1,
     frameColor: '#0005F5',
@@ -177,7 +177,7 @@ const config8 = {
 // frame + square qr code with size: 1024 and error correction: 2 | type: png
 const config9 = {
     text: sampleUrl,
-    canvasType: CanvasType.PNG,
+    canvasType: CanvasType.SVG,
     frameStyle: QRCodeFrame.BALLOON_BOTTOM,
     dataPattern: DataPattern.SQUARE,
     colorDark: "#000000",
@@ -210,7 +210,7 @@ const config10 = {
 // frame + square qr code with v-card, with size: 1024 and error correction: 2 | type: png
 const config11 = {
     text: vCardSampleData,
-    canvasType: CanvasType.PNG,
+    canvasType: CanvasType.SVG,
     frameStyle: QRCodeFrame.BOX_TOP,
     dataPattern: DataPattern.SQUARE,
     colorDark: "#000000",
