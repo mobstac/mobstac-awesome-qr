@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Bump prerelease version
-        run: npm version prerelease --preid=beta --no-git-tag-version
+        run: npm version prerelease --preid=beta --no-git-tag-version --ignore-scripts
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
