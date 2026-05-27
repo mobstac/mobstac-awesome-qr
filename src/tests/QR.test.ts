@@ -675,6 +675,39 @@ describe('Output QR code tests', () => {
     });
 });
 
+describe('SVG output compliance', () => {
+    const sizes = [256, 1024];
+    const configs = [
+        { name: 'square', base: config2 },
+        { name: 'circular', base: config6 },
+    ];
+
+    for (const { name, base } of configs) {
+        for (const size of sizes) {
+            it(`${name} (${size}px): uses attributes not inline styles for dimensions`, async () => {
+                const builder = new QRCodeBuilder({ ...base, size });
+                const qrCode = await builder.build(CanvasType.SVG);
+                const svg = qrCode.svg as string;
+                const openTag = svg.substring(0, svg.indexOf('>') + 1);
+
+                // Must have width/height as attributes
+                expect(openTag).to.match(/\bwidth="[\d.]+"/);
+                expect(openTag).to.match(/\bheight="[\d.]+"/);
+
+                // Must have viewBox
+                expect(openTag).to.match(/\bviewBox="/);
+
+                // Must NOT have inline style with width/height
+                const styleMatch = openTag.match(/\bstyle="([^"]*)"/);
+                if (styleMatch) {
+                    expect(styleMatch[1]).to.not.match(/\bwidth\s*:/);
+                    expect(styleMatch[1]).to.not.match(/\bheight\s*:/);
+                }
+            });
+        }
+    }
+});
+
 
 
 
