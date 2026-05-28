@@ -27,6 +27,18 @@ export enum CanvasType {
     SVG = 'svg',
 }
 
+export enum ModuleType {
+    LIGHT = 0,
+    DARK_DATA = 1,
+    FINDER_OUTER = 2,
+    FINDER_INNER = 3,
+    ALIGNMENT_OUTER = 4,
+    ALIGNMENT_CENTER = 5,
+    TIMING = 6,
+    FORMAT_INFO = 7,
+    VERSION_INFO = 8,
+}
+
 export enum EyeFrameShape {
     SQUARE = 'square',
     CIRCLE = 'circle',

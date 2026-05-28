@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import 'mocha';
-import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, ModuleType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
 import { QRCodeBuilder } from '../index';
 import { QRCode } from '../Models';
+import { QRMatrix } from '../Types';
 
 // tslint:disable-next-line:no-var-requires
 const fs =  require('fs');
@@ -708,7 +709,96 @@ describe('SVG output compliance', () => {
     }
 });
 
+describe('QRCodeBuilder.computeMatrix()', () => {
+    it('returns a valid QRMatrix for a simple URL', () => {
+        const matrix = QRCodeBuilder.computeMatrix('https://example.com');
+        expect(matrix).to.have.property('version').that.is.a('number').greaterThan(0);
+        expect(matrix).to.have.property('moduleCount').that.equals(matrix.version * 4 + 17);
+        expect(matrix).to.have.property('modules').that.is.instanceOf(Uint8Array);
+        expect(matrix.modules.length).to.equal(matrix.moduleCount * matrix.moduleCount);
+        expect(matrix).to.have.property('patternPositions').that.is.an('array');
+    });
 
+    it('produces deterministic output for same input', () => {
+        const m1 = QRCodeBuilder.computeMatrix('https://example.com');
+        const m2 = QRCodeBuilder.computeMatrix('https://example.com');
+        expect(m1.version).to.equal(m2.version);
+        expect(m1.moduleCount).to.equal(m2.moduleCount);
+        expect(Buffer.from(m1.modules).equals(Buffer.from(m2.modules))).to.be.true;
+    });
 
+    it('different text produces different matrix', () => {
+        const m1 = QRCodeBuilder.computeMatrix('https://example.com');
+        const m2 = QRCodeBuilder.computeMatrix('https://uniqode.com/different');
+        expect(Buffer.from(m1.modules).equals(Buffer.from(m2.modules))).to.be.false;
+    });
 
+    it('all modules have a valid ModuleType', () => {
+        const matrix = QRCodeBuilder.computeMatrix('https://example.com');
+        const validTypes = new Set([
+            ModuleType.LIGHT, ModuleType.DARK_DATA,
+            ModuleType.FINDER_OUTER, ModuleType.FINDER_INNER,
+            ModuleType.ALIGNMENT_OUTER, ModuleType.ALIGNMENT_CENTER,
+            ModuleType.TIMING, ModuleType.FORMAT_INFO, ModuleType.VERSION_INFO,
+        ]);
+        for (let i = 0; i < matrix.modules.length; i++) {
+            expect(validTypes.has(matrix.modules[i]),
+                `module[${i}] has invalid type ${matrix.modules[i]}`).to.be.true;
+        }
+    });
+
+    it('finder patterns are at the three corners', () => {
+        const matrix = QRCodeBuilder.computeMatrix('https://example.com');
+        const n = matrix.moduleCount;
+        const at = (r: number, c: number) => matrix.modules[r * n + c];
+
+        // Top-left finder inner (center at 3,3)
+        expect(at(3, 3)).to.equal(ModuleType.FINDER_INNER);
+        // Top-left finder outer (frame)
+        expect(at(0, 0)).to.equal(ModuleType.FINDER_OUTER);
+        expect(at(0, 6)).to.equal(ModuleType.FINDER_OUTER);
+        expect(at(6, 0)).to.equal(ModuleType.FINDER_OUTER);
+
+        // Bottom-left finder
+        expect(at(n - 4, 3)).to.equal(ModuleType.FINDER_INNER);
+        expect(at(n - 7, 0)).to.equal(ModuleType.FINDER_OUTER);
+
+        // Top-right finder
+        expect(at(3, n - 4)).to.equal(ModuleType.FINDER_INNER);
+        expect(at(0, n - 7)).to.equal(ModuleType.FINDER_OUTER);
+    });
+
+    it('timing patterns on row 6 and col 6', () => {
+        const matrix = QRCodeBuilder.computeMatrix('https://example.com');
+        const n = matrix.moduleCount;
+        const at = (r: number, c: number) => matrix.modules[r * n + c];
+
+        for (let i = 8; i < n - 8; i++) {
+            expect(at(6, i)).to.equal(ModuleType.TIMING, `timing at row 6, col ${i}`);
+            expect(at(i, 6)).to.equal(ModuleType.TIMING, `timing at row ${i}, col 6`);
+        }
+    });
+
+    it('accepts custom error correction level', () => {
+        const matrixL = QRCodeBuilder.computeMatrix('https://example.com', QRErrorCorrectLevel.L);
+        const matrixH = QRCodeBuilder.computeMatrix('https://example.com', QRErrorCorrectLevel.H);
+        // L uses fewer error correction bytes → may produce smaller version
+        expect(matrixL.version).to.be.at.most(matrixH.version);
+    });
+
+    it('throws on empty text', () => {
+        expect(() => QRCodeBuilder.computeMatrix('')).to.throw('text is required');
+    });
+
+    it('long text produces higher version', () => {
+        const short = QRCodeBuilder.computeMatrix('hi');
+        const long = QRCodeBuilder.computeMatrix('https://the-qrcode-generator.com/very/long/path?with=many&query=parameters&that=force&a=higher&qr=version&number=to&be=used');
+        expect(long.version).to.be.greaterThan(short.version);
+    });
+
+    it('matrix is compact: Uint8Array size matches moduleCount^2', () => {
+        const matrix = QRCodeBuilder.computeMatrix('https://example.com');
+        expect(matrix.modules.byteLength).to.equal(matrix.moduleCount * matrix.moduleCount);
+    });
+});
 

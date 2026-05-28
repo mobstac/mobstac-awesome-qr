@@ -1,5 +1,12 @@
-import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, ModuleType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
 import { ImageIO } from './io/ImageIO';
+
+export interface QRMatrix {
+    version: number;
+    moduleCount: number;
+    modules: Uint8Array;
+    patternPositions: number[];
+}
 
 export interface Watermark {
     showWatermark: boolean;
