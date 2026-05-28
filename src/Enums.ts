@@ -27,16 +27,27 @@ export enum CanvasType {
     SVG = 'svg',
 }
 
+/**
+ * Module type encoding: bit 0 = dark flag, bits 1-4 = region.
+ * Use `type & 1` to check dark/light, `type & ~1` to get region.
+ */
 export enum ModuleType {
-    LIGHT = 0,
-    DARK_DATA = 1,
-    FINDER_OUTER = 2,
-    FINDER_INNER = 3,
-    ALIGNMENT_OUTER = 4,
-    ALIGNMENT_CENTER = 5,
-    TIMING = 6,
-    FORMAT_INFO = 7,
-    VERSION_INFO = 8,
+    LIGHT_DATA       = 0b00000,  // 0
+    DARK_DATA        = 0b00001,  // 1
+    LIGHT_FINDER     = 0b00010,  // 2
+    DARK_FINDER      = 0b00011,  // 3
+    LIGHT_FINDER_CENTER = 0b00100, // 4
+    DARK_FINDER_CENTER  = 0b00101, // 5
+    LIGHT_ALIGNMENT  = 0b00110,  // 6
+    DARK_ALIGNMENT   = 0b00111,  // 7
+    LIGHT_ALIGNMENT_CENTER = 0b01000, // 8
+    DARK_ALIGNMENT_CENTER  = 0b01001, // 9
+    LIGHT_TIMING     = 0b01010,  // 10
+    DARK_TIMING      = 0b01011,  // 11
+    LIGHT_FORMAT     = 0b01100,  // 12
+    DARK_FORMAT      = 0b01101,  // 13
+    LIGHT_VERSION    = 0b01110,  // 14
+    DARK_VERSION     = 0b01111,  // 15
 }
 
 export enum EyeFrameShape {

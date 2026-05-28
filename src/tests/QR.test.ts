@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, ModuleType, QRCodeFrame, QRErrorCorrectLevel } from '../Enums';
+const { NodeImageIO } = require('../io/NodeImageIO');
 import { QRCodeBuilder } from '../index';
 import { QRCode } from '../Models';
 import { QRMatrix } from '../Types';
@@ -738,16 +739,20 @@ describe('QRCodeBuilder.computeMatrix()', () => {
 
     it('all modules have a valid ModuleType', () => {
         const matrix = QRCodeBuilder.computeMatrix('https://example.com');
-        const validTypes = new Set([
-            ModuleType.LIGHT, ModuleType.DARK_DATA,
-            ModuleType.FINDER_OUTER, ModuleType.FINDER_INNER,
-            ModuleType.ALIGNMENT_OUTER, ModuleType.ALIGNMENT_CENTER,
-            ModuleType.TIMING, ModuleType.FORMAT_INFO, ModuleType.VERSION_INFO,
-        ]);
+        const validTypes = new Set(Object.values(ModuleType).filter(v => typeof v === 'number'));
         for (let i = 0; i < matrix.modules.length; i++) {
             expect(validTypes.has(matrix.modules[i]),
                 `module[${i}] has invalid type ${matrix.modules[i]}`).to.be.true;
         }
+    });
+
+    it('dark flag encoded in bit 0', () => {
+        const matrix = QRCodeBuilder.computeMatrix('https://example.com');
+        const n = matrix.moduleCount;
+        // Top-left finder corner (0,0) is dark → bit 0 should be 1
+        expect(matrix.modules[0] & 1).to.equal(1);
+        // Inside finder gap (1,1) is light → bit 0 should be 0
+        expect(matrix.modules[1 * n + 1] & 1).to.equal(0);
     });
 
     it('finder patterns are at the three corners', () => {
@@ -755,30 +760,34 @@ describe('QRCodeBuilder.computeMatrix()', () => {
         const n = matrix.moduleCount;
         const at = (r: number, c: number) => matrix.modules[r * n + c];
 
-        // Top-left finder inner (center at 3,3)
-        expect(at(3, 3)).to.equal(ModuleType.FINDER_INNER);
-        // Top-left finder outer (frame)
-        expect(at(0, 0)).to.equal(ModuleType.FINDER_OUTER);
-        expect(at(0, 6)).to.equal(ModuleType.FINDER_OUTER);
-        expect(at(6, 0)).to.equal(ModuleType.FINDER_OUTER);
+        // Top-left finder inner (center at 3,3) — dark
+        expect(at(3, 3)).to.equal(ModuleType.DARK_FINDER_CENTER);
+        // Top-left finder outer (frame) — dark
+        expect(at(0, 0)).to.equal(ModuleType.DARK_FINDER);
+        expect(at(0, 6)).to.equal(ModuleType.DARK_FINDER);
+        expect(at(6, 0)).to.equal(ModuleType.DARK_FINDER);
+        // Inside finder gap — light
+        expect(at(1, 1)).to.equal(ModuleType.LIGHT_FINDER);
 
         // Bottom-left finder
-        expect(at(n - 4, 3)).to.equal(ModuleType.FINDER_INNER);
-        expect(at(n - 7, 0)).to.equal(ModuleType.FINDER_OUTER);
+        expect(at(n - 4, 3)).to.equal(ModuleType.DARK_FINDER_CENTER);
+        expect(at(n - 7, 0)).to.equal(ModuleType.DARK_FINDER);
 
         // Top-right finder
-        expect(at(3, n - 4)).to.equal(ModuleType.FINDER_INNER);
-        expect(at(0, n - 7)).to.equal(ModuleType.FINDER_OUTER);
+        expect(at(3, n - 4)).to.equal(ModuleType.DARK_FINDER_CENTER);
+        expect(at(0, n - 7)).to.equal(ModuleType.DARK_FINDER);
     });
 
-    it('timing patterns on row 6 and col 6', () => {
+    it('timing patterns on row 6 and col 6 with correct dark/light', () => {
         const matrix = QRCodeBuilder.computeMatrix('https://example.com');
         const n = matrix.moduleCount;
         const at = (r: number, c: number) => matrix.modules[r * n + c];
 
         for (let i = 8; i < n - 8; i++) {
-            expect(at(6, i)).to.equal(ModuleType.TIMING, `timing at row 6, col ${i}`);
-            expect(at(i, 6)).to.equal(ModuleType.TIMING, `timing at row ${i}, col 6`);
+            const expectedDark = i % 2 === 0;
+            const expected = expectedDark ? ModuleType.DARK_TIMING : ModuleType.LIGHT_TIMING;
+            expect(at(6, i)).to.equal(expected, `timing at row 6, col ${i}`);
+            expect(at(i, 6)).to.equal(expected, `timing at row ${i}, col 6`);
         }
     });
 
@@ -802,6 +811,81 @@ describe('QRCodeBuilder.computeMatrix()', () => {
     it('matrix is compact: Uint8Array size matches moduleCount^2', () => {
         const matrix = QRCodeBuilder.computeMatrix('https://example.com');
         expect(matrix.modules.byteLength).to.equal(matrix.moduleCount * matrix.moduleCount);
+    });
+});
+
+describe('QRCodeBuilder.buildFromMatrix()', () => {
+    it('produces identical SVG to build() for same config', async () => {
+        const text = 'https://example.com';
+        const config = {
+            text,
+            size: 512,
+            colorDark: '#1a5276',
+            colorLight: '#ffffff',
+            backgroundColor: '#ffffff',
+            dataPattern: DataPattern.CIRCLE,
+            eyeBallShape: EyeBallShape.CIRCLE,
+            eyeFrameShape: EyeFrameShape.ROUNDED,
+            imageIO: new NodeImageIO(),
+        };
+
+        const builderA = new QRCodeBuilder(config);
+        const resultA = await builderA.build(CanvasType.SVG);
+
+        const matrix = QRCodeBuilder.computeMatrix(text);
+        const builderB = new QRCodeBuilder(config);
+        const resultB = await builderB.buildFromMatrix(matrix, CanvasType.SVG);
+
+        expect(resultA.svg).to.equal(resultB.svg);
+    });
+
+    it('renders different styles from same matrix', async () => {
+        const text = 'https://example.com';
+        const matrix = QRCodeBuilder.computeMatrix(text);
+
+        const builderA = new QRCodeBuilder({
+            text,
+            size: 512,
+            colorDark: '#000000',
+            dataPattern: DataPattern.SQUARE,
+            imageIO: new NodeImageIO(),
+        });
+        const resultA = await builderA.buildFromMatrix(matrix, CanvasType.SVG);
+
+        const builderB = new QRCodeBuilder({
+            text,
+            size: 512,
+            colorDark: '#ff0000',
+            dataPattern: DataPattern.CIRCLE,
+            imageIO: new NodeImageIO(),
+        });
+        const resultB = await builderB.buildFromMatrix(matrix, CanvasType.SVG);
+
+        expect(resultA.svg).to.not.equal(resultB.svg);
+        expect(resultA.svg).to.be.a('string').with.length.greaterThan(0);
+        expect(resultB.svg).to.be.a('string').with.length.greaterThan(0);
+    });
+
+    it('is faster than build() for repeated style changes', async () => {
+        const text = 'https://the-qrcode-generator.com/benchmark';
+        const matrix = QRCodeBuilder.computeMatrix(text);
+        const colors = ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ff00ff'];
+
+        const startFull = process.hrtime.bigint();
+        for (const color of colors) {
+            const b = new QRCodeBuilder({ text, size: 1024, colorDark: color, imageIO: new NodeImageIO() });
+            await b.build(CanvasType.SVG);
+        }
+        const fullTime = Number(process.hrtime.bigint() - startFull) / 1e6;
+
+        const startMatrix = process.hrtime.bigint();
+        for (const color of colors) {
+            const b = new QRCodeBuilder({ text, size: 1024, colorDark: color, imageIO: new NodeImageIO() });
+            await b.buildFromMatrix(matrix, CanvasType.SVG);
+        }
+        const matrixTime = Number(process.hrtime.bigint() - startMatrix) / 1e6;
+
+        expect(matrixTime).to.be.lessThan(fullTime);
     });
 });
 

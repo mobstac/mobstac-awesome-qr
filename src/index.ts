@@ -47,8 +47,15 @@ export class QRCodeBuilder {
             text,
             correctLevel,
         };
-        const qrCode = new QRCode(-1, config);
+        const qrCode = new QRCode(-1, config, true);
         return qrCode.toMatrix();
+    }
+
+    public async buildFromMatrix(matrix: QRMatrix, format?: CanvasType): Promise<QRCode | never> {
+        this.config.canvasType = format ? format : CanvasType.SVG;
+        const qrCode = QRCode.fromMatrix(matrix, this.config);
+        qrCode.svg = await qrCode.svgDrawing.drawSVG();
+        return qrCode;
     }
 
     public async build(format?: CanvasType): Promise<QRCode | never> {

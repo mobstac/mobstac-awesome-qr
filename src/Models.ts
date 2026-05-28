@@ -160,22 +160,44 @@ export class QRCode {
     public dataList: QR8bitByte[] = [];
     // public drawing: Drawing;
     // for dashboard comment this out
-    public svgDrawing: SVGDrawing;
+    public svgDrawing!: SVGDrawing;
     // @ts-ignore
     // public canvas: Canvas;
     public svg: any = '';
 
     private config: QRCodeConfig;
 
-    constructor(typeNumber: number, config: QRCodeConfig) {
+    constructor(typeNumber: number, config: QRCodeConfig, skipRendering = false) {
         this.typeNumber = typeNumber;
         this.config = config;
         this.errorCorrectLevel = config.correctLevel;
         this.addData(config.text);
         this.make();
-        // this.drawing = new Drawing(this.moduleCount, this.patternPosition, config, this.isDark, this.modules);
-        // for dashboard comment this out
-        this.svgDrawing = new SVGDrawing(this.moduleCount, this.patternPosition, this.config, this.isDark, this.modules);
+        if (!skipRendering) {
+            this.svgDrawing = new SVGDrawing(this.moduleCount, this.patternPosition, this.config, this.isDark, this.modules);
+        }
+    }
+
+    public static fromMatrix(matrix: QRMatrix, config: QRCodeConfig): QRCode {
+        const qr = Object.create(QRCode.prototype) as QRCode;
+        qr.typeNumber = matrix.version;
+        qr.config = config;
+        qr.errorCorrectLevel = config.correctLevel;
+        qr.moduleCount = matrix.moduleCount;
+        qr.dataList = [];
+        qr.svg = '';
+        qr.moduleTypes = matrix.modules;
+
+        qr.modules = new Array(matrix.moduleCount);
+        for (let row = 0; row < matrix.moduleCount; row++) {
+            qr.modules[row] = new Array(matrix.moduleCount);
+            for (let col = 0; col < matrix.moduleCount; col++) {
+                qr.modules[row][col] = (matrix.modules[row * matrix.moduleCount + col] & 1) === 1;
+            }
+        }
+
+        qr.svgDrawing = new SVGDrawing(qr.moduleCount, matrix.patternPositions, config, qr.isDark.bind(qr), qr.modules);
+        return qr;
     }
 
     get patternPosition() {
@@ -269,13 +291,14 @@ export class QRCode {
                 }
                 const isOuter = (0 <= r && r <= 6 && (c === 0 || c === 6)) || (0 <= c && c <= 6 && (r === 0 || r === 6));
                 const isInner = 2 <= r && r <= 4 && 2 <= c && c <= 4;
+                const idx = (row + r) * this.moduleCount + (col + c);
                 if (isOuter || isInner) {
                     this.modules[row + r][col + c] = !0;
-                    this.moduleTypes[(row + r) * this.moduleCount + (col + c)] = isInner ? ModuleType.FINDER_INNER : ModuleType.FINDER_OUTER;
+                    this.moduleTypes[idx] = isInner ? ModuleType.DARK_FINDER_CENTER : ModuleType.DARK_FINDER;
                 } else {
                     this.modules[row + r][col + c] = !1;
                     if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
-                        this.moduleTypes[(row + r) * this.moduleCount + (col + c)] = ModuleType.FINDER_OUTER;
+                        this.moduleTypes[idx] = isInner ? ModuleType.LIGHT_FINDER_CENTER : ModuleType.LIGHT_FINDER;
                     }
                 }
             }
@@ -301,15 +324,17 @@ export class QRCode {
             if (this.modules[r][6] != null) {
                 continue;
             }
-            this.modules[r][6] = r % 2 === 0;
-            this.moduleTypes[r * this.moduleCount + 6] = ModuleType.TIMING;
+            const dark = r % 2 === 0;
+            this.modules[r][6] = dark;
+            this.moduleTypes[r * this.moduleCount + 6] = dark ? ModuleType.DARK_TIMING : ModuleType.LIGHT_TIMING;
         }
         for (let c = 8; c < this.moduleCount - 8; c++) {
             if (this.modules[6][c] != null) {
                 continue;
             }
-            this.modules[6][c] = c % 2 === 0;
-            this.moduleTypes[6 * this.moduleCount + c] = ModuleType.TIMING;
+            const dark = c % 2 === 0;
+            this.modules[6][c] = dark;
+            this.moduleTypes[6 * this.moduleCount + c] = dark ? ModuleType.DARK_TIMING : ModuleType.LIGHT_TIMING;
         }
     }
 
@@ -326,12 +351,14 @@ export class QRCode {
                     for (let c = -2; c <= 2; c++) {
                         const isCenter = r === 0 && c === 0;
                         const isEdge = r === -2 || r === 2 || c === -2 || c === 2;
-                        if (isEdge || isCenter) {
-                            this.modules[row + r][col + c] = !0;
+                        const dark = isEdge || isCenter;
+                        this.modules[row + r][col + c] = dark;
+                        const idx = (row + r) * this.moduleCount + (col + c);
+                        if (isCenter) {
+                            this.moduleTypes[idx] = dark ? ModuleType.DARK_ALIGNMENT_CENTER : ModuleType.LIGHT_ALIGNMENT_CENTER;
                         } else {
-                            this.modules[row + r][col + c] = !1;
+                            this.moduleTypes[idx] = dark ? ModuleType.DARK_ALIGNMENT : ModuleType.LIGHT_ALIGNMENT;
                         }
-                        this.moduleTypes[(row + r) * this.moduleCount + (col + c)] = isCenter ? ModuleType.ALIGNMENT_CENTER : ModuleType.ALIGNMENT_OUTER;
                     }
                 }
             }
@@ -347,14 +374,14 @@ export class QRCode {
             const row = Math.floor(i / 3);
             const col = (i % 3) + this.moduleCount - 8 - 3;
             this.modules[row][col] = mod;
-            this.moduleTypes[row * this.moduleCount + col] = ModuleType.VERSION_INFO;
+            this.moduleTypes[row * this.moduleCount + col] = mod ? ModuleType.DARK_VERSION : ModuleType.LIGHT_VERSION;
         }
         for (i = 0; i < 18; i++) {
             mod = !test && ((bits >> i) & 1) === 1;
             const row = (i % 3) + this.moduleCount - 8 - 3;
             const col = Math.floor(i / 3);
             this.modules[row][col] = mod;
-            this.moduleTypes[row * this.moduleCount + col] = ModuleType.VERSION_INFO;
+            this.moduleTypes[row * this.moduleCount + col] = mod ? ModuleType.DARK_VERSION : ModuleType.LIGHT_VERSION;
         }
     }
 
@@ -374,7 +401,7 @@ export class QRCode {
                 row = this.moduleCount - 15 + i; col = 8;
             }
             this.modules[row][col] = mod;
-            this.moduleTypes[row * this.moduleCount + col] = ModuleType.FORMAT_INFO;
+            this.moduleTypes[row * this.moduleCount + col] = mod ? ModuleType.DARK_FORMAT : ModuleType.LIGHT_FORMAT;
         }
         for (i = 0; i < 15; i++) {
             mod = !test && ((bits >> i) & 1) === 1;
@@ -387,10 +414,10 @@ export class QRCode {
                 row = 8; col = 15 - i - 1;
             }
             this.modules[row][col] = mod;
-            this.moduleTypes[row * this.moduleCount + col] = ModuleType.FORMAT_INFO;
+            this.moduleTypes[row * this.moduleCount + col] = mod ? ModuleType.DARK_FORMAT : ModuleType.LIGHT_FORMAT;
         }
         this.modules[this.moduleCount - 8][8] = !test;
-        this.moduleTypes[(this.moduleCount - 8) * this.moduleCount + 8] = ModuleType.FORMAT_INFO;
+        this.moduleTypes[(this.moduleCount - 8) * this.moduleCount + 8] = !test ? ModuleType.DARK_FORMAT : ModuleType.LIGHT_FORMAT;
     }
 
     private mapData(data: any[], maskPattern: number) {
@@ -414,7 +441,7 @@ export class QRCode {
                             dark = !dark;
                         }
                         this.modules[row][col - c] = dark;
-                        this.moduleTypes[row * this.moduleCount + (col - c)] = dark ? ModuleType.DARK_DATA : ModuleType.LIGHT;
+                        this.moduleTypes[row * this.moduleCount + (col - c)] = dark ? ModuleType.DARK_DATA : ModuleType.LIGHT_DATA;
                         bitIndex--;
                         if (bitIndex === -1) {
                             byteIndex++;
