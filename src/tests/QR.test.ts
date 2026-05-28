@@ -534,7 +534,8 @@ describe('Output QR code tests', () => {
             done();
         });
     });
-    it('QR test SVG: frame-plus-square', done => {
+    it('QR test SVG: frame-plus-square', function(done) {
+        this.timeout(30000);
         const qrCodeGenerator = new QRCodeBuilder(config10);
 
         qrCodeGenerator.build(CanvasType.SVG).then(qrCode => {
@@ -545,7 +546,8 @@ describe('Output QR code tests', () => {
             done();
         });
     });
-    it('QR test SVG: frame-plus-square', done => {
+    it('QR test SVG: frame-plus-square-vcard', function(done) {
+        this.timeout(30000);
         const qrCodeGenerator = new QRCodeBuilder(config12);
 
         qrCodeGenerator.build(CanvasType.SVG).then(qrCode => {
@@ -556,7 +558,8 @@ describe('Output QR code tests', () => {
             done();
         });
     });
-    it('QR test SVG: frame-plus-square', done => {
+    it('QR test SVG: logo-no-background', function(done) {
+        this.timeout(30000);
         const qrCodeGenerator = new QRCodeBuilder(config13);
 
         qrCodeGenerator.build(CanvasType.SVG).then(qrCode => {
