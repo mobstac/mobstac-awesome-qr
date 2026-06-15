@@ -1,13 +1,14 @@
 import { ImageIO, TranscodeOptions } from './ImageIO';
 
+const probe: any = require('probe-image-size');
+
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 /**
  * NodeImageIO — Node.js/Lambda implementation.
  *
  * Uses native fetch (Node 18+).
- * sharp and probe-image-size are optional peer dependencies —
- * only required if transcode() or probeSize() are called.
+ * sharp is an optional peer dependency — only required if transcode() is called.
  */
 export class NodeImageIO implements ImageIO {
     private timeoutMs: number;
@@ -26,10 +27,6 @@ export class NodeImageIO implements ImageIO {
     }
 
     async probeSize(input: Buffer | ArrayBuffer | string): Promise<{ width: number; height: number }> {
-        let probe: any;
-        try { probe = require('probe-image-size'); } catch {
-            throw new Error('Image dimension probing requires "probe-image-size". Install it with: npm install probe-image-size');
-        }
         if (typeof input === 'string') {
             // URL — probe directly
             const result = await probe(input);
