@@ -1746,6 +1746,11 @@ export class SVGDrawing {
     private async drawAlign(context: SvgCanvas, centerX: number, centerY: number, nWidth: number, nHeight: number, shape: DataPattern) {
         let drawShape: any;
         let boolFlag: boolean = false;
+        // True when drawShape is bound to drawSquare, whose signature places
+        // width/height before gradient. The other shape fns take gradient first,
+        // so the call sites below dispatch on this flag — not on `shape ===
+        // SQUARE`, which would miss patterns that fall through to drawSquare.
+        let usesSquareSignature = false;
 
         switch (shape) {
             case DataPattern.CIRCLE:
@@ -1764,9 +1769,19 @@ export class SVGDrawing {
             case DataPattern.THIN_SQUARE:
                 drawShape = this.drawThinSquare.bind(this);
                 break;
+            case DataPattern.SMOOTH_ROUND:
+                drawShape = this.drawSquare.bind(this);
+                boolFlag = true;
+                usesSquareSignature = true;
+                break;
+            case DataPattern.SMOOTH_SHARP:
+                drawShape = this.drawSquare.bind(this);
+                usesSquareSignature = true;
+                break;
             case DataPattern.SQUARE:
             default:
                 drawShape = this.drawSquare.bind(this);
+                usesSquareSignature = true;
                 break;
         }
 
@@ -1783,7 +1798,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
+            if (usesSquareSignature) {
                     drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
                     drawShape(x, y, context, gr, width, height, boolFlag);
@@ -1800,7 +1815,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
+            if (usesSquareSignature) {
                     drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
                     drawShape(x, y, context, gr, width, height, boolFlag);
@@ -1817,7 +1832,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
+            if (usesSquareSignature) {
                     drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
                     drawShape(x, y, context, gr, width, height, boolFlag);
@@ -1833,7 +1848,7 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x , y );
-            if (shape === DataPattern.SQUARE) {
+            if (usesSquareSignature) {
                     drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
                     drawShape(x, y, context, gr, width, height, boolFlag);
@@ -1848,7 +1863,7 @@ export class SVGDrawing {
 
         let gr = this.getColorFromQrSvg( x, y);
 
-        if (shape === DataPattern.SQUARE) {
+        if (usesSquareSignature) {
             drawShape(x, y, context, width, height, boolFlag, gr);
         } else {
             drawShape(x, y, context, gr, width, height, boolFlag);

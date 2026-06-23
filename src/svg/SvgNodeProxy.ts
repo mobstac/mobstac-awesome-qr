@@ -25,12 +25,24 @@ class ProxyNode {
         this.tagName = tagName;
     }
 
+    // jsbarcode's getRenderProperties dispatches on `nodeName` to pick the
+    // SVGRenderer; without this it falls through to the ObjectRenderer and
+    // never appends bars to the proxy. Match DOM semantics — nodeName mirrors
+    // the tag name for element nodes.
+    get nodeName(): string {
+        return this.tagName;
+    }
+
     setAttribute(name: string, value: string): void {
         this.attrs.set(name, String(value));
     }
 
     getAttribute(name: string): string | null {
         return this.attrs.get(name) || null;
+    }
+
+    hasAttribute(name: string): boolean {
+        return this.attrs.has(name);
     }
 
     appendChild(child: ProxyNode): ProxyNode {
