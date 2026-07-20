@@ -66,6 +66,11 @@ export class NodeImageIO implements ImageIO {
     }
 
     async detectFormat(input: Buffer | ArrayBuffer): Promise<string> {
+        return this.sniffFormat(input) || 'png'; // fallback
+    }
+
+    /** Format from magic bytes, or null when no signature matches. */
+    private sniffFormat(input: Buffer | ArrayBuffer): string | null {
         const buf = input instanceof Buffer ? input : Buffer.from(input);
         // Check magic bytes
         if (buf[0] === 0x89 && buf[1] === 0x50) return 'png';
@@ -77,7 +82,7 @@ export class NodeImageIO implements ImageIO {
         // Check if it's SVG (starts with < or whitespace + <)
         const str = buf.slice(0, 256).toString('utf8').trim();
         if (str.startsWith('<svg') || str.startsWith('<?xml')) return 'svg+xml';
-        return 'png'; // fallback
+        return null;
     }
 
     async isSvgUrl(url: string): Promise<boolean> {
@@ -97,9 +102,16 @@ export class NodeImageIO implements ImageIO {
         }
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        let contentType = (response.headers.get('content-type') || 'image/png').split(';')[0].trim();
+        // Prefer magic bytes over the header — mismatched types (e.g. PNG bytes served as
+        // "image/jpg") are tolerated by browsers but rejected by librsvg. Fall back to the
+        // header (then png) only when the bytes carry no recognizable signature.
+        const sniffed = this.sniffFormat(buffer);
+        const headerType = (response.headers.get('content-type') || '').split(';')[0].trim();
+        const mime = sniffed
+            ? (sniffed === 'svg+xml' ? 'image/svg+xml' : `image/${sniffed}`)
+            : (headerType || 'image/png');
         const base64 = buffer.toString('base64');
-        return `data:${contentType};base64,${base64}`;
+        return `data:${mime};base64,${base64}`;
     }
 
     async resizeToBase64(input: Buffer | ArrayBuffer, width: number, height: number): Promise<string> {
