@@ -1,12 +1,15 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es2022",
         "module": "commonjs",
         "declaration": true,
         "outDir": "./lib",
         "strict": true,
-        "lib": ["es2015", "dom"],
-        "types": ["node"]
+        "lib": ["es2022"],
+        "types": ["node"],
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true
     },
     "include": ["src"],
     "exclude": ["node_modules", "**/tests/*"]

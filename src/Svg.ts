@@ -1,15 +1,21 @@
 /* tslint:disable:no-var-requires */
-// @ts-ignore
-import { Gradient, SVG , registerWindow} from '@svgdotjs/svg.js';
 import { CanvasUtil, maxLogoScale } from './Common';
 import { DEFAULT_CANVAS_SIZE, DEFAULT_TEXT_TAG_FONT_SIZE, LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
 import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
-import { isNode, isSvgFile, getFrameTextSize, getLengthOfLongestText } from './Util';
-const fetch = require('node-fetch');
-const sharp = require("sharp")
-const probe = require('probe-image-size');
-const JsBarcode = require('jsbarcode');
+import { getFrameTextSize, getLengthOfLongestText } from './Util';
+import { SvgCanvas } from './svg/SvgCanvas';
+import { SvgElement, sanitizeSvg, stripRootSizeAttrs } from './svg/SvgElement';
+import { SvgGradient } from './svg/SvgGradient';
+import { SvgTextMetrics } from './svg/SvgTextMetrics';
+import { SvgNodeProxy } from './svg/SvgNodeProxy';
+import { ImageIO } from './io/ImageIO';
+import { NodeImageIO } from './io/NodeImageIO';
+let _JsBarcode: any = null;
+function getJsBarcode() {
+    if (!_JsBarcode) _JsBarcode = require('jsbarcode');
+    return _JsBarcode;
+}
 
 
 
@@ -46,8 +52,7 @@ export class SVGDrawing {
             moduleSize: nSize,
         };
 
-        // @ts-ignore
-        return Object.assign(config, drawingConfig);
+        return Object.assign(config, drawingConfig) as QRDrawingConfig;
     }
 
     public config: QRDrawingConfig;
@@ -79,10 +84,35 @@ export class SVGDrawing {
     public logoCordinateX = 0;
     public logoCordinateY = 0
     public TwoDArray: any;
+    public QrSvg: SvgCanvas;
     public isSmoothPattern: boolean = false;
     public multiLineHeight: number = 0;
-    private sizeRatio:  number = 1
+    private sizeRatio: number = 1;
     public isFrameCircularOrNone: boolean = false;
+
+    public imageIO: ImageIO;
+
+    /** Create a linear gradient on a canvas and return its url() string for use in fill/stroke. */
+    private makeGradient(canvas: SvgCanvas, color1: string, color2: string, rotate: number = 0): string {
+        const grad = canvas.gradient('linear', function(add: any) {
+            add.stop(0, color1);
+            add.stop(1, color2);
+        });
+        if (rotate) {
+            grad.transform({ rotate });
+        }
+        return grad.url();
+    }
+
+    /** If gradient string contains two colors (space-separated), create a gradient; otherwise return as-is. */
+    private resolveGradient(canvas: SvgCanvas, gradient: string): string {
+        if (gradient.length > 7) {
+            const parts = gradient.split(' ');
+            const rotate = this.config.gradientType === GradientType.VERTICAL ? 90 : 0;
+            return this.makeGradient(canvas, parts[0], parts[1], rotate);
+        }
+        return gradient;
+    }
 
     constructor(moduleCount: number, patternPosition: number[], config: QRCodeConfig, isDark: any, modules: Array<Array<boolean | null>>) {
         this.moduleCount = moduleCount;
@@ -93,42 +123,37 @@ export class SVGDrawing {
         this.typeNumber = config.typeNumber;
         this.correctLevel = config.correctLevel;
         this.isPainted = false;
-
-        const { createSVGWindow } = eval('require')('svgdom');
-        const QRsvgWindow = createSVGWindow();
-        const svgDocument = QRsvgWindow.document;
-        registerWindow(QRsvgWindow, svgDocument);
-        // @ts-ignore
-        this.QrSvg = SVG(svgDocument.documentElement).size(config.size, config.size);
-        
-
-        if (isNode) {
-            const { createSVGWindow } = eval('require')('svgdom');
-            const svgWindow = createSVGWindow();
-            const svgDocument = svgWindow.document;
-
-            registerWindow(svgWindow, svgDocument);
-            // @ts-ignore
-            this.canvas = SVG(svgDocument.documentElement).size(config.size, config.size);
+        if (config.imageIO) {
+            this.imageIO = config.imageIO;
+        } else if (config.imageServerURL) {
+            const isBrowser = typeof (globalThis as any).window !== 'undefined';
+            if (!isBrowser) {
+                throw new Error(
+                    'imageServerURL requires a browser environment. ' +
+                    'In Node, pass an explicit imageIO instance instead.'
+                );
+            }
+            const { BrowserImageIO } = require('./io/BrowserImageIO');
+            this.imageIO = new BrowserImageIO(
+                config.imageServerURL,
+                config.imageServerRequestHeaders
+            );
         } else {
-            this.canvas = SVG().size(config.size, config.size);
+            this.imageIO = new NodeImageIO();
         }
+
+        this.QrSvg = new SvgCanvas(config.size, config.size);
+        this.canvas = new SvgCanvas(config.size, config.size);
     }
 
     // Root function for  creating SVGs
     public async drawSVG(): Promise<any> {
         const frameStyle = this.config.frameStyle;
-        let mainCanvas: object;
+        let mainCanvas: SvgCanvas;
         let canvasHeight: number;
         let canvasWidth: number;
         this.sizeRatio = this.config.size / 1024;
         this.isFrameCircularOrNone = (frameStyle === QRCodeFrame.CIRCULAR || frameStyle === QRCodeFrame.NONE);
-
-        if (isNode) {
-            const { createSVGWindow } = eval('require')('svgdom');
-            const svgWindow = createSVGWindow();
-            const svgDocument = svgWindow.document;
-        }
 
         if (frameStyle && frameStyle !== QRCodeFrame.NONE) {
             const textLinesLength = this.config.frameText ? this.config.frameText.split('\n').length : 1;
@@ -155,7 +180,7 @@ export class SVGDrawing {
             }
 
             if ( this.config.showBarcodeValue && this.isFrameCircularOrNone ) {
-               canvasHeight += ( 150 * this.sizeRatio ); 
+               canvasHeight += ( 200 * this.sizeRatio );
             }
             if ( this.config.showBarcode ) {
                 canvasHeight += ( 400 * this.sizeRatio );
@@ -169,14 +194,14 @@ export class SVGDrawing {
                     this.widthSVG = 38;
                     this.widthView = 38;
                 }
-                // @ts-ignore
-                mainCanvas = isNode ? SVG(svgDocument.documentElement).size(canvasWidth+this.widthSVG, canvasHeight) : SVG().size(canvasWidth+this.widthSVG, canvasHeight);
-                // @ts-ignore
-                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
+                mainCanvas = new SvgCanvas(canvasWidth+this.widthSVG, canvasHeight);
+                // No .fill() here — mainCanvas is nested inside the circular finalCanvas
+                // later, and SvgCanvas.fill() inserts a 100% bg rect that would overflow
+                // the circle and paint over the outer ring stroke. The QR background is
+                // provided by the inner circle drawn in addDesign() instead.
+                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight);
             } else {
-                // @ts-ignore
-                mainCanvas = isNode ? SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight) : SVG().size(canvasWidth+this.widthSVG, canvasHeight);
-                // @ts-ignore
+                mainCanvas = new SvgCanvas(canvasWidth, canvasHeight);
                 mainCanvas.viewbox(0, 0, canvasWidth , canvasHeight ).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
                 
             }
@@ -226,16 +251,14 @@ export class SVGDrawing {
             canvasWidth = this.config.size;
 
             if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
-                canvasHeight += ( 150 * this.sizeRatio );
+                canvasHeight += ( 200 * this.sizeRatio );
              }
              if ( this.config.showBarcode ) {
                  canvasHeight += ( 400 * this.sizeRatio );
              } 
 
-            // @ts-ignore
-            mainCanvas = isNode ? SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight) : SVG().size(canvasWidth+this.widthSVG, canvasHeight);
+            mainCanvas = new SvgCanvas(canvasWidth, canvasHeight);
 
-            // @ts-ignore
             mainCanvas.viewbox(0, 0, canvasWidth, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
         }
 
@@ -277,13 +300,13 @@ export class SVGDrawing {
                 return this.drawBarcode(mainCanvas)
             })
             .then(() => {
-                return this.drawAlignPatterns(mainCanvas, gradient); //TODO Check Plotting of dots for Qr Codes with frame
+                return this.drawAlignPatterns(mainCanvas, gradient);
             })
             .then(() => {
                 return this.drawAlignProtectors(mainCanvas);
             })
             .then(() => {
-                return this.drawPositionPatterns(mainCanvas, gradient); //TODO Check Plotting of dots for Qr Codes with frame
+                return this.drawPositionPatterns(mainCanvas, gradient);
             })
             .then(() => {
                 return this.addTextTag(mainCanvas);
@@ -298,19 +321,22 @@ export class SVGDrawing {
                 await this.addWatermark(mainCanvas);
             })
             .then(()=>{
-                // @ts-ignore
-                return this.addDesign(mainCanvas,gradient);
+                    return this.addDesign(mainCanvas,gradient);
             })
             .then(async (canvas: any) => {
                 return this.addSticker(canvas);
             })
-            .then((canvas: object) => {
-                // @ts-ignore
+            .then((canvas: any) => {
                 return canvas.svg();
+            })
+            .catch((err: any) => {
+                const wrapped = new Error(`SVG generation failed: ${err?.message || err}`);
+                (wrapped as any).cause = err;
+                throw wrapped;
             });
     }
 
-    addTextTag(mainCanvas: object): any {
+    addTextTag(mainCanvas: SvgCanvas): any {
         if (!this.config.textTag || !this.config.textTag.length) {
             return;
         }
@@ -320,12 +346,10 @@ export class SVGDrawing {
         this.config.textTagPosition = this.config.textTagPosition || TextTagPosition.TOP_CENTER;
 
         // Load Roboto font
-        // @ts-ignore
         mainCanvas.defs().style(`
             @import url('https://fonts.googleapis.com/css?family=Roboto:400');
         `);
 
-        // @ts-ignore
         const textTagRef = mainCanvas.plain(this.config.textTag)
 
         // Scale font size to rawSize
@@ -342,7 +366,6 @@ export class SVGDrawing {
         const transform = this.getTextTagTransform();
 
         // Position and rotate around the anchor point
-        // @ts-ignore
         textTagRef.move(transform.x, transform.y)
             .rotate(transform.rotation, transform.x, transform.y)
             .font({ anchor: transform.anchor })
@@ -438,16 +461,18 @@ export class SVGDrawing {
         return randomNumber;
     }
 
-    private async addDesignHelper(finalCanvas: object, canvas: object, gradient: string) {
+    private async addDesignHelper(finalCanvas: SvgCanvas, canvas: SvgCanvas, gradient: string) {
         const size = this.config.size;
-        const pos = Math.sqrt(2) * size / 2 + this.config.moduleSize;
+        // Padding prevents stroke overflow at circular frame canvas edges
+        const padding = this.config.moduleSize / 2;
+        const pos = Math.sqrt(2) * size / 2 + this.config.moduleSize + padding;
         const radius = size / Math.sqrt(2) + this.config.moduleSize / 2;
 
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
         const moduleSize = this.config.dotScale * this.config.moduleSize;
         const increment  = this.config.nSize + ( 1 - this.config.dotScale ) * 0.5 * this.config.nSize;
-        const shift = ( Math.sqrt(2) * size + 2 * this.config.moduleSize - size) / 2 ;
-        const limit  = Math.sqrt(2) * size + 2 * this.config.moduleSize;
+        const shift = ( Math.sqrt(2) * size + 2 * this.config.moduleSize + padding - size) / 2 ;
+        const limit  = Math.sqrt(2) * size + 2 * this.config.moduleSize + padding;
         const str = this.config.text;
         const len = str.length;
         let num = str.charCodeAt(0) + str.charCodeAt(len-1);
@@ -575,53 +600,45 @@ export class SVGDrawing {
             this.addCircularFrameOuterDots(rightSideDots, finalCanvas);
             this.addCircularFrameOuterDots(downSideDots, finalCanvas);
             this.addCircularFrameOuterDots(upSideDots, finalCanvas);
-            // @ts-ignore
-            finalCanvas.add(canvas.move(shift,shift));
+            canvas.move(shift, shift);
+            finalCanvas.add(canvas.root);
             return finalCanvas;
         }
 
         for(const values of Object.values(randomArray)) {
-            // @ts-ignore
-            const i  = values["i"];
-            // @ts-ignore
-            const j  = values["j"];
+            const i  = (values as any)["i"];
+            const j  = (values as any)["j"];
             let grad = this.getColorFromQrSvg(i , j , true);
             if(this.config.gradientType === GradientType.RADIAL) {
                 grad = this.config.colorDark;
             }
             switch (dataPattern) {
                 case DataPattern.CIRCLE:
-                    // @ts-ignore
-                this.drawCircle(i+moduleSize/2, j+moduleSize/2, finalCanvas, grad, moduleSize / 2, moduleSize / 2, false);
+                        this.drawCircle(i+moduleSize/2, j+moduleSize/2, finalCanvas, grad, moduleSize / 2, moduleSize / 2, false);
                 break;
                 case DataPattern.KITE:
-                    // @ts-ignore
-                    this.drawKite(i, j, finalCanvas, grad, moduleSize, moduleSize);
+                            this.drawKite(i, j, finalCanvas, grad, moduleSize, moduleSize);
                     break;
                 case DataPattern.LEFT_DIAMOND:
-                    // @ts-ignore
-                    this.drawDiamond(i, j, finalCanvas, grad, moduleSize, moduleSize, false);
+                            this.drawDiamond(i, j, finalCanvas, grad, moduleSize, moduleSize, false);
                     break;
                 case DataPattern.RIGHT_DIAMOND:
-                    // @ts-ignore
-                    this.drawDiamond(i, j, finalCanvas, grad, moduleSize, moduleSize, true);
+                            this.drawDiamond(i, j, finalCanvas, grad, moduleSize, moduleSize, true);
                     break;
                 case DataPattern.THIN_SQUARE:
-                    // @ts-ignore
-                    this.drawThinSquare(i, j, finalCanvas, grad, moduleSize, moduleSize);
+                            this.drawThinSquare(i, j, finalCanvas, grad, moduleSize, moduleSize);
                     break;
                 default:
-                    // @ts-ignore
-                    this.drawSquare(i, j, finalCanvas, moduleSize, moduleSize, false, grad);
+                            this.drawSquare(i, j, finalCanvas, moduleSize, moduleSize, false, grad);
                     break;
             }
         }
-        // @ts-ignore
-        finalCanvas.add(canvas.move(shift,shift));
+        canvas.move(shift, shift);
+        finalCanvas.add(canvas.root);
         return finalCanvas;
     }
 
-    addCircularFrameOuterDots(randomArray: any, canvas: object) {
+    addCircularFrameOuterDots(randomArray: any, canvas: SvgCanvas) {
         this.TwoDArray = randomArray;
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
         // Add dots to canvas
@@ -647,62 +664,60 @@ export class SVGDrawing {
     }
 
 
-    private async addDesign(canvas: object,gradient: string): Promise<object> {
+    private async addDesign(canvas: SvgCanvas, gradient: string): Promise<SvgCanvas> {
         if (this.config.frameStyle !== QRCodeFrame.CIRCULAR) {
             return canvas;
         }
 
-        const size = this.config.size;;
-        const { createSVGWindow } = require('svgdom');
-        const svgWindow = createSVGWindow();
-        const svgDocument = svgWindow.document;
-        const { SVG, registerWindow } = require('@svgdotjs/svg.js');
-        let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize
+        const size = this.config.size;
+        // Padding prevents stroke overflow at circular frame canvas edges
+        const padding = this.config.moduleSize / 2;
+        let canvasHeight = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         if ( this.config.showBarcode ){
             canvasHeight += ( 400 * this.sizeRatio );
         }
         if ( this.config.showBarcodeValue ){
-            canvasHeight += ( 150 * this.sizeRatio );
+            canvasHeight += ( 200 * this.sizeRatio );
         }
-        const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize;
-        const finalCanvas = SVG(svgDocument.documentElement).size(canvasWidth, canvasHeight)
-        const color = this.config.backgroundColor ? this.config.backgroundColor : 'none' ;
+        const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
+        const finalCanvas = new SvgCanvas(canvasWidth, canvasHeight);
+        finalCanvas.viewbox(0, 0, canvasWidth, canvasHeight);
+        // Default the inner-circle fill to opaque white. The QR's white background
+        // used to come from mainCanvas.fill() — which had to be removed because its
+        // 100% bg rect overflowed the circular area and painted over the ring stroke.
+        // The inner circle now owns that responsibility, so its default cannot be 'none'.
+        const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
         const width = this.config.moduleSize;
-        // @ts-ignore
         let grad : any;
         const col1 = this.config.colorDark;
         const col2 = this.config.colorLight;
         switch (this.config.gradientType) {
             case GradientType.HORIZONTAL:
-                // @ts-ignore
-                grad = finalCanvas.gradient('linear', function(add) {
+                    grad = finalCanvas.gradient('linear', function(add: any) {
                     add.stop(0, col1 )
                     add.stop(1, col2 )
-                    });
+                    }).url();
                     break;
             case GradientType.VERTICAL:
-                // @ts-ignore
-                grad = finalCanvas.gradient('linear', function(add) {
+                    grad = finalCanvas.gradient('linear', function(add: any) {
                     add.stop(0, col1 )
                     add.stop(1, col2 )
-                    }).from(0, 0).to(0, 1);
+                    }).from(0, 0).to(0, 1).url();
                 break;
             case GradientType.LINEAR:
-                // @ts-ignore
-                grad = finalCanvas.gradient('linear', function(add) {
+                    grad = finalCanvas.gradient('linear', function(add: any) {
                     add.stop(0, col1 )
                     add.stop(1, col2 )
-                    });
+                    }).url();
                     break;
             default:
                 grad =gradient;
         }
-        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize;
+        const pos = Math.sqrt(2)*size/2 + this.config.moduleSize + padding;
         const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
         if (this.config.backgroundImage) {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(grad);
-            finalCanvas.circle(Math.sqrt(2)*size + 2*this.config.moduleSize - width * 2).attr({cx : pos , cy : pos}).fill('#ffffff')
-            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
+            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
                 this.addDesignHelper(finalCanvas, canvas, gradient);
                 return finalCanvas;
             });
@@ -712,8 +727,8 @@ export class SVGDrawing {
             this.addDesignHelper(finalCanvas, canvas, gradient);
             return finalCanvas;
         } else {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(grad);
-            finalCanvas.circle(Math.sqrt(2)*size + 2*this.config.moduleSize - width * 2).attr({cx : pos , cy : pos}).fill(color);
+            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
+            finalCanvas.circle(size).attr({cx : pos , cy : pos}).radius(radius - width/2).fill(color);
             this.addDesignHelper(finalCanvas , canvas, gradient);
             return finalCanvas;
         }
@@ -861,7 +876,7 @@ export class SVGDrawing {
         return _r + _g + _b;
     }
 
-    private async drawLogoImage(context: object) {
+    private async drawLogoImage(context: SvgCanvas) {
         if (!this.config.logoImage) {
             return;
         }
@@ -887,104 +902,98 @@ export class SVGDrawing {
         const logoHeight = this.calculatedLogoHeight ;
         const coordinateX = this.logoCordinateX ;
         const coordinateY = this.logoCordinateY ;
-        if(this.config.logoImage){
-            return isSvgFile(this.config.logoImage).then( async (isSvg: any) => {
-                    if (isSvg) {
-                        return fetch(this.config.logoImage)
-                            .then((r: { text: () => void; }) => r.text())
-                            .then( async (text: any) => {
-                                const mainMargin = this.config.margin;
-                                const logoSize = this.config.size;
+        if(!this.config.logoImage) return;
 
+        // When skipImageValidation is true (browser), use the URL directly
+        if (this.config.skipImageValidation) {
+            context.image('').size(logoWidth, logoHeight)
+                .attr({ 'xlink:href': this.config.logoImage, 'preserveAspectRatio': 'none' })
+                .move(coordinateX, coordinateY);
+            return;
+        }
 
-                                const coordinateX = this.shiftX +  0.5 * (this.config.size - logoWidth);
-                                const coordinateY = this.shiftY +  0.5 * (this.config.size - logoHeight);
-                                const centreCoordinateX = coordinateX - mainMargin;
-                                const centreCoordinateY = coordinateY - mainMargin;
-                                const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
-                                text = text.substring(text.indexOf('<svg'));
-                                text = text.substring(0, text.indexOf('</svg>') + 6);
-                                let extraText = '';
-                                const headSvg = text.substring(0, text.indexOf('>') + 1);
-                                if (headSvg.indexOf(' viewBox') === -1) {
-                                    let width = 0, height = 0;
-                                    if (headSvg.indexOf(' width') !== -1) {
-                                        const widthIndex = headSvg.indexOf('"',headSvg.indexOf('width'));
-                                        width = text.substring(widthIndex + 1, headSvg.indexOf('"', widthIndex + 1));
-                                    }
-                                    if (headSvg.indexOf(' height') !== -1) {
-                                        const heightIndex = headSvg.indexOf('"',headSvg.indexOf('height'));
-                                        height = text.substring(heightIndex + 1, headSvg.indexOf('"', heightIndex + 1))
-                                    }
-                                    if (width || height) {
-                                        width = width ? width : height;
-                                        height = height ? height : width;
-                                    } else {
-                                        width = centreCoordinateX + this.config.margin + this.shiftX + logoSize;
-                                        height = centreCoordinateY + this.config.margin + this.shiftY + logoSize
-                                    }
-                                    extraText += ` viewBox="0 0 ${width} ${height }"`
-                                }
-                                if (headSvg.indexOf('x=') !== -1 || headSvg.indexOf('x =') !== -1) {
-                                    text = text.replace(/x\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                                }
-                                if (headSvg.indexOf('y=') !== -1 || headSvg.indexOf('y =') !== -1) {
-                                    text = text.replace(/y\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                                }
-                                if (headSvg.indexOf(' width') !== -1) {
-                                    text = text.replace(/width\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                                }
-                                if (headSvg.indexOf(' height') !== -1) {
-                                    text = text.replace(/height\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                                }
+        try {
+            const isSvg = this.imageIO.isSvgUrl
+                ? await this.imageIO.isSvgUrl(this.config.logoImage)
+                : false;
 
-                                try{
-                                    // @ts-ignore
-                                   context.svg(text
-                                    .replace('<svg', `<svg fill='#000'` + extraText + ` x="${coordinateX}" y="${coordinateY}" width="${logoWidth}" height="${logoHeight}"`));
-                                } catch(e){
-                                    await fetch(this.config.logoImage)
-                                    .then(  (response : Response) => response.arrayBuffer())
-                                    .then( async (array : ArrayBuffer) => {
-                                        array = new Uint8Array(array);
-                                        let jpegImage = await sharp(array).resize({ width : Math.round(logoWidth) , height : Math.round(logoHeight) , fit : 'fill'}).png();
-                                        let buffer = await jpegImage.toBuffer();
-                                        const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-                                        const contentType = 'png'
-                                        const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
+            if (isSvg) {
+                const imageBuffer = await this.imageIO.fetchImage(this.config.logoImage);
+                let text: string;
+                if (Buffer.isBuffer(imageBuffer)) {
+                    text = imageBuffer.toString('utf8');
+                } else {
+                    text = String.fromCharCode(...new Uint8Array(imageBuffer as ArrayBuffer));
+                }
 
-                                        // @ts-ignore
-                                        // context.svg('<image x="'+coordinateX+'" y="'+coordinateY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'"  height="'+ logoHeight +'px" width="'+ logoWidth +'px" />')
-                                        context.image('').size(logoWidth , logoHeight)
-                                        .attr({ 'xlink:href': imageBase64 ,'preserveAspectRatio': 'none'})
-                                        .move(coordinateX , coordinateY)
-                                    }).catch(console.error.bind(console));
-                                }
-                            }).catch(console.error.bind(console));
+                const mainMargin = this.config.margin;
+                const logoSize = this.config.size;
+                const svgCoordX = this.shiftX + 0.5 * (this.config.size - logoWidth);
+                const svgCoordY = this.shiftY + 0.5 * (this.config.size - logoHeight);
+                const centreCoordinateX = svgCoordX - mainMargin;
+                const centreCoordinateY = svgCoordY - mainMargin;
 
-                    } else {
-                        // @ts-ignore
-                        let  imageBase64 =  await this.getImageBase64Data(this.config.logoImage)
-                        //@ts-ignore
-                        // context.svg('<image x="'+coordinateX+'" y="'+ coordinateY +'"  preserveAspectRatio="none" href="'+ imageBase64 +'" height="'+ logoHeight +'px" width="'+ logoWidth +'px" />')  ;
-                        context.image('').size(logoWidth , logoHeight)
-                        .attr({ 'xlink:href': imageBase64, 'preserveAspectRatio': 'none' })
-                        .move(coordinateX , coordinateY)
+                text = text.substring(text.indexOf('<svg'));
+                text = text.substring(0, text.indexOf('</svg>') + 6);
+                text = sanitizeSvg(text);
+                let extraText = '';
+                const headSvg = text.substring(0, text.indexOf('>') + 1);
+                if (headSvg.indexOf(' viewBox') === -1) {
+                    let width: any = 0, height: any = 0;
+                    if (headSvg.indexOf(' width') !== -1) {
+                        const widthIndex = headSvg.indexOf('"', headSvg.indexOf('width'));
+                        width = text.substring(widthIndex + 1, headSvg.indexOf('"', widthIndex + 1));
                     }
-             })
+                    if (headSvg.indexOf(' height') !== -1) {
+                        const heightIndex = headSvg.indexOf('"', headSvg.indexOf('height'));
+                        height = text.substring(heightIndex + 1, headSvg.indexOf('"', heightIndex + 1));
+                    }
+                    if (width || height) {
+                        width = width ? width : height;
+                        height = height ? height : width;
+                    } else {
+                        width = centreCoordinateX + this.config.margin + this.shiftX + logoSize;
+                        height = centreCoordinateY + this.config.margin + this.shiftY + logoSize;
+                    }
+                    extraText += ` viewBox="0 0 ${width} ${height}"`;
+                }
+                // Drop the logo's own x/y/width/height so this caller can position it.
+                // Root tag only, whole attribute names only - see stripRootSizeAttrs().
+                text = stripRootSizeAttrs(text);
+
+                try {
+                    context.add(text
+                        .replace('<svg', `<svg fill='#000'` + extraText + ` x="${svgCoordX}" y="${svgCoordY}" width="${logoWidth}" height="${logoHeight}"`));
+                } catch(e) {
+                    // SVG inline failed, fall back to raster
+                    const imageBase64 = await this.imageIO.resizeToBase64(
+                        await this.imageIO.fetchImage(this.config.logoImage),
+                        Math.round(logoWidth), Math.round(logoHeight)
+                    );
+                    context.image('').size(logoWidth, logoHeight)
+                        .attr({ 'xlink:href': imageBase64, 'preserveAspectRatio': 'none' })
+                        .move(svgCoordX, svgCoordY);
+                }
+            } else {
+                const imageBase64 = await this.imageIO.toBase64DataUri(this.config.logoImage);
+                context.image('').size(logoWidth, logoHeight)
+                    .attr({ 'xlink:href': imageBase64, 'preserveAspectRatio': 'none' })
+                    .move(coordinateX, coordinateY);
+            }
+        } catch(error) {
+            throw new Error(`Failed to load logo image: ${(error as any)?.message || error}`);
         }
     }
 
 
-    private async addBackground(context: object, size: number, backgroundImage?: string, backgroundColor?: string) {
+    private async addBackground(context: SvgCanvas, size: number, backgroundImage?: string, backgroundColor?: string) {
         if (!backgroundImage) {
             if(backgroundColor) {
                 let color = backgroundColor ? backgroundColor : '#ffffff';
                 if(backgroundColor === 'rgba(255,255,255,0)'){
                     color = '#ffffff00'
                 }
-                // @ts-ignore
-                context.rect(size,size).fill(color).move(this.shiftX,this.shiftY);
+                    context.rect(size,size).fill(color).move(this.shiftX,this.shiftY);
             }
             return;
         }
@@ -995,85 +1004,66 @@ export class SVGDrawing {
         return this.addBackgroundImage(context, size, backgroundImage!);
     }
 
-    private async addBackgroundImage(context: object, size: number, backgroundImage: string) {
-        // @ts-ignore
-        context.rect(size,size).move(this.shiftX, this.shiftY).fill('#ffffff')
-        await isSvgFile(backgroundImage).then( async flag =>{
-            if(flag){
-                await fetch(backgroundImage)
-                .then(  (response : Response) => response.arrayBuffer())
-                .then( async (array : ArrayBuffer) => {
-                    array = new Uint8Array(array);
-                    let jpegImage = await sharp(array).resize({ width : size , height : size , fit : 'fill'}).png();
-                    let buffer = await jpegImage.toBuffer();
-                    const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-                    const contentType = 'png'
-                    const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
-                    // @ts-ignore
-                    // context.svg('<image opacity="0.6" x="'+this.shiftX+'" y="'+this.shiftY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'"  height="'+ size +'px" width="'+ size +'px" />')
-                    context.image('').size(size , size)
-                    .attr({ 'xlink:href': imageBase64 , opacity : 0.6 , 'preserveAspectRatio': 'none' })
-                    .move(this.shiftX , this.shiftY)
+    private async addBackgroundImage(context: SvgCanvas, size: number, backgroundImage: string) {
+        (context as SvgCanvas).rect(size, size).move(this.shiftX, this.shiftY).fill('#ffffff');
+        try {
+            const isSvg = this.imageIO.isSvgUrl
+                ? await this.imageIO.isSvgUrl(backgroundImage)
+                : false;
 
-                })
+            if (isSvg) {
+                const imageBase64 = await this.imageIO.resizeToBase64(
+                    await this.imageIO.fetchImage(backgroundImage), size, size
+                );
+                (context as SvgCanvas).image('').size(size, size)
+                    .attr({ 'xlink:href': imageBase64, opacity: 0.6, 'preserveAspectRatio': 'none' })
+                    .move(this.shiftX, this.shiftY);
             } else {
-                let imageBase64 = await this.getImageBase64Data(backgroundImage);
-                //@ts-ignore
-                //context.svg('<image opacity="0.6" x="'+this.shiftX+'" y="'+this.shiftY+'"  preserveAspectRatio="none" href="'+ imageBase64 +'" height="'+ size +'px" width="'+ size +'px" />')
-                context.image('').size(size , size)
-                .attr({ 'xlink:href': imageBase64 , opacity : 0.6 , 'preserveAspectRatio': 'none' })
-                .move(this.shiftX , this.shiftY)
+                const imageBase64 = await this.imageIO.toBase64DataUri(backgroundImage);
+                (context as SvgCanvas).image('').size(size, size)
+                    .attr({ 'xlink:href': imageBase64, opacity: 0.6, 'preserveAspectRatio': 'none' })
+                    .move(this.shiftX, this.shiftY);
             }
-        })
-    }
-    private async getImageBase64Data(backgroundImage: string) {
-        const imageUrlData = await fetch(backgroundImage);
-        const buffer = await imageUrlData.arrayBuffer();
-        const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-        let contentType = imageUrlData.headers.get('content-type');
-        contentType =  contentType.substring(contentType.indexOf('/') + 1);
-        const imageBase64 = `data:${contentType};base64,${stringifiedBuffer}`;
-        return imageBase64;
+        } catch (error) {
+            throw new Error(`Failed to load background image: ${(error as any)?.message || error}`);
+        }
     }
 
-    private async addCircularBackgroundImage(context: object, size: number, backgroundImage: string, pos: number, grad: string, width: number, radius: number) {
+    private async getImageBase64Data(imageUrl: string): Promise<string> {
+        return this.imageIO.toBase64DataUri(imageUrl);
+    }
 
-        // @ts-ignore
-        // context.circle(size).fill('#ffffff').attr({ opacity : 0.6})
+    private async addCircularBackgroundImage(context: SvgCanvas, size: number, backgroundImage: string, pos: number, grad: string, width: number, radius: number) {
         size = Math.floor(size);
 
-        await fetch(backgroundImage)
-                .then(  (response : Response) => response.arrayBuffer())
-                .then( async (array : ArrayBuffer) => {
-                    array = new Uint8Array(array);
-                    let jpegImage = await sharp(array).resize({ width : size , height : size , fit : 'fill'}).png();
-                    let buffer = await jpegImage.toBuffer();
-                    const stringifiedBuffer = Buffer.from(buffer).toString('base64');
-                    const contentType = 'png'
-                    const imageBase64 = `data:image/${contentType};base64,${stringifiedBuffer}`;
+        try {
+            const imageBase64 = await this.imageIO.resizeToBase64(
+                await this.imageIO.fetchImage(backgroundImage), size, size
+            );
 
-                    //@ts-ignore
-                    // let image = context.image(imageBase64);
-                    // image.attr('preserveAspectRatio', 'none');
-                    // image.size(size, size ).move(this.shiftX  , this.shiftY).attr({ opacity : 0.6})
-                    //@ts-ignore
-                    let image = context.image('').size(size , size)
-                    .attr({ 'xlink:href': imageBase64 , opacity : 0.6 , 'preserveAspectRatio': 'none' })
-                    .move(this.shiftX, this.shiftY)
+            // Create clip path for circular crop
+            const clipId = 'circBgClip';
+            const clipCircle = new SvgElement('circle');
+            clipCircle.setAttr('cx', String(pos));
+            clipCircle.setAttr('cy', String(pos));
+            clipCircle.setAttr('r', String((size - width * 2) / 2));
+            (context as SvgCanvas).clipPath(clipId, clipCircle);
 
-
-                    //@ts-ignore
-                    let circle = context.circle(size - width * 2).attr({cx : pos , cy : pos}).fill('#ffffff')
-                    image.clipWith(circle)
-                    return ;
-        }).catch(
-            ( error: any ) =>{
-                console.error(error);
-            }
-        )
+            // Add image with clip-path
+            (context as SvgCanvas).image('').size(size, size)
+                .attr({
+                    'xlink:href': imageBase64,
+                    opacity: 0.6,
+                    'preserveAspectRatio': 'none',
+                    'clip-path': `url(#${clipId})`
+                })
+                .move(this.shiftX, this.shiftY);
+        } catch (error) {
+            throw new Error(`Failed to load circular background image: ${(error as any)?.message || error}`);
+        }
     }
 
-    private fillMargin(context: object) {
+    private fillMargin(context: SvgCanvas) {
         const margin = this.config.margin;
         const size = this.config.size;
         const viewportSize = this.config.viewportSize;
@@ -1081,100 +1071,64 @@ export class SVGDrawing {
         if (this.config.whiteMargin) {
             const color = this.config.useOpacity ? '#ffffff' : '#ffffff99';
             if (this.config.useOpacity) {
-                // @ts-ignore
-                context.rect(size, margin).fill(color).move(-margin + this.shiftX, -margin + this.shiftY);
-                // @ts-ignore
-                context.rect(size, margin).fill(color).move(-margin + this.shiftX, viewportSize + this.shiftY);
-                // @ts-ignore
-                context.rect(margin, size).fill(color).move(viewportSize + this.shiftX, -margin + this.shiftY);
-                // @ts-ignore
-                context.rect(margin, size).fill(color).move(-margin + this.shiftX, -margin + this.shiftY);
+                    context.rect(size, margin).fill(color).move(-margin + this.shiftX, -margin + this.shiftY);
+                    context.rect(size, margin).fill(color).move(-margin + this.shiftX, viewportSize + this.shiftY);
+                    context.rect(margin, size).fill(color).move(viewportSize + this.shiftX, -margin + this.shiftY);
+                    context.rect(margin, size).fill(color).move(-margin + this.shiftX, -margin + this.shiftY);
             } else {
-                // @ts-ignore
-                context.rect(size, margin).fill(color).move(-margin + this.shiftX, -margin + this.shiftY).attr({opacity: 0.6});
-                // @ts-ignore
-                context.rect(size, margin).fill(color).move(-margin + this.shiftX, viewportSize + this.shiftY).attr({opacity: 0.6});
-                // @ts-ignore
-                context.rect(margin, size).fill(color).move(viewportSize + this.shiftX, -margin + this.shiftY).attr({opacity: 0.6});
-                // @ts-ignore
-                context.rect(margin, size).fill(color).move(-margin + this.shiftX, -margin + this.shiftY).attr({opacity: 0.6});
+                    context.rect(size, margin).fill(color).move(-margin + this.shiftX, -margin + this.shiftY).attr({opacity: 0.6});
+                    context.rect(size, margin).fill(color).move(-margin + this.shiftX, viewportSize + this.shiftY).attr({opacity: 0.6});
+                    context.rect(margin, size).fill(color).move(viewportSize + this.shiftX, -margin + this.shiftY).attr({opacity: 0.6});
+                    context.rect(margin, size).fill(color).move(-margin + this.shiftX, -margin + this.shiftY).attr({opacity: 0.6});
             }
         }
     }
 
-    private async drawAlignPatterns(context: object, gradient: string) {
+    private async drawAlignPatterns(context: SvgCanvas, gradient: string) {
         const moduleCount = this.moduleCount;
         const xyOffset = (1 - this.config.dotScale) * 0.5;
-
         const dataPattern = this.config.dataPattern ? this.config.dataPattern : DataPattern.SQUARE;
+        const patternPosition = this.patternPosition;
+        const nSize = this.config.nSize;
+        const dotScale = this.config.dotScale;
+        const isDark = this.isDark.bind(this);
+        const hasLogoBackground = !!(this.config.logoBackground && this.config.logoImage);
+
         for (let row = 0; row < moduleCount; row++) {
             for (let col = 0; col < moduleCount; col++) {
-                const bIsDark = this.isDark.bind(this)(row, col) || false; //  data dot is black or white ( should not be drawn )
+                const bIsDark = isDark(row, col) || false;
 
-                const isBlkPosCtr = (col < 8 && (row < 8 || row >= moduleCount - 8)) || (col >= moduleCount - 8 && row < 8); // data dot is behind an eye
-                let bProtected =  (row === 6 || col === 6 || isBlkPosCtr )  // data dot is in timeline
-
-                const patternPosition = this.patternPosition;
+                const isBlkPosCtr = (col < 8 && (row < 8 || row >= moduleCount - 8)) || (col >= moduleCount - 8 && row < 8);
+                let bProtected =  (row === 6 || col === 6 || isBlkPosCtr )
                 for (let i = 0; i < patternPosition.length - 1; i++) {
                     bProtected = bProtected || (row >= patternPosition[i] - 2 && row <= patternPosition[i] + 2 && col >= patternPosition[i] - 2 && col <= patternPosition[i] + 2);
                 } // data dot is alignment eye
 
 
-                const nLeft = col * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
-                const nTop = row * this.config.nSize + (bProtected ? 0 : xyOffset * this.config.nSize);
+                const nLeft = col * nSize + (bProtected ? 0 : xyOffset * nSize);
+                const nTop = row * nSize + (bProtected ? 0 : xyOffset * nSize);
 
-                let _isDataDotBehindLogo = false;
-                if( this.config.logoBackground && this.config.logoImage ){
-                    _isDataDotBehindLogo = this.isDataDotBehindLogo(nLeft , nTop );
-                }
-                if(_isDataDotBehindLogo ){
+                if (hasLogoBackground && this.isDataDotBehindLogo(nLeft, nTop)) {
                     continue;
                 }
 
+                const scale = bProtected ? 1 : dotScale;
+                const cellW = scale * nSize;
+                const cellH = cellW;
+
                 if(this.isSmoothPattern){
                     if(this.TwoDArray[row][col]){
-                        this.fillRectWithMask(
-                            context,
-                            nLeft,
-                            nTop,
-                            (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                            (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                            bIsDark,
-                            dataPattern,
-                            row,
-                            col
-                        );
+                        this.fillRectWithMask(context, nLeft, nTop, cellW, cellH, bIsDark, dataPattern, row, col);
                     }
                 } else {
                     if (patternPosition.length === 0) {
-                        // if align pattern list is empty, then it means that we don't need to leave room for the align patterns
                         if (!bProtected ) {
-                            this.fillRectWithMask(
-                                context,
-                                nLeft,
-                                nTop,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                bIsDark,
-                                dataPattern,
-                                row,
-                                col
-                            );
+                            this.fillRectWithMask(context, nLeft, nTop, cellW, cellH, bIsDark, dataPattern, row, col);
                         }
                     } else {
-                        let inAgnRange = col < moduleCount - 4 && col >= moduleCount - 4 - 5 && row < moduleCount - 4 && row >= moduleCount - 4 - 5; // data is major alignment eye
+                        let inAgnRange = col < moduleCount - 4 && col >= moduleCount - 4 - 5 && row < moduleCount - 4 && row >= moduleCount - 4 - 5;
                         if ((!bProtected && !inAgnRange ) ) {
-                            this.fillRectWithMask(
-                                context,
-                                nLeft,
-                                nTop,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                (bProtected ? (isBlkPosCtr ? 1 : 1) : this.config.dotScale) * this.config.nSize,
-                                bIsDark,
-                                dataPattern,
-                                row,
-                                col
-                            );
+                            this.fillRectWithMask(context, nLeft, nTop, cellW, cellH, bIsDark, dataPattern, row, col);
                         }
                     }
                 }
@@ -1184,7 +1138,7 @@ export class SVGDrawing {
 
 
     //Function to create data dots in QR.
-    private async fillRectWithMask(canvas: object, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern,row : number, col : number) {
+    private async fillRectWithMask(canvas: SvgCanvas, x: number, y: number, w: number, h: number, bIsDark: boolean, shape: DataPattern, row: number, col: number) {
         let gradient ;
 
 
@@ -1235,7 +1189,7 @@ export class SVGDrawing {
             this.drawSquare(x, y, canvas, w, h, false, color, !bIsDark);
         }
     }
-    drawSmoothSharp(startX: number, startY: number, context: object, gradient: string, width: number, height: number, row : number, col : number, isRound?: boolean, isMask?: boolean) {
+    drawSmoothSharp(startX: number, startY: number, context: SvgCanvas, gradient: string, width: number, height: number, row : number, col : number, isRound?: boolean, isMask?: boolean) {
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
             op = 0.0;
@@ -1246,13 +1200,7 @@ export class SVGDrawing {
 
         const maxWidth = this.TwoDArray[0].length;
         const maxHeight = this.TwoDArray.length;
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = context.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
-        }
+        gradient = this.resolveGradient(context as SvgCanvas, gradient);
 
         let outerBorderRadiusPath = ''
         let size = this.config.moduleSize ;
@@ -1279,13 +1227,11 @@ export class SVGDrawing {
 
             if( array[row-1][col] ){
                 outerBorderRadiusPath = `M 0 0 L -${size / 4} 0 A ${size / 4} ${size / 4} 0 0 1 0 ${size/4} L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size / 4, startY + this.config.margin + this.shiftY).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size / 4, startY + this.config.margin + this.shiftY).fill(gradient)
             }
             if( array[row][col-1] ){
                 outerBorderRadiusPath = `M 0 0 L 0 -${size / 4} A ${size / 4} ${size / 4} 0 0 0 ${size/4} 0 L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX , startY + this.config.margin + this.shiftY - size / 4).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX , startY + this.config.margin + this.shiftY - size / 4).fill(gradient)
             }
 
         }
@@ -1310,13 +1256,11 @@ export class SVGDrawing {
 
             if( array[row-1][col] ){
                 outerBorderRadiusPath = `M 0 0 L ${size / 4} 0 A ${size / 4} ${size / 4} 0 0 0 0 ${size / 4} L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY).fill(gradient)
             }
             if( array[row][col+1] ){
                 outerBorderRadiusPath = `M 0 0 L 0 -${size / 4} A ${size / 4} ${size / 4} 0 0 1 -${size / 4}  0 L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 3 / 4, startY + this.config.margin + this.shiftY - size / 4).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 3 / 4, startY + this.config.margin + this.shiftY - size / 4).fill(gradient)
             }
         }
 
@@ -1339,13 +1283,11 @@ export class SVGDrawing {
 
             if( array[row+1][col] ){
                 outerBorderRadiusPath = `M 0 0 L 0 -${size/4} A${size/4} ${size/4} 0 0 0 ${size/4} 0 L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY + size * 3 / 4).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY + size * 3 / 4).fill(gradient)
             }
             if( array[row][col+1] ){
                 outerBorderRadiusPath = `M 0 0 L -${size / 4} 0 A ${size / 4} ${size / 4} 0 0 1 0 ${size / 4}   L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 3 / 4 , startY + this.config.margin + this.shiftY + size).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 3 / 4 , startY + this.config.margin + this.shiftY + size).fill(gradient)
             }
         }
 
@@ -1369,21 +1311,18 @@ export class SVGDrawing {
 
             if( array[row+1][col] ){
                 outerBorderRadiusPath = `M 0 0 L  -${size/4} 0  A${size/4} ${size/4} 0 0 0 0 -${size/4}  L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size / 4, startY + this.config.margin + this.shiftY + size * 3 / 4).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size / 4, startY + this.config.margin + this.shiftY + size * 3 / 4).fill(gradient)
             }
             if( array[row][col-1] ){
                 outerBorderRadiusPath = `M 0 0 L ${size / 4} 0 A ${size / 4} ${size / 4} 0 0 0 0 ${size / 4}   L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX  , startY + this.config.margin + this.shiftY + size).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX  , startY + this.config.margin + this.shiftY + size).fill(gradient)
             }
         }
 
-        // @ts-ignore
         context.path(dotPath).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr( { 'data-pos' : `${row} ${col}`})
 
     }
-    drawSmoothRound(startX: number, startY: number, context: object, gradient: string, width: number, height: number, row : number, col : number, isRound?: boolean, isMask?: boolean) {
+    drawSmoothRound(startX: number, startY: number, context: SvgCanvas, gradient: string, width: number, height: number, row : number, col : number, isRound?: boolean, isMask?: boolean) {
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
             op = 0.0;
@@ -1394,13 +1333,7 @@ export class SVGDrawing {
 
         const maxWidth = this.TwoDArray[0].length ;
         const maxHeight = this.TwoDArray.length ;
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = context.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
-        }
+        gradient = this.resolveGradient(context as SvgCanvas, gradient);
         let outerBorderRadiusPath = ''
 
 
@@ -1429,13 +1362,11 @@ export class SVGDrawing {
 
             if( array[row-1][col] ){
                 outerBorderRadiusPath = `M 0 0 L -${size * 3 / 7} 0 A ${size * 3 / 7} ${size * 3 / 7} 0 0 1 0 ${ size * 3 / 7} L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size * 3 / 7, startY + this.config.margin + this.shiftY).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size * 3 / 7, startY + this.config.margin + this.shiftY).fill(gradient)
             }
             if( array[row][col-1] ){
                 outerBorderRadiusPath = `M 0 0 L 0 -${size * 3 / 7} A ${size * 3 / 7} ${size * 3 / 7} 0 0 0 ${size * 3 / 7} 0 L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX , startY + this.config.margin + this.shiftY - size * 3 / 7).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX , startY + this.config.margin + this.shiftY - size * 3 / 7).fill(gradient)
             }
 
         }
@@ -1461,13 +1392,11 @@ export class SVGDrawing {
 
             if( array[row-1][col] ){
                 outerBorderRadiusPath = `M 0 0 L ${size * 3 / 7} 0 A ${size * 3 / 7} ${size * 3 / 7} 0 0 0 0 ${size * 3/ 7} L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY).fill(gradient)
             }
             if( array[row][col+1] ){
                 outerBorderRadiusPath = `M 0 0 L 0 -${size * 3 / 7} A ${size * 3 / 7} ${size * 3 / 7} 0 0 1 -${size * 3 / 7}  0 L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 4 / 7, startY + this.config.margin + this.shiftY - size * 3 / 7).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 4 / 7, startY + this.config.margin + this.shiftY - size * 3 / 7).fill(gradient)
             }
         }
 
@@ -1492,13 +1421,11 @@ export class SVGDrawing {
 
             if( array[row+1][col] ){
                 outerBorderRadiusPath = `M 0 0 L 0 -${size * 3 / 7 } A${size * 3 / 7} ${size * 3 / 7} 0 0 0 ${size * 3 / 7} 0 L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY + size * 4 / 7).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size , startY + this.config.margin + this.shiftY + size * 4 / 7).fill(gradient)
             }
             if( array[row][col+1] ){
                 outerBorderRadiusPath = `M 0 0 L -${size * 3 / 7} 0 A ${size * 3 / 7} ${size * 3 / 7} 0 0 1 0 ${size * 3 / 7}   L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 4 / 7 , startY + this.config.margin + this.shiftY + size).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX + size * 4 / 7 , startY + this.config.margin + this.shiftY + size).fill(gradient)
             }
         }
 
@@ -1523,20 +1450,17 @@ export class SVGDrawing {
 
             if( array[row+1][col] ){
                 outerBorderRadiusPath = `M 0 0 L  -${size * 3 / 7} 0  A${ size * 3 / 7} ${size * 3 / 7} 0 0 0 0 -${size * 3 / 7}  L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size * 3 / 7, startY + this.config.margin + this.shiftY + size * 4 / 7).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX - size * 3 / 7, startY + this.config.margin + this.shiftY + size * 4 / 7).fill(gradient)
             }
             if( array[row][col-1] ){
                 outerBorderRadiusPath = `M 0 0 L ${size * 3 / 7} 0 A ${size * 3 / 7} ${size * 3 / 7} 0 0 0 0 ${size * 3 / 7}   L 0 0`
-                // @ts-ignore
-                context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX  , startY + this.config.margin + this.shiftY + size).fill(gradient)
+                    context.path(outerBorderRadiusPath).move(startX + this.config.margin + this.shiftX  , startY + this.config.margin + this.shiftY + size).fill(gradient)
             }
         }
-        // @ts-ignore
         context.path(dotPath).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr( { 'data-pos' : `${row} ${col}`})
     }
 
-    private drawAlignProtectors(context: object , disable : boolean = true) {
+    private drawAlignProtectors(context: SvgCanvas, disable: boolean = true) {
 
         if(this.isSmoothPattern)
             return;
@@ -1567,7 +1491,7 @@ export class SVGDrawing {
         }
     }
 
-    private async drawPositionPatterns(context: object, gradient: string ) {
+    private async drawPositionPatterns(context: SvgCanvas, gradient: string) {
 
         const moduleSize = this.config.moduleSize;
         const moduleCount = this.moduleCount;
@@ -1674,7 +1598,7 @@ export class SVGDrawing {
             }
         }
     }
-    async drawEyes(context: object, eyeFrameShape: EyeFrameShape, eyeFrameColor: string, eyeBallShape: EyeBallShape, eyeBallColor: string) {
+    async drawEyes(context: SvgCanvas, eyeFrameShape: EyeFrameShape, eyeFrameColor: string, eyeBallShape: EyeBallShape, eyeBallColor: string) {
 
         /*
             CALCULATION
@@ -1689,12 +1613,8 @@ export class SVGDrawing {
 
         // ---- Step 1 : Create SVG canvas for eye frame
 
-        const { createSVGWindow } = eval('require')('svgdom');
-        const eyeFrameWindow = createSVGWindow();
-        const eyeFrameDocument = eyeFrameWindow.document;
-        registerWindow(eyeFrameWindow, eyeFrameDocument);
-        // @ts-ignore
-        let eyeFrameCanvas = SVG(eyeFrameDocument.documentElement).size( 7 * this.config.moduleSize , 7 * this.config.moduleSize ).viewbox(0,0,7 * this.config.moduleSize , 7 * this.config.moduleSize);
+        let eyeFrameCanvas = new SvgCanvas( 7 * this.config.moduleSize , 7 * this.config.moduleSize );
+        eyeFrameCanvas.viewbox(0, 0, 7 * this.config.moduleSize , 7 * this.config.moduleSize);
 
         // ---- Step 2 : Add eye frame path to eye frame Canvas
         let width = 7 * this.config.moduleSize ;
@@ -1740,35 +1660,27 @@ export class SVGDrawing {
         }
 
         // ----- Step 2.2 : Add Generated path to eyeFrame Canvas
-        eyeFrameCanvas.path(framePath).fill(eyeFrameColor).stroke({ width : 10})
+        eyeFrameCanvas.path(framePath).fill(eyeFrameColor).stroke({ width : 10 * this.sizeRatio})
 
         // --- Step 3 : Add eyeFrame canvas to main Canvas for 3 eyes
 
         // Top Left Eye
         eyeFrameCanvas.move(0 + this.config.margin + this.shiftX ,0 + this.config.margin + this.shiftY)
-        // @ts-ignore
         context.add(eyeFrameCanvas.svg())
 
         // Top Right Eye
         eyeFrameCanvas.move(0 + this.config.margin + this.shiftX + ( this.moduleCount - 7) * moduleSize ,0 + this.config.margin + this.shiftY)
-        // @ts-ignore
         context.add(eyeFrameCanvas.svg())
 
         // Bottom Left Eye
         eyeFrameCanvas.move(0 + this.config.margin + this.shiftX ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize)
-        // @ts-ignore
         context.add(eyeFrameCanvas.svg())
 
 
 
         // ---- Step 1 : Create SVG canvas for eye ball
 
-        const eyeBallWindow = createSVGWindow();
-        const eyeBallDocument = eyeBallWindow.document;
-        registerWindow(eyeBallWindow, eyeBallDocument);
-
-        // @ts-ignore
-        let eyeBallCanvas = SVG(eyeBallDocument.documentElement).size( 3 * this.config.moduleSize , 3 * this.config.moduleSize );
+        let eyeBallCanvas = new SvgCanvas( 3 * this.config.moduleSize , 3 * this.config.moduleSize );
 
 
         let eyeBallPath ;
@@ -1809,33 +1721,31 @@ export class SVGDrawing {
 
          // Top Left Eye
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize,0 + this.config.margin + this.shiftY + 2 * moduleSize)
-         // @ts-ignore
-         context.add(eyeBallCanvas.svg())
+          context.add(eyeBallCanvas.svg())
 
          // Top Right Eye
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize,0 + this.config.margin + this.shiftY + 2 * moduleSize)
-         // @ts-ignore
-         context.add(eyeBallCanvas.svg())
+          context.add(eyeBallCanvas.svg())
 
          // Bottom Left Eye
          eyeBallCanvas.move(0 + this.config.margin + this.shiftX + 2 * moduleSize ,0 + this.config.margin + this.shiftY + + ( this.moduleCount - 7) * moduleSize + 2 * moduleSize)
-         // @ts-ignore
-         context.add(eyeBallCanvas.svg())
+          context.add(eyeBallCanvas.svg())
 
     }
 
 
-    private async drawAlign(context: object, centerX: number, centerY: number, nWidth: number, nHeight: number, shape: DataPattern) {
-        let drawShape;
+    private async drawAlign(context: SvgCanvas, centerX: number, centerY: number, nWidth: number, nHeight: number, shape: DataPattern) {
+        let drawShape: any;
         let boolFlag: boolean = false;
-        drawShape = this.drawSquare.bind(this);
+        // True when drawShape is bound to drawSquare, whose signature places
+        // width/height before gradient. The other shape fns take gradient first,
+        // so the call sites below dispatch on this flag — not on `shape ===
+        // SQUARE`, which would miss patterns that fall through to drawSquare.
+        let usesSquareSignature = false;
 
         switch (shape) {
             case DataPattern.CIRCLE:
                 drawShape = this.drawCircle.bind(this);
-                break;
-            case DataPattern.SQUARE:
-                drawShape = this.drawSquare.bind(this);
                 break;
             case DataPattern.KITE:
                 drawShape = this.drawKite.bind(this);
@@ -1850,8 +1760,19 @@ export class SVGDrawing {
             case DataPattern.THIN_SQUARE:
                 drawShape = this.drawThinSquare.bind(this);
                 break;
+            case DataPattern.SMOOTH_ROUND:
+                drawShape = this.drawSquare.bind(this);
+                boolFlag = true;
+                usesSquareSignature = true;
+                break;
+            case DataPattern.SMOOTH_SHARP:
+                drawShape = this.drawSquare.bind(this);
+                usesSquareSignature = true;
+                break;
+            case DataPattern.SQUARE:
             default:
                 drawShape = this.drawSquare.bind(this);
+                usesSquareSignature = true;
                 break;
         }
 
@@ -1868,12 +1789,10 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
-                // @ts-ignore
-                drawShape(x, y, context, width, height, boolFlag, gr);
+            if (usesSquareSignature) {
+                    drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
-                // @ts-ignore
-                drawShape(x, y, context, gr, width, height, boolFlag);
+                    drawShape(x, y, context, gr, width, height, boolFlag);
             }
 
             y += nHeight;
@@ -1887,12 +1806,10 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
-                // @ts-ignore
-                drawShape(x, y, context, width, height, boolFlag, gr);
+            if (usesSquareSignature) {
+                    drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
-                // @ts-ignore
-                drawShape(x, y, context, gr, width, height, boolFlag);
+                    drawShape(x, y, context, gr, width, height, boolFlag);
             }
 
             y += nHeight;
@@ -1906,12 +1823,10 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x, y);
-            if (shape === DataPattern.SQUARE) {
-                // @ts-ignore
-                drawShape(x, y, context, width, height, boolFlag, gr);
+            if (usesSquareSignature) {
+                    drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
-                // @ts-ignore
-                drawShape(x, y, context, gr, width, height, boolFlag);
+                    drawShape(x, y, context, gr, width, height, boolFlag);
             }
             x += nWidth;
         }
@@ -1924,12 +1839,10 @@ export class SVGDrawing {
 
         for (let i = 0; i < 4; i++) {
             let gr = this.getColorFromQrSvg( x , y );
-            if (shape === DataPattern.SQUARE) {
-                // @ts-ignore
-                drawShape(x, y, context, width, height, boolFlag, gr);
+            if (usesSquareSignature) {
+                    drawShape(x, y, context, width, height, boolFlag, gr);
             } else {
-                // @ts-ignore
-                drawShape(x, y, context, gr, width, height, boolFlag);
+                    drawShape(x, y, context, gr, width, height, boolFlag);
             }
             x += nWidth;
         }
@@ -1941,78 +1854,58 @@ export class SVGDrawing {
 
         let gr = this.getColorFromQrSvg( x, y);
 
-        if (shape === DataPattern.SQUARE) {
-            // @ts-ignore
+        if (usesSquareSignature) {
             drawShape(x, y, context, width, height, boolFlag, gr);
         } else {
-            // @ts-ignore
             drawShape(x, y, context, gr, width, height, boolFlag);
         }
     }
 
 
-    private drawSquare(startX: number, startY: number, canvas: object, width: number, height: number, isRound: boolean, gradient: string , isMask?: boolean) {
+    private drawSquare(startX: number, startY: number, canvas: SvgCanvas, width: number, height: number, isRound: boolean, gradient: string, isMask?: boolean) {
         let op = isMask ? 0.6 : 1;
         if(this.config.frameStyle === QRCodeFrame.CIRCULAR && this.config.backgroundImage && isMask) {
             op = 0.0;
         }
 
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = canvas.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            }).transform( { rotate : this.config.gradientType === GradientType.VERTICAL ? 90 : 0});
-        }
+        gradient = this.resolveGradient(canvas as SvgCanvas, gradient);
         let rotate = 0;
         if (isRound) {
             if (this.config.useOpacity) {
-                // @ts-ignore
-                canvas.rect(height, width).radius(height / 4)
+                    canvas.rect(height, width).radius(height / 4)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
-                // @ts-ignore
-                    canvas.rect(height, width).radius(height / 4)
+                        canvas.rect(height, width).radius(height / 4)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
             return;
         }
         if (this.config.useOpacity) {
-            //@ts-ignore
             canvas.rect(height, width).
             move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).
             attr({opacity: op }).
             fill(gradient).
             transform({ rotate : rotate})
         } else {
-            // @ts-ignore
             canvas.rect(height, width).fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
         }
     }
 
-    private drawCircle(centerX: number, centerY: number, canvas: object, gradient: string , radiusX: number, radiusY?: number, isMask?: boolean) {
+    private drawCircle(centerX: number, centerY: number, canvas: SvgCanvas, gradient: string, radiusX: number, radiusY?: number, isMask?: boolean) {
         const op = isMask ? 0.6 : 1;
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = canvas.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            })
-        }
+        gradient = this.resolveGradient(canvas as SvgCanvas, gradient);
         let rotate = 0;
         if(this.config.gradientType === GradientType.VERTICAL){
             rotate = 90;
         }
         if (this.config.useOpacity) {
 
-            // @ts-ignore
             // canvas.path(`M 0, 0
             // a ${radiusX},${radiusX} 0 1 1 ${radiusX * 2},0
             // a ${radiusX},${radiusX} 0 1 1 -${radiusX * 2},0`)
             canvas.circle().radius(radiusX)
             .fill(gradient).move(centerX + this.config.margin - radiusX + this.shiftX, centerY + this.config.margin - radiusX + this.shiftY).attr({opacity: op});
         } else {
-            // @ts-ignore
             // canvas.path(`M 0, 0
             // a ${radiusX},${radiusX} 0 1 1 ${radiusX * 2},0
             // a ${radiusX},${radiusX} 0 1 1 -${radiusX * 2},0`)
@@ -2021,15 +1914,9 @@ export class SVGDrawing {
         }
     }
 
-    private drawKite(startX: number, startY: number, context: object, gradient: string, width: number, height: number, isRound?: boolean, isMask?: boolean) {
+    private drawKite(startX: number, startY: number, context: SvgCanvas, gradient: string, width: number, height: number, isRound?: boolean, isMask?: boolean) {
         const op = isMask ? 0.6 : 1;
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = context.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            })
-        }
+        gradient = this.resolveGradient(context as SvgCanvas, gradient);
         let rotate = 0;
         if(this.config.gradientType === GradientType.VERTICAL){
             rotate = 90;
@@ -2038,7 +1925,6 @@ export class SVGDrawing {
             [startX + width + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY],
             [startX + width / 2 + this.config.margin + this.shiftX, startY + height + this.config.margin + this.shiftY],
             [startX + this.config.margin + this.shiftX, startY + height / 2 + this.config.margin + this.shiftY]];
-        // @ts-ignore
         const polygon = context.polygon(coordinates);
         // M 50 0 100 100 50 200 0 100 Z
         if (this.config.useOpacity) {
@@ -2049,15 +1935,9 @@ export class SVGDrawing {
     }
 
 
-    private drawDiamond(startX: number, startY: number, context: object, gradient: string , width: number, height: number, isRight?: boolean, isMask?: boolean) {
+    private drawDiamond(startX: number, startY: number, context: SvgCanvas, gradient: string , width: number, height: number, isRight?: boolean, isMask?: boolean) {
         const op = isMask ? 0.6 : 1;
-        if(gradient.length > 7 ){
-            // @ts-ignore
-            gradient = context.gradient( 'linear',function(add){
-                add.stop(0 , gradient.split(" ")[0])
-                add.stop(1 , gradient.split(" ")[1])
-            })
-        }
+        gradient = this.resolveGradient(context as SvgCanvas, gradient);
         let rotate = 0;
         if(this.config.gradientType === GradientType.VERTICAL){
             rotate = 90;
@@ -2065,32 +1945,28 @@ export class SVGDrawing {
         const d = width/2;
         if (isRight) {
             if (this.config.useOpacity) {
-                // @ts-ignore
-                context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
-                // @ts-ignore
-                context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
         } else {
             if (this.config.useOpacity) {
-                // @ts-ignore
-                context.path(`M0 0h${d}l${d} ${d}v${d}h-${d}l-${d}-${d}`)
+                    context.path(`M0 0h${d}l${d} ${d}v${d}h-${d}l-${d}-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
-                // @ts-ignore
-                context.path(`M0 0h${d}l${d} ${d}v${d}h-${d}l-${d}-${d}`)
+                    context.path(`M0 0h${d}l${d} ${d}v${d}h-${d}l-${d}-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
         }
     }
 
-    drawThinSquare(startX: number, startY: number, canvas: object, gradient: string, width: number, height: number, isRound?: boolean, isMask?: boolean){
+    drawThinSquare(startX: number, startY: number, canvas: SvgCanvas, gradient: string, width: number, height: number, isRound?: boolean, isMask?: boolean) {
         this.drawSquare(startX, startY, canvas, width, height, true, gradient , isMask )
     }
 
-    private async drawFocus(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+    private async drawFocus(startX: number, startY: number, canvas: SvgCanvas, gradient: string | undefined, width: number, height: number) {
         /* Change Implementation :
             Make one big rect with background color
             Draw the corner lines
@@ -2105,90 +1981,80 @@ export class SVGDrawing {
             backgroundColor = '#ffffff00'
         }
 
-        // @ts-ignore
         canvas.rect(width , height).move(startX , startY).fill(backgroundColor);
 
         //TOP LEFT FOCUS
-        // @ts-ignore
         canvas.polyline([   startX + frameWidth / 2 , startY  + frameWidth / 2 + height / 3,
                             startX + frameWidth / 2, startY  + frameWidth / 2,
                             startX + frameWidth / 2 + width / 3, startY  + frameWidth / 2
                         ]).stroke({
-                            color : gradient ,
+                            color : gradient || '' ,
                             width : frameWidth ,
                             linejoin : 'round'
                         });
 
         //TOP RIGHT FOCUS
-        // @ts-ignore
         canvas.polyline([   startX + frameWidth / 2 + width * 2 / 3  , startY  + frameWidth / 2 ,
                             startX + width - frameWidth / 2  , startY  + frameWidth / 2,
                             startX - frameWidth / 2 + width , startY  + frameWidth / 2 + height / 3
                         ]).stroke({
-                            color : gradient ,
+                            color : gradient || '' ,
                             width : frameWidth ,
                             linejoin : 'round'
                         });
 
         //BOTTOM RIGHT FOCUS
-        // @ts-ignore
         canvas.polyline([   startX - frameWidth / 2 + width , startY  + frameWidth / 2 + height * 2 / 3  ,
                             startX + width - frameWidth / 2  , startY + height - frameWidth / 2,
                             startX - frameWidth / 2 + width * 2 / 3 , startY  - frameWidth / 2 +  height
                         ]).stroke({
-                            color : gradient ,
+                            color : gradient || '' ,
                             width : frameWidth ,
                             linejoin : 'round'
                         });
 
 
         //BOTTOM LEFT FOCUS
-        // @ts-ignore
         canvas.polyline([   startX + frameWidth / 2  , startY  + frameWidth / 2 + height * 2 / 3  ,
                             startX + frameWidth / 2  , startY + height - frameWidth / 2,
                             startX - frameWidth / 2 + width / 3 , startY  - frameWidth / 2 +  height
                         ]).stroke({
-                            color : gradient ,
+                            color : gradient || '' ,
                             width : frameWidth ,
                             linejoin : 'round'
                         });
     }
 
-    private async drawTextOnlyBackground(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+    private async drawTextOnlyBackground(startX: number, startY: number, canvas: SvgCanvas, gradient: string | undefined, width: number, height: number) {
         const moduleSize = this.config.moduleSize;
         const backgroundColor = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
         const radius = moduleSize;
-        // @ts-ignore
         canvas.rect(width, height).fill(backgroundColor).move(startX, startY);
-        // @ts-ignore
         canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).move(startX + moduleSize, startY + moduleSize);
     }
 
-    private async drawSquareFrame(startX: number, startY: number, canvas: object, gradient: string | undefined, width: number, height: number) {
+    private async drawSquareFrame(startX: number, startY: number, canvas: SvgCanvas, gradient: string | undefined, width: number, height: number) {
 
         const moduleSize = this.config.moduleSize;
         let frameWidth = moduleSize * 2 / 3;
-         // @ts-ignore
-        canvas.polyline([   startX + frameWidth / 2, startY  + frameWidth / 2,
+         canvas.polyline([   startX + frameWidth / 2, startY  + frameWidth / 2,
                             startX + width - frameWidth / 2 , startY  + frameWidth / 2,
                             startX + width - frameWidth / 2, startY + height - frameWidth / 2,
                             startX + frameWidth / 2, startY + height - frameWidth / 2,
                             startX + frameWidth / 2 , startY + frameWidth / 2])
                         .stroke({
-                            color : gradient ,
+                            color : gradient || '' ,
                             width : frameWidth ,
                             linejoin : 'round' ,
                             linecap : 'round'
                         })
 
 
-        // @ts-ignore
         // canvas.rect(width, height).fill(gradient ? gradient : '#000000').radius(radius).move(startX, startY);
-        // @ts-ignore
         // canvas.rect(width - 2 * moduleSize, height - 2 * moduleSize).fill(backgroundColor).radius(radius).move(startX + moduleSize, startY + moduleSize);
     }
 
-    private async drawFrame(canvas: object, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined) {
+    private async drawFrame(canvas: SvgCanvas, frameStyle: QRCodeFrame | undefined, frameColor: string | undefined, frameText: string | undefined) {
         if (!frameStyle || frameStyle === QRCodeFrame.NONE || frameStyle === QRCodeFrame.CIRCULAR) {
             return;
         }
@@ -2205,21 +2071,18 @@ export class SVGDrawing {
         let borderX = 0, borderY = 0, bannerX = 0, bannerY = 0,
             textX = 0, textY = 0, logoX = 0, logoY = 0, cornerRadius = 0;
 
-        if (isNode) {
-            const path = require('path');
-            const fontPath = path.join(__dirname, '../src/assets/fonts/Roboto');
-            // const {setFontDir, setFontFamilyMappings, preloadFonts} = require('svgdom');
-            // setFontDir(fontPath);
-            // setFontFamilyMappings({'Roboto': 'Roboto-Regular.ttf'});
-            // preloadFonts();
-        }
-
         const textLinesLength = text.length ? text.split('\n').length : 0;
 
         const textLineMaxLength = getLengthOfLongestText(text);
         const fontSize = getFrameTextSize(this.config.viewportSize, textLineMaxLength);
 
-        const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10); 
+        const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10);
+
+        // Roboto cap-height is ~0.71*fontSize; half (~0.355*fontSize) is the
+        // distance from the alphabetic baseline (which the SVG <text> y attribute
+        // corresponds to) down to the visual midline of capitals. Adding it to
+        // the banner-center y produces a baseline that visually centers all-caps
+        // frame text vertically inside the rectangle.
 
         switch (frameStyle) {
             case QRCodeFrame.BANNER_BOTTOM:
@@ -2229,7 +2092,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize / 2 - 1;
                 textX = size / 3;
-                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 1.5;
                 break;
@@ -2239,7 +2102,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -2249,7 +2112,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2259,7 +2122,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -2269,7 +2132,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 4;
                 break;
@@ -2279,7 +2142,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = this.config.isVCard ? moduleSize * 3 : moduleSize * 2;
                 //this.shiftY = 0.9 * this.shiftY
@@ -2290,7 +2153,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2300,7 +2163,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2323,52 +2186,42 @@ export class SVGDrawing {
 
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
             const coordinates = [[0, 0], [size / 24, size / 12], [-size / 24, size / 12]];
-            // @ts-ignore
             canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size - moduleSize / 2);
         }
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
-            // @ts-ignore
             canvas.polygon(coordinates).fill(color).move(size / 2 - size/24 + moduleSize / 2, size / 5 - moduleSize / 2 + multiLineHeight);
         }
 
         // Banner for frame text
         if (frameStyle !== QRCodeFrame.TEXT_ONLY && frameStyle !== QRCodeFrame.FOCUS) {
-            // @ts-ignore
             canvas.rect(size, (size / 5) + multiLineHeight).fill(color).radius(moduleSize)
             .move(bannerX, bannerY);
         }
 
         if (frameStyle === QRCodeFrame.BANNER_BOTTOM) {
-            // @ts-ignore
             canvas.rect(moduleSize, moduleSize* 4/3 ).fill(color)
                 .move(bannerX, bannerY - moduleSize / 3);
 
-            // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
                 .move(size - moduleSize / 2, bannerY - moduleSize / 3);
         }
         if (frameStyle === QRCodeFrame.BANNER_TOP) {
-            // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
                 .move(bannerX, bannerY - moduleSize + size / 5 + multiLineHeight);
 
-            // @ts-ignore
             canvas.rect(moduleSize, moduleSize * 4/3).fill(color)
                 .move(size - moduleSize / 2, bannerY - moduleSize + size / 5 + multiLineHeight);
         }
-        // @ts-ignore
         canvas.defs().style(`
             @import url('https://fonts.googleapis.com/css?family=Roboto:400');
     `);
 
-        // @ts-ignore
         textX = canvas.width()/2;
 
         let textYVal = textY;
         const textLines = text.split('\n');
         for (const line of textLines){
-            // @ts-ignore
             const textRef = canvas.plain(line);
             textRef.move(textX, textYVal)
                 .font({ fill: textColor, family: 'Roboto', size: fontSize, leading: 0, anchor: 'middle'});
@@ -2376,13 +2229,15 @@ export class SVGDrawing {
         }
 
 
+        // Measure the last text line width using pre-computed font metrics
+        const lastLine = textLines[textLines.length - 1] || '';
+        const lastLineWidth = SvgTextMetrics.measureText(lastLine, fontSize);
+
         if (this.config.isVCard) {
-            // @ts-ignore
-            logoX = (canvas.width()/2 - canvas.node.childNodes[canvas.node.childNodes.length - 1].getComputedTextLength()/2) - (this.config.size/13);
+            logoX = (canvas.width()/2 - lastLineWidth/2) - (this.config.size/13);
             logoY = logoY + (moduleSize * 3.2)
         } else {
-            // @ts-ignore
-            logoX = (canvas.width()/2 - canvas.node.childNodes[canvas.node.childNodes.length - 1].getComputedTextLength()/2) - (this.config.size/12);
+            logoX = (canvas.width()/2 - lastLineWidth/2) - (this.config.size/12);
             logoY = logoY + (moduleSize * 0.3)
         }
 
@@ -2408,7 +2263,8 @@ export class SVGDrawing {
     }
 
     async setLogoDimensions(){
-        let result = await probe(this.config.logoImage);
+        if (this.config.skipImageValidation) return;
+        const result = await this.imageIO.probeSize(this.config.logoImage!);
         this.config.logoHeight = result.height;
         this.config.logoWidth = result.width ;
         this.config.rectangular = this.config.logoWidth !== this.config.logoHeight;
@@ -2679,9 +2535,8 @@ export class SVGDrawing {
      * - Integrates the generated barcode SVG into the main canvas.
      * 
      * Dependencies:
-     * - `svgdom` for creating an SVG window and document.
      * - `JsBarcode` for generating the barcode.
-     * - `@svgdotjs/svg.js` for manipulating SVG elements.
+     * - `SvgNodeProxy` for providing a minimal DOM interface to JsBarcode.
      */
     drawBarcode(mainCanvas: any) {
         let overallYPosition = this.config.size + this.multiLineHeight;
@@ -2709,19 +2564,16 @@ export class SVGDrawing {
         ){
             let tempOverallYPosition = overallYPosition;
             if ( this.config.showBarcodeValue && this.isFrameCircularOrNone ) {
-                // @ts-ignore
-                mainCanvas.rect(this.config.size, (150 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
+                    mainCanvas.rect(this.config.size, (200 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition);
                 tempOverallYPosition += (100 * this.sizeRatio);
             }
             if ( this.config.showBarcode ) {
-                // @ts-ignore
-                mainCanvas.rect(this.config.size, ( 400 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition + (50 * this.sizeRatio));
+                    mainCanvas.rect(this.config.size, ( 400 * this.sizeRatio )).fill('#FFFFFF').move(this.shiftX, tempOverallYPosition + (50 * this.sizeRatio));
             }
         }
 
         
         if ( this.config.showBarcodeValue && this.isFrameCircularOrNone) {
-            // @ts-ignore
             mainCanvas.defs().style(`
                 @import url('https://fonts.googleapis.com/css?family=Roboto:400');
             `);
@@ -2738,27 +2590,27 @@ export class SVGDrawing {
             overallYPosition += ( 100 * this.sizeRatio );
             let barcodeXPosition = this.shiftX + this.config.margin;
             const barcodeYPosition = overallYPosition;
-            const { createSVGWindow } = eval('require')('svgdom');
-            const barcodeWindow = createSVGWindow();
-            const barcodeDocument = barcodeWindow.document;
-            registerWindow(barcodeWindow, barcodeDocument);
-            // @ts-ignore
-            let barcodeCanvas = SVG(barcodeDocument.documentElement).size( this.config.size - this.config.margin * 2, 150 * this.sizeRatio ).viewbox(0, 0, this.config.size - this.config.margin * 2, 150 * this.sizeRatio);
-            JsBarcode(barcodeCanvas.node, this.config.barcodeValue, {
+            const barcodeWidth = this.config.size - this.config.margin * 2;
+            const barcodeHeight = 150 * this.sizeRatio;
+            const barcodeProxy = new SvgNodeProxy(barcodeWidth, barcodeHeight);
+            getJsBarcode()(barcodeProxy.node, this.config.barcodeValue, {
                 format: this.config.barcodeType,
                 text: this.getBarcodeText(),
-                xmlDocument: barcodeDocument,
+                xmlDocument: barcodeProxy.document,
                 displayValue: true,
                 fontSize: 50 * this.sizeRatio,
                 width: 6 * this.sizeRatio,
                 height : 180 * this.sizeRatio,
-                margin: 10,
+                margin: 0,
                 background: '#ffffff00',
             });
-            const barcodeCanvasWidth = parseInt(barcodeCanvas.width(),10);
+            const barcodeCanvasWidth = barcodeWidth;
             barcodeXPosition = this.config.size / 2 - barcodeCanvasWidth / 2 + this.shiftX;
-            barcodeCanvas.move(barcodeXPosition, barcodeYPosition)
-            mainCanvas.add(barcodeCanvas.svg());
+            // Wrap barcode in an SVG element positioned correctly
+            const barcodeSvgEl = barcodeProxy.toSvgElement();
+            barcodeSvgEl.setAttr('x', String(barcodeXPosition));
+            barcodeSvgEl.setAttr('y', String(barcodeYPosition));
+            mainCanvas.add(barcodeSvgEl);
         }
     }
     
@@ -2769,7 +2621,7 @@ export class SVGDrawing {
         return this.config.barcodeText ? this.config.barcodeText : this.config.primaryIdentifierValue ;
     }
 
-    private async addWatermark(context: object) {
+    private async addWatermark(context: SvgCanvas) {
 
         function validateWatermarkConfig(watermark: any): boolean {
             if (!watermark) {
@@ -2827,33 +2679,29 @@ export class SVGDrawing {
         const imageX = qrCodeBottomRightX - watermarkWidth - padding + positionCorrectionIndex;
         const imageY = qrCodeBottomRightY - watermarkHeight - padding + positionCorrectionIndex;
 
-        const watermarkCanvas = SVG().size( this.config.watermark.width , this.config.watermark.height )
-            .viewbox(0,0,this.config.watermark.width , this.config.watermark.height);
+        const watermarkCanvas = new SvgCanvas( this.config.watermark.width , this.config.watermark.height );
+        watermarkCanvas.viewbox(0, 0, this.config.watermark.width , this.config.watermark.height);
 
-        // Fetch and add the watermark image
-        await fetch(this.config.watermark.watermark)
-            .then((response: any) => response.text())
-            .then((svgContent: any) => {
-                // Add the SVG content to the watermark canvas
-                watermarkCanvas.add(svgContent);
+        try {
+            const imageBuffer = await this.imageIO.fetchImage(this.config.watermark.watermark);
+            let svgContent: string;
+            if (Buffer.isBuffer(imageBuffer)) {
+                svgContent = imageBuffer.toString('utf8');
+            } else {
+                svgContent = String.fromCharCode(...new Uint8Array(imageBuffer as ArrayBuffer));
+            }
 
-                watermarkCanvas.size(watermarkWidth, watermarkHeight);
-
-                // Move the watermark to the calculated position relative to QR code
-                watermarkCanvas.move(imageX, imageY).attr({ opacity: this.config.watermark ? this.config.watermark.opacity : 1 });
-
-                // @ts-ignore
-                context.add(watermarkCanvas);
-            })
-            .catch((error: any) => {
-                // tslint:disable-next-line:no-console
-                console.error('Error loading watermark image:', error);
-            });
+            watermarkCanvas.add(sanitizeSvg(svgContent));
+            watermarkCanvas.size(watermarkWidth, watermarkHeight);
+            watermarkCanvas.move(imageX, imageY).attr({ opacity: this.config.watermark ? this.config.watermark.opacity : 1 });
+            (context as SvgCanvas).add(watermarkCanvas.root);
+        } catch (error) {
+            throw new Error(`Failed to load watermark image: ${(error as any)?.message || error}`);
+        }
     }
 
     async addSticker(mainCanvas: any) {
         if (!this.config.sticker || !this.config.sticker.imageUrl) {
-            console.log('No sticker found');
             return mainCanvas;
         }
 
@@ -2903,33 +2751,45 @@ export class SVGDrawing {
     private async addStickerWithConfig(mainCanvas: any, stickerConfig: Sticker) {
         const size = this.config.size;
 
-        let stickerCanvas = SVG().size(size, size).viewbox(0, 0, size, size);
+        let stickerCanvas = new SvgCanvas(size, size);
+        stickerCanvas.viewbox(0, 0, size, size);
 
-        // Always validate and convert images to base64 for Lambda/server-side usage
-        const imageBase64 = await this.getImageBase64Data(stickerConfig.imageUrl);
-        stickerCanvas.image('')
-            .size(size, size)
-            .move(0, 0)
-            .attr({ 
-                'xlink:href': imageBase64, 
-                opacity: 1, 
-                'preserveAspectRatio': 'xMidYMid meet'
-            });
+        if (this.config.skipImageValidation) {
+            // Browser: use URL directly without base64 conversion
+            stickerCanvas.image('')
+                .size(size, size)
+                .move(0, 0)
+                .attr({
+                    'xlink:href': stickerConfig.imageUrl,
+                    opacity: 1,
+                    'preserveAspectRatio': 'xMidYMid meet'
+                });
+        } else {
+            // Server/Lambda: convert to base64
+            const imageBase64 = await this.getImageBase64Data(stickerConfig.imageUrl);
+            stickerCanvas.image('')
+                .size(size, size)
+                .move(0, 0)
+                .attr({
+                    'xlink:href': imageBase64,
+                    opacity: 1,
+                    'preserveAspectRatio': 'xMidYMid meet'
+                });
+        }
 
         const qrGroup = stickerCanvas.group();
         qrGroup.attr({
-            transform: `translate(${stickerConfig.qrCodeX}, ${stickerConfig.qrCodeY}) scale(${stickerConfig.qrCodeScale}) rotate(${stickerConfig.qrCodeRotate || 0})`,                                                  
+            transform: `translate(${stickerConfig.qrCodeX}, ${stickerConfig.qrCodeY}) scale(${stickerConfig.qrCodeScale}) rotate(${stickerConfig.qrCodeRotate || 0})`,
         });
 
-        // Collect child nodes into a static array to avoid mutation during iteration
-        const children = Array.from(mainCanvas.node.childNodes) as Node[];
-        children.forEach((child: Node) => {
-            qrGroup.node.appendChild(child);
+        // Move all children from mainCanvas into the qrGroup
+        const mainCanvasRef = mainCanvas as SvgCanvas;
+        const children = [...mainCanvasRef.children];
+        children.forEach((child: SvgElement | string) => {
+            qrGroup.add(child);
         });
-        // Clear the original parent to ensure no residual nodes remain
-        while (mainCanvas.node.firstChild) {
-            mainCanvas.node.removeChild(mainCanvas.node.firstChild);
-        }
+        // Clear the original canvas
+        mainCanvasRef.root.clear();
 
         return stickerCanvas;
     }

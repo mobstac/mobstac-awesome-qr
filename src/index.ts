@@ -4,36 +4,58 @@ import {
     QRErrorCorrectLevel,
 } from './Enums';
 import { QRCode } from './Models';
-import { QRCodeConfig } from './Types';
+import { QRCodeConfig, QRMatrix } from './Types';
 import { maxLogoScale } from './Common';
 import { getLengthOfLongestText } from './Util';
 
 export class QRCodeBuilder {
     private config: QRCodeConfig;
 
+    private static readonly DEFAULT_CONFIG: QRCodeConfig = {
+        size: 800,
+        margin: 800/12,
+        typeNumber: 4,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRErrorCorrectLevel.H,
+        backgroundDimming: 'rgba(0,0,0,0)',
+        logoScale: 0.15,
+        logoMargin: 800/12/4,
+        logoCornerRadius: 8,
+        rectangular: false,
+        logoWidth: 0,
+        logoHeight: 0,
+        dotScale: 0.35,
+        text: '',
+        maskedDots: false,
+        isVCard: false,
+        useCanvas: false,
+        useOpacity: true,
+        logoBackground: true
+    };
+
     public constructor(config?: Partial<QRCodeConfig>) {
-        const defaultConfig: QRCodeConfig = {
-            size: 800,
-            margin: 800/12, // margin must be 1/12 of size
-            typeNumber: 4,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRErrorCorrectLevel.H,
-            backgroundDimming: 'rgba(0,0,0,0)',
-            logoScale: 0.15,
-            logoMargin: 800/12/4, // 1/4 of margin
-            logoCornerRadius: 8,
-            rectangular: false,
-            logoWidth: 0,
-            logoHeight: 0,
-            dotScale: 0.35,
-            text: '',
-            maskedDots: false,
-            isVCard: false,
-            useCanvas: false,
-            useOpacity: true
+        this.config = Object.assign({}, QRCodeBuilder.DEFAULT_CONFIG, config);
+    }
+
+    public static computeMatrix(text: string, correctLevel: QRErrorCorrectLevel = QRErrorCorrectLevel.H): QRMatrix {
+        if (!text) {
+            throw new Error('text is required to compute a QR matrix');
+        }
+        const config: QRCodeConfig = {
+            ...QRCodeBuilder.DEFAULT_CONFIG,
+            text,
+            correctLevel,
         };
-        this.config = Object.assign({}, defaultConfig, config);
+        const qrCode = new QRCode(-1, config, true);
+        return qrCode.toMatrix();
+    }
+
+    public async buildFromMatrix(matrix: QRMatrix, format?: CanvasType): Promise<QRCode | never> {
+        this.config.canvasType = format ? format : CanvasType.SVG;
+        const qrCode = QRCode.fromMatrix(matrix, this.config);
+        qrCode.svg = await qrCode.svgDrawing.drawSVG();
+        return qrCode;
     }
 
     public async build(format?: CanvasType): Promise<QRCode | never> {

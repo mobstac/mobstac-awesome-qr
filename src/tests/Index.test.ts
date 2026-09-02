@@ -1,4 +1,3 @@
-import { Gradient } from '@svgdotjs/svg.js';
 import 'mocha';
 import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from '../Enums';
 import { QRCodeBuilder } from '../index';
@@ -42,8 +41,8 @@ const config = {
         "showWatermark": false
     },
     "colorLight": "#8f00ff",
-    "frameColor": "#000000",
-    "frameStyle": QRCodeFrame.NONE,
+    "frameColor": "#000FFF",
+    "frameStyle": QRCodeFrame.BALLOON_BOTTOM,
     "logoHeight": 0,
     "logoMargin": 10,
     "barcodeText": "",

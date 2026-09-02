@@ -1,4 +1,12 @@
-import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
+import { CanvasType, DataPattern, EyeBallShape, EyeFrameShape, GradientType, ModuleType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
+import { ImageIO } from './io/ImageIO';
+
+export interface QRMatrix {
+    version: number;
+    moduleCount: number;
+    modules: Uint8Array;
+    patternPositions: number[];
+}
 
 export interface Watermark {
     showWatermark: boolean;
@@ -91,12 +99,14 @@ export interface QRCodeConfig {
     useCanvas?: boolean;
     useOpacity?: boolean;
     imageServerURL?: string,
-    imageServerRequestHeaders?: object,
+    imageServerRequestHeaders?: Record<string, string>,
     sticker?: Sticker;
     textTag?: string;
     textTagColor?: string;
     textTagFontSize?: number;
     textTagPosition?: TextTagPosition;
+    skipImageValidation?: boolean;
+    imageIO?: ImageIO;
 
     [key: string]: any;
 }
@@ -141,7 +151,7 @@ export interface QRDrawingConfig {
     useCanvas?: boolean;
     useOpacity?: boolean;
     imageServerURL?: string,
-    imageServerRequestHeaders?: object
+    imageServerRequestHeaders?: Record<string, string>
     showBarcodeValue?: boolean;
     barcodeValue?: string;
     showBarcode?: boolean;
@@ -155,4 +165,5 @@ export interface QRDrawingConfig {
     textTagColor?: string;
     textTagFontSize?: number;
     textTagPosition?: TextTagPosition;
+    imageIO?: ImageIO;
 }
