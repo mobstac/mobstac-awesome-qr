@@ -263,6 +263,51 @@ function escapeAttr(value: string): string {
 }
 
 /**
+ * Escape XML text content (character data).
+ *
+ * Attribute values already go through escapeAttr(); text nodes were being
+ * emitted verbatim, so a caption such as `Bar & Grill` produced a bare `&`
+ * and the document was not well-formed. Renderers that actually parse the
+ * SVG (librsvg, used for PNG/JPEG) reject it with
+ * "xmlParseEntityRef: no name", while SVG/PDF/EPS pass the broken file
+ * through unnoticed.
+ *
+ * Quotes are legal inside character data and are deliberately left alone.
+ */
+export function escapeText(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+/**
+ * Remove x / y / width / height from an SVG root element's opening tag.
+ *
+ * Used when inlining an SVG logo, whose own size/position must be dropped so
+ * the caller can place it. Two rules matter:
+ *
+ *  - only the ROOT opening tag is rewritten, so child attributes are safe;
+ *  - attribute names must be preceded by whitespace, so `rx`, `ry`, `cx`,
+ *    `cy` and `viewBox` are never partially matched.
+ *
+ * The previous implementation tested `head.indexOf('x=')` — which matches
+ * `viewBox=` — and then ran the replacement across the whole document, so the
+ * first `x="..."` it found was often `rx="18"` on a child element. Removing
+ * that left a bare `r` attribute and produced malformed XML.
+ */
+export function stripRootSizeAttrs(svgText: string): string {
+    const end = svgText.indexOf('>');
+    if (end === -1) {
+        return svgText;
+    }
+    const head = svgText
+        .substring(0, end + 1)
+        .replace(/\s+(?:x|y|width|height)\s*=\s*("[^"]*"|'[^']*')/g, '');
+    return head + svgText.substring(end + 1);
+}
+
+/**
  * Compute the minimum x/y of a path's `d` attribute, considering M, L, and A
  * endpoints. This is the subset of commands the QR builder emits — paths use
  * only absolute M, L, and A, and arcs are quarter-circles that bulge inward

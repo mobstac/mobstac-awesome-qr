@@ -5,7 +5,7 @@ import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QR
 import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
 import { getFrameTextSize, getLengthOfLongestText } from './Util';
 import { SvgCanvas } from './svg/SvgCanvas';
-import { SvgElement, sanitizeSvg } from './svg/SvgElement';
+import { SvgElement, sanitizeSvg, stripRootSizeAttrs } from './svg/SvgElement';
 import { SvgGradient } from './svg/SvgGradient';
 import { SvgTextMetrics } from './svg/SvgTextMetrics';
 import { SvgNodeProxy } from './svg/SvgNodeProxy';
@@ -957,18 +957,9 @@ export class SVGDrawing {
                     }
                     extraText += ` viewBox="0 0 ${width} ${height}"`;
                 }
-                if (headSvg.indexOf('x=') !== -1 || headSvg.indexOf('x =') !== -1) {
-                    text = text.replace(/x\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                }
-                if (headSvg.indexOf('y=') !== -1 || headSvg.indexOf('y =') !== -1) {
-                    text = text.replace(/y\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                }
-                if (headSvg.indexOf(' width') !== -1) {
-                    text = text.replace(/width\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                }
-                if (headSvg.indexOf(' height') !== -1) {
-                    text = text.replace(/height\s*=\s*"[+.a-zA-Z0-9_-]{1,100}"/, ``);
-                }
+                // Drop the logo's own x/y/width/height so this caller can position it.
+                // Root tag only, whole attribute names only - see stripRootSizeAttrs().
+                text = stripRootSizeAttrs(text);
 
                 try {
                     context.add(text

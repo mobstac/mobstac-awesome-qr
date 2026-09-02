@@ -1,4 +1,4 @@
-import { SvgElement } from './SvgElement';
+import { escapeText, SvgElement } from './SvgElement';
 import { SvgGradient } from './SvgGradient';
 
 /**
@@ -109,7 +109,7 @@ export class SvgCanvas {
     /** Create a plain text element (mirrors svg.js `plain()`). */
     plain(text: string): SvgElement {
         const el = new SvgElement('text');
-        el.add(text);
+        el.add(escapeText(text));
         this.root.add(el);
         return el;
     }
@@ -118,12 +118,12 @@ export class SvgCanvas {
     text(content: string | ((add: { tspan: (t: string) => SvgElement }) => void)): SvgElement {
         const el = new SvgElement('text');
         if (typeof content === 'string') {
-            el.add(content);
+            el.add(escapeText(content));
         } else {
             content({
                 tspan: (t: string) => {
                     const ts = new SvgElement('tspan');
-                    ts.add(t);
+                    ts.add(escapeText(t));
                     el.add(ts);
                     return ts;
                 }
