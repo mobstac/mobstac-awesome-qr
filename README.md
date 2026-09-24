@@ -43,6 +43,9 @@ Switch to develop branch
 **sharp** : Converting images between different formats ( SVG, JPEG, PNG)\
 **probe-image-size**: Retrive meta data of images.
 
+**Node.js >= 20.9** is required: sharp 0.35 dropped older Node versions.
+`svgdom` is pinned to `0.1.16` on purpose — newer 0.1.x releases require Node >= 22 and break SVG rendering.
+
 ## Run Locally
 
 Once the packages are installed we can start generating QR code locally.
