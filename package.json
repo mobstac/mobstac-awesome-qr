@@ -1,16 +1,19 @@
 {
     "name": "mobstac-awesome-qr",
-    "version": "4.2.2",
+    "version": "4.2.3",
     "description": "MobStac Awesome QR code library",
     "homepage": "https://github.com/mobstac/mobstac-awesome-qr",
     "bugs": "https://github.com/mobstac/mobstac-awesome-qr/issues",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "engines": {
+        "node": ">=20.9"
+    },
     "scripts": {
         "test": "nyc mocha",
         "testMain": "nyc mocha -g 'QR code main tests'",
         "testFrame": "nyc mocha -g 'QR code frame tests'",
-        "build": "tsc && webpack",
+        "build": "tsc && NODE_OPTIONS=--openssl-legacy-provider webpack",
         "coverage": "nyc --reporter=text npm run test",
         "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
         "lint": "tslint -p tsconfig.json",
@@ -79,10 +82,9 @@
         "jsbarcode": "^3.11.6",
         "node-fetch": "^2.6.7",
         "probe-image-size": "^7.2.3",
-        "request": "^2.88.2",
-        "sharp": "^0.30.7",
+        "sharp": "^0.35.4",
         "svg.colorat.js": "^1.0.0",
-        "svgdom": "^0.1.10",
+        "svgdom": "0.1.16",
         "xmlhttprequest": "^1.8.0"
     }
 }
