@@ -134,10 +134,10 @@ describe('Circular frame transparent fill', () => {
         const svg = qr.svg as string;
         const circles = parseCircles(svg);
 
-        // First circle in the circular frame is the outer stroke ring
-        const outerCircle = circles[0];
+        // The outer ring is the stroked circle (drawn last, over the QR)
+        const outerCircle = circles.find(c => c.stroke);
         expect(outerCircle).to.exist;
-        expect(outerCircle.fill).to.equal('#ffffff00');
+        expect(outerCircle!.fill).to.equal('#ffffff00');
     });
 
     it('inner fill circle uses background color', async () => {
@@ -158,18 +158,16 @@ describe('Circular frame transparent fill', () => {
         const svg = qr.svg as string;
         const circles = parseCircles(svg);
 
-        // Second circle should be the inner fill with backgroundColor
-        const innerCircle = circles[1];
+        // The inner disc is the unstroked circle holding backgroundColor
+        const innerCircle = circles.find(c => !c.stroke);
         expect(innerCircle).to.exist;
-        expect(innerCircle.fill).to.equal('#ff0000');
+        expect(innerCircle!.fill).to.equal('#ff0000');
     });
 
-    // Regression: with v5's SvgCanvas, calling .fill() on a canvas inserts a
-    // <rect width="100%" height="100%"> as its first child. When that canvas
-    // is later embedded as a nested <svg> inside the circular finalCanvas,
-    // the 100%-sized rect overflows the circle and paints over the outer ring
-    // stroke. mainCanvas.fill() must be skipped for CIRCULAR; the inner-fill
-    // circle in addDesign() provides the QR background.
+    // Regression: an earlier SvgCanvas.fill() inserted a
+    // <rect width="100%" height="100%">. Nested inside the circular
+    // finalCanvas, that rect overflowed the circle and painted over the outer
+    // ring stroke. fill() now only sets the fill attribute, as svg.js did.
     it('CIRCULAR output contains no 100%-sized background rect', async () => {
         const config = {
             text: 'https://example.com',
@@ -183,7 +181,8 @@ describe('Circular frame transparent fill', () => {
         expect(svg).to.not.match(/<rect[^>]*\bheight="100%"/);
     });
 
-    it('CIRCULAR inner fill circle defaults to opaque white when no backgroundColor', async () => {
+    // 2.6.x parity: no backgroundColor leaves the disc transparent.
+    it('CIRCULAR inner fill circle is transparent when no backgroundColor', async () => {
         const config = {
             text: 'https://example.com',
             size: 1024,
@@ -192,12 +191,11 @@ describe('Circular frame transparent fill', () => {
         };
         const qr = await new QRCodeBuilder(config).build(CanvasType.SVG);
         const circles = parseCircles(qr.svg as string);
-        // [0] outer ring (stroke + transparent fill), [1] inner background disc
-        expect(circles[0].fill).to.equal('#ffffff00');
-        expect(circles[1].fill).to.equal('#ffffff');
+        expect(circles.find(c => c.stroke)!.fill).to.equal('#ffffff00');
+        expect(circles.find(c => !c.stroke)!.fill).to.equal('none');
     });
 
-    it('rgba background skips transparent fill (uses color directly)', async () => {
+    it('rgba background fills the inner disc; the ring stays transparent', async () => {
         const config = {
             text: 'https://example.com',
             size: 512,
@@ -215,9 +213,9 @@ describe('Circular frame transparent fill', () => {
         const svg = qr.svg as string;
         const circles = parseCircles(svg);
 
-        // For rgba background, both circles use the rgba color (not #ffffff00)
-        const outerCircle = circles[0];
-        expect(outerCircle.fill).to.equal('rgba(255,0,0,0.5)');
+        // The ring is drawn over the QR, so a non-transparent fill would cover it.
+        expect(circles.find(c => !c.stroke)!.fill).to.equal('rgba(255,0,0,0.5)');
+        expect(circles.find(c => c.stroke)!.fill).to.equal('#ffffff00');
     });
 });
 
@@ -331,11 +329,12 @@ describe('Circular frame inner circle radius consistency', () => {
         expect(solidCircles.length).to.be.greaterThan(1);
         expect(rgbaCircles.length).to.be.greaterThan(1);
 
-        // The inner circle (index 1) radius should be the same in both cases
-        // since both use radius - width/2
-        const solidInnerR = parseFloat(solidCircles[1].r);
-        const rgbaInnerR = parseFloat(rgbaCircles[1].r);
+        // The inner disc (unstroked) has the same radius in both cases, and
+        // matches the ring's radius so it runs under the ring (2.6.x parity).
+        const solidInnerR = parseFloat(solidCircles.find(c => !c.stroke)!.r);
+        const rgbaInnerR = parseFloat(rgbaCircles.find(c => !c.stroke)!.r);
         expect(solidInnerR).to.equal(rgbaInnerR);
+        expect(solidInnerR).to.equal(parseFloat(solidCircles.find(c => c.stroke)!.r));
     });
 });
 

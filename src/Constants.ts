@@ -153,6 +153,14 @@ export let maxLogoSizeConfigERH = new Map<number, LogoSize>([
 export const DEFAULT_TEXT_TAG_FONT_SIZE = 30;
 export const DEFAULT_CANVAS_SIZE = 1024;
 
+/**
+ * Extra baseline drop for frame text, in SVG units, to match the dashboard (2.6.x).
+ * svg.js moved each line by its measured box top before the font was applied, so
+ * it measured the host page's body font: the dashboard's Inter 15px gives a box
+ * top 14.5 above the baseline. svg.js never scaled it with QR size, so neither do we.
+ */
+export const FRAME_TEXT_TOP_OFFSET = 14.5;
+
 export const cellPhoneSVGPath = `<?xml version="1.0" encoding="iso-8859-1"?>
 <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="<<x-axis>>" y="<<y-axis>>"
 	 width="<<width>>" height="<<height>>" viewBox="0 0 792 792" style="enable-background:new 0 0 792 792;" xml:space="preserve">

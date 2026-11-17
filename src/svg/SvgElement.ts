@@ -308,15 +308,6 @@ export function stripRootSizeAttrs(svgText: string): string {
 }
 
 /**
- * Compute the minimum x/y of a path's `d` attribute, considering M, L, and A
- * endpoints. This is the subset of commands the QR builder emits — paths use
- * only absolute M, L, and A, and arcs are quarter-circles that bulge inward
- * toward their chord midpoint, so endpoint-minima capture the bbox tightly.
- *
- * Returned origin matches svg.js's bbox-top-left semantics so .move(x, y)
- * lands the path's leftmost-topmost extent at (x, y).
- */
-/**
  * Compute the minimum x/y of a polygon/polyline `points` attribute. Points are
  * encoded as `x1,y1 x2,y2 …` (commas or whitespace as separators in either
  * position — SVG accepts both).
@@ -334,25 +325,62 @@ function computePointsBboxMin(points: string): { minX: number; minY: number } {
     return { minX, minY };
 }
 
+// Number of arguments each path command takes.
+const PATH_ARITY: Record<string, number> = { M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7, Z: 0 };
+
+/**
+ * Compute the minimum x/y of a path's `d` attribute from the end point of every
+ * segment. Returned origin matches svg.js's bbox-top-left semantics so
+ * .move(x, y) lands the path's leftmost-topmost extent at (x, y).
+ */
 function computePathBboxMin(d: string): { minX: number; minY: number } {
     let minX = Infinity;
     let minY = Infinity;
-    const tokens = d.match(/[MLA][^MLAmla]*/gi) || [];
-    for (const tok of tokens) {
-        const cmd = tok[0].toUpperCase();
-        const nums = tok.slice(1).trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
-        if (cmd === 'M' || cmd === 'L') {
-            for (let i = 0; i + 1 < nums.length; i += 2) {
-                if (nums[i] < minX) minX = nums[i];
-                if (nums[i + 1] < minY) minY = nums[i + 1];
+    // Walk every command, absolute and relative, tracking the current point.
+    // The right-diamond pattern (`M… h v l H v`) neither starts at its own
+    // top-left nor uses only absolute commands.
+    // ponytail: endpoints only — curve control points and arc bulges are not
+    // measured. Exact for every path the QR builder moves today; compute real
+    // curve/arc extrema if a moved path ever bulges past its endpoints.
+    const tokens = d.match(/[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g) || [];
+    let x = 0, y = 0, startX = 0, startY = 0;
+    let cmd = '';
+    let i = 0;
+    while (i < tokens.length) {
+        if (/[a-zA-Z]/.test(tokens[i])) {
+            cmd = tokens[i++];
+            if (cmd === 'Z' || cmd === 'z') {
+                x = startX;
+                y = startY;
+                continue;
             }
-        } else if (cmd === 'A') {
-            // Arc: rx ry x-axis-rot large-arc sweep x y — only the endpoint
-            // contributes to the bbox-min for the paths this builder emits.
-            for (let i = 0; i + 6 < nums.length; i += 7) {
-                if (nums[i + 5] < minX) minX = nums[i + 5];
-                if (nums[i + 6] < minY) minY = nums[i + 6];
-            }
+        }
+        const upper = cmd.toUpperCase();
+        const relative = cmd !== upper;
+        const arity = PATH_ARITY[upper];
+        if (!arity) {
+            i++; // unknown command or stray number — skip it
+            continue;
+        }
+        const args = tokens.slice(i, i + arity).map(Number);
+        i += arity;
+        if (args.length < arity || args.some(isNaN)) {
+            break;
+        }
+        if (upper === 'H') {
+            x = relative ? x + args[0] : args[0];
+        } else if (upper === 'V') {
+            y = relative ? y + args[0] : args[0];
+        } else {
+            x = relative ? x + args[arity - 2] : args[arity - 2];
+            y = relative ? y + args[arity - 1] : args[arity - 1];
+        }
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (upper === 'M') {
+            startX = x;
+            startY = y;
+            cmd = relative ? 'l' : 'L'; // extra pairs after M are implicit lineto
         }
     }
     if (!isFinite(minX)) minX = 0;

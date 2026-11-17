@@ -138,7 +138,8 @@ describe('SvgCanvas', () => {
             const p = canvas.polyline([0, 0, 10, 20, 30, 40]);
             expect(p.tag).to.equal('polyline');
             expect(p.getAttr('points')).to.equal('0,0 10,20 30,40');
-            expect(p.getAttr('fill')).to.equal('none');
+            // svg.js parity: no fill attribute, so it inherits the canvas fill.
+            expect(p.getAttr('fill')).to.equal(undefined);
         });
 
         // Mirrors the call shape used by drawDiamond / drawSmoothRound /
@@ -248,24 +249,20 @@ describe('SvgCanvas', () => {
     });
 
     describe('fill', () => {
-        it('adds background rect 100%x100%', () => {
+        // svg.js parity: fill() on <svg> sets the inherited fill attribute and
+        // paints no background (2.6.x and 4.2.x framed QRs are transparent
+        // around the frame).
+        it('sets the fill attribute on the root <svg>', () => {
             const canvas = new SvgCanvas(100, 100);
             canvas.fill('#ffffff');
-            const svg = canvas.serialize();
-            expect(svg).to.contain('<rect');
-            expect(svg).to.contain('fill="#ffffff"');
-            expect(svg).to.contain('height="100%"');
-            expect(svg).to.contain('width="100%"');
+            expect(canvas.root.getAttr('fill')).to.equal('#ffffff');
         });
 
-        it('inserts background rect after defs', () => {
+        it('adds no background element', () => {
             const canvas = new SvgCanvas(100, 100);
-            canvas.defs().style('.x{}');
-            canvas.fill('#000');
-            const defs = canvas.root.children[0] as SvgElement;
-            const bgRect = canvas.root.children[1] as SvgElement;
-            expect(defs.tag).to.equal('defs');
-            expect(bgRect.tag).to.equal('rect');
+            canvas.fill('#ffffff');
+            expect(canvas.root.children).to.have.length(0);
+            expect(canvas.serialize()).to.not.contain('<rect');
         });
     });
 
