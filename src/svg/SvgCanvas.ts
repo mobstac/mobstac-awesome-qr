@@ -49,16 +49,10 @@ export class SvgCanvas {
     }
 
     fill(color: string): this {
-        // Add a background rect covering the entire canvas.
-        // CSS 'background' on <svg> is not rendered by librsvg (used by sharp),
-        // so we use a full-size rect as the first child after defs.
-        const bgRect = new SvgElement('rect');
-        bgRect.setAttr('width', '100%');
-        bgRect.setAttr('height', '100%');
-        bgRect.setAttr('fill', color);
-        // Insert after defs (index 0 if defs exists, else index 0)
-        const insertIdx = this._defs ? 1 : 0;
-        this.root.insertAt(insertIdx, bgRect);
+        // Same as svg.js: set the inherited `fill` on <svg>. It paints no
+        // background, so framed QRs stay transparent around the frame, matching
+        // both 2.6.x (dashboard) and 4.2.x (Lambda) output.
+        this.root.setAttr('fill', color);
         return this;
     }
 
@@ -158,8 +152,9 @@ export class SvgCanvas {
     }
 
     polyline(coords: number[]): SvgElement {
+        // No fill attribute, as in svg.js: the polyline inherits the canvas fill.
+        // Frame borders rely on that to paint the band inside the border.
         const el = new SvgElement('polyline');
-        el.setAttr('fill', 'none');
         // Coords come as flat array [x1, y1, x2, y2, ...]
         const pairs: string[] = [];
         for (let i = 0; i < coords.length; i += 2) {

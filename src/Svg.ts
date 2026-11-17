@@ -1,6 +1,6 @@
 /* tslint:disable:no-var-requires */
 import { CanvasUtil, maxLogoScale } from './Common';
-import { DEFAULT_CANVAS_SIZE, DEFAULT_TEXT_TAG_FONT_SIZE, LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
+import { DEFAULT_CANVAS_SIZE, DEFAULT_TEXT_TAG_FONT_SIZE, FRAME_TEXT_TOP_OFFSET, LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
 import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
 import { getFrameTextSize, getLengthOfLongestText, isBrowserEnvironment } from './Util';
@@ -196,11 +196,8 @@ export class SVGDrawing {
                     this.widthView = 38;
                 }
                 mainCanvas = new SvgCanvas(canvasWidth+this.widthSVG, canvasHeight);
-                // No .fill() here — mainCanvas is nested inside the circular finalCanvas
-                // later, and SvgCanvas.fill() inserts a 100% bg rect that would overflow
-                // the circle and paint over the outer ring stroke. The QR background is
-                // provided by the inner circle drawn in addDesign() instead.
-                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight);
+                // fill() only sets the inherited fill attribute (no background), as in 2.6.x.
+                mainCanvas.viewbox(0, 0, canvasWidth+this.widthView, canvasHeight).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
             } else {
                 mainCanvas = new SvgCanvas(canvasWidth, canvasHeight);
                 mainCanvas.viewbox(0, 0, canvasWidth , canvasHeight ).fill(this.config.backgroundColor ? this.config.backgroundColor : '#ffffff');
@@ -699,11 +696,9 @@ export class SVGDrawing {
         const canvasWidth = Math.sqrt(2)*size + 2*this.config.moduleSize + padding;
         const finalCanvas = new SvgCanvas(canvasWidth, canvasHeight);
         finalCanvas.viewbox(0, 0, canvasWidth, canvasHeight);
-        // Default the inner-circle fill to opaque white. The QR's white background
-        // used to come from mainCanvas.fill() — which had to be removed because its
-        // 100% bg rect overflowed the circular area and painted over the ring stroke.
-        // The inner circle now owns that responsibility, so its default cannot be 'none'.
-        const color = this.config.backgroundColor ? this.config.backgroundColor : '#ffffff';
+        // No backgroundColor means a transparent disc, as in 2.6.x; the dashboard
+        // shows a checkerboard behind such previews.
+        const color = this.config.backgroundColor ? this.config.backgroundColor : 'none';
         const width = this.config.moduleSize;
         let grad : any;
         const col1 = this.config.colorDark;
@@ -732,23 +727,22 @@ export class SVGDrawing {
         }
         const pos = Math.sqrt(2)*size/2 + this.config.moduleSize + padding;
         const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
+        // The ring is drawn last, as in 2.6.x, so it covers QR modules that reach
+        // the edge. Its fill must stay transparent or it would cover the QR.
+        const drawRing = () => finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
         if (this.config.backgroundImage) {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
-            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
-                this.addDesignHelper(finalCanvas, canvas, gradient);
+            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(async ()=>{
+                await this.addDesignHelper(finalCanvas, canvas, gradient);
+                drawRing();
                 return finalCanvas;
             });
-        } else if( this.config.backgroundColor && this.config.backgroundColor.includes('rgba')) {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill(color);
-            finalCanvas.circle(size).attr({cx: pos,cy: pos}).radius(radius - width/2).fill(color);
-            this.addDesignHelper(finalCanvas, canvas, gradient);
-            return finalCanvas;
-        } else {
-            finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
-            finalCanvas.circle(size).attr({cx : pos , cy : pos}).radius(radius - width/2).fill(color);
-            this.addDesignHelper(finalCanvas , canvas, gradient);
-            return finalCanvas;
         }
+        // Full radius, as in 2.6.x: the disc runs under the ring, so their
+        // anti-aliased edges don't meet and leave a seam.
+        finalCanvas.circle(size).attr({cx : pos , cy : pos}).radius(radius).fill(color);
+        await this.addDesignHelper(finalCanvas , canvas, gradient);
+        drawRing();
+        return finalCanvas;
     }
 
 
@@ -1778,14 +1772,12 @@ export class SVGDrawing {
                 drawShape = this.drawThinSquare.bind(this);
                 break;
             case DataPattern.SMOOTH_ROUND:
-                drawShape = this.drawSquare.bind(this);
-                boolFlag = true;
-                usesSquareSignature = true;
-                break;
             case DataPattern.SMOOTH_SHARP:
-                drawShape = this.drawSquare.bind(this);
-                usesSquareSignature = true;
-                break;
+                // Smooth patterns already draw the alignment modules in
+                // drawAlignPatterns. 2.6.x and 4.2.x reached drawSquare here with
+                // mis-ordered arguments (zero-height, unfilled rects), so nothing
+                // visible was ever drawn; real squares would change the look.
+                return;
             case DataPattern.SQUARE:
             default:
                 drawShape = this.drawSquare.bind(this);
@@ -1962,10 +1954,10 @@ export class SVGDrawing {
         const d = width/2;
         if (isRight) {
             if (this.config.useOpacity) {
-                    context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    context.path(`M${d} 0h${d}v${d}l-${d} ${d}H0v-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
-                    context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    context.path(`M${d} 0h${d}v${d}l-${d} ${d}H0v-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
         } else {
@@ -2095,11 +2087,8 @@ export class SVGDrawing {
 
         const multiLineHeight = ( textLinesLength - 1 ) * (fontSize + 10);
 
-        // Roboto cap-height is ~0.71*fontSize; half (~0.355*fontSize) is the
-        // distance from the alphabetic baseline (which the SVG <text> y attribute
-        // corresponds to) down to the visual midline of capitals. Adding it to
-        // the banner-center y produces a baseline that visually centers all-caps
-        // frame text vertically inside the rectangle.
+        // Baseline = banner centre + fontSize / 7 + FRAME_TEXT_TOP_OFFSET, which is
+        // what 2.6.x's svg.js text.move() produced (see FRAME_TEXT_TOP_OFFSET).
 
         switch (frameStyle) {
             case QRCodeFrame.BANNER_BOTTOM:
@@ -2109,7 +2098,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize / 2 - 1;
                 textX = size / 3;
-                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 1.5;
                 break;
@@ -2119,7 +2108,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -2129,7 +2118,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2139,7 +2128,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =  ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = moduleSize * 2;
                 break;
@@ -2149,7 +2138,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 4;
                 break;
@@ -2159,7 +2148,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = moduleSize / 2;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = this.config.isVCard ? moduleSize * 3 : moduleSize * 2;
                 //this.shiftY = 0.9 * this.shiftY
@@ -2170,7 +2159,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2180,7 +2169,7 @@ export class SVGDrawing {
                 bannerX = moduleSize / 2;
                 bannerY = size + moduleSize * 1.5;
                 textX = size / 3;
-                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize * 0.355;
+                textY =   ( 2 * bannerY + ( size / 5 )) / 2 + fontSize / 7 + FRAME_TEXT_TOP_OFFSET;
                 logoX = size / 3 - size / 9;
                 logoY = size + moduleSize * 3;
                 break;
@@ -2203,11 +2192,12 @@ export class SVGDrawing {
 
         if (frameStyle === QRCodeFrame.BALLOON_BOTTOM) {
             const coordinates = [[0, 0], [size / 24, size / 12], [-size / 24, size / 12]];
-            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size - moduleSize / 2);
+            // dashboard_version fix ffd1b01 (2023): centres the pointer under the QR.
+            canvas.polygon(coordinates).fill(color).move(size / 2 - size / 24 + moduleSize / 2, size - moduleSize / 2);
         }
         if (frameStyle === QRCodeFrame.BALLOON_TOP) {
             const coordinates = [[0, 0], [size / 24, 0], [0, size / 12], [-size / 24, 0]];
-            canvas.polygon(coordinates).fill(color).move(size / 2 - size/24 + moduleSize / 2, size / 5 - moduleSize / 2 + multiLineHeight);
+            canvas.polygon(coordinates).fill(color).move(size / 2 - moduleSize, size / 5 - moduleSize / 2 + multiLineHeight);
         }
 
         // Banner for frame text

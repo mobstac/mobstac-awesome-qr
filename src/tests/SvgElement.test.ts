@@ -163,6 +163,33 @@ describe('SvgElement', () => {
             expect(el.getAttr('transform')).to.equal('translate(55, 60)');
         });
 
+        // Regression for the right-diamond data pattern: its path uses relative
+        // (h/v/l) and absolute H/V commands and does not start at its own
+        // top-left, so bbox-min must come from walking every command.
+        it('move() shifts path translate by bbox-min across relative and H/V commands', () => {
+            const el = new SvgElement('path');
+            // Points: (32,16) (48,16) (48,32) (32,48) (16,48) (16,32) -> bbox-min (16,16).
+            el.setAttr('d', 'M32 16h16v16l-16 16H16v-16');
+            el.move(256, 0);
+            expect(el.getAttr('transform')).to.equal('translate(240, -16)');
+        });
+
+        it('move() keeps bbox-min at the origin for a relative path starting there', () => {
+            const el = new SvgElement('path');
+            // Left-diamond shape: every point stays at or above (0,0).
+            el.setAttr('d', 'M0 0h16l16 16v16h-16l-16-16');
+            el.move(10, 20);
+            expect(el.getAttr('transform')).to.equal('translate(10, 20)');
+        });
+
+        it('move() reads an exponent coordinate as a number, not a command', () => {
+            const el = new SvgElement('path');
+            // Implicit lineto after L: (1e-7, -4) is a point, so bbox-min is (0, -4).
+            el.setAttr('d', 'M0 0 L5 5 1e-7 -4');
+            el.move(0, 0);
+            expect(el.getAttr('transform')).to.equal('translate(0, 4)');
+        });
+
         it('move() translates polyline via transform', () => {
             const el = new SvgElement('polyline');
             el.setAttr('points', '0,0 10,0 10,10');
