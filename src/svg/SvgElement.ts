@@ -347,7 +347,7 @@ function computePathBboxMin(d: string): { minX: number; minY: number } {
     let cmd = '';
     let i = 0;
     while (i < tokens.length) {
-        if (/[a-zA-Z]/.test(tokens[i])) {
+        if (/^[a-zA-Z]$/.test(tokens[i])) {
             cmd = tokens[i++];
             if (cmd === 'Z' || cmd === 'z') {
                 x = startX;

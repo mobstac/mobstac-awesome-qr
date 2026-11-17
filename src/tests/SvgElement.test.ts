@@ -182,6 +182,14 @@ describe('SvgElement', () => {
             expect(el.getAttr('transform')).to.equal('translate(10, 20)');
         });
 
+        it('move() reads an exponent coordinate as a number, not a command', () => {
+            const el = new SvgElement('path');
+            // Implicit lineto after L: (1e-7, -4) is a point, so bbox-min is (0, -4).
+            el.setAttr('d', 'M0 0 L5 5 1e-7 -4');
+            el.move(0, 0);
+            expect(el.getAttr('transform')).to.equal('translate(0, 4)');
+        });
+
         it('move() translates polyline via transform', () => {
             const el = new SvgElement('polyline');
             el.setAttr('points', '0,0 10,0 10,10');

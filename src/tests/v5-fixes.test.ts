@@ -844,3 +844,42 @@ describe('FileSystemImageIO', () => {
         }
     });
 });
+
+// ─── Right-diamond dots on the grid ────────────────────────────────
+
+/** Top-left corner of every translated path drawn with relative commands (the diamond dots), sorted. */
+function diamondCorners(svg: string): string[] {
+    const corners: string[] = [];
+    for (const tag of svg.match(/<path\b[^>]*>/g) || []) {
+        const d = /\bd="([^"]+)"/.exec(tag);
+        const t = /translate\(([-\d.e]+),\s*([-\d.e]+)\)/.exec(tag);
+        if (!d || !t || !/[hvl]/.test(d[1])) continue;
+        let x = 0, y = 0, minX = Infinity, minY = Infinity;
+        for (const seg of d[1].match(/[MLHVhvl][^MLHVhvl]*/g) || []) {
+            const n = (seg.slice(1).match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) || []).map(Number);
+            switch (seg[0]) {
+                case 'M': case 'L': x = n[0]; y = n[1]; break;
+                case 'l': x += n[0]; y += n[1]; break;
+                case 'H': x = n[0]; break;
+                case 'h': x += n[0]; break;
+                case 'V': y = n[0]; break;
+                case 'v': y += n[0]; break;
+            }
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+        }
+        corners.push(`${(minX + Number(t[1])).toFixed(2)},${(minY + Number(t[2])).toFixed(2)}`);
+    }
+    return corners.sort();
+}
+
+describe('Right-diamond data pattern', () => {
+    // Left-diamond's path starts at its own top-left, so its dots sit on the grid.
+    it('draws its dots on the same grid cells as left-diamond', async () => {
+        const build = async (dataPattern: DataPattern) =>
+            (await new QRCodeBuilder({ text: 'https://example.com/right-diamond', size: 512, margin: 20, dataPattern }).build(CanvasType.SVG)).svg as string;
+        const right = diamondCorners(await build(DataPattern.RIGHT_DIAMOND));
+        expect(right.length).to.be.greaterThan(100);
+        expect(right).to.deep.equal(diamondCorners(await build(DataPattern.LEFT_DIAMOND)));
+    });
+});

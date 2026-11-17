@@ -731,8 +731,8 @@ export class SVGDrawing {
         // the edge. fill none (not 2.6.x's #ffffff00) so no renderer can paint it over the QR.
         const drawRing = () => finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('none');
         if (this.config.backgroundImage) {
-            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(()=>{
-                this.addDesignHelper(finalCanvas, canvas, gradient);
+            return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(async ()=>{
+                await this.addDesignHelper(finalCanvas, canvas, gradient);
                 drawRing();
                 return finalCanvas;
             });
@@ -740,7 +740,7 @@ export class SVGDrawing {
         // Full radius, as in 2.6.x: the disc runs under the ring, so their
         // anti-aliased edges don't meet and leave a seam.
         finalCanvas.circle(size).attr({cx : pos , cy : pos}).radius(radius).fill(color);
-        this.addDesignHelper(finalCanvas , canvas, gradient);
+        await this.addDesignHelper(finalCanvas , canvas, gradient);
         drawRing();
         return finalCanvas;
     }
