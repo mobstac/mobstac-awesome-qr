@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Right-diamond dots were drawn half a module right and down**, so many right-diamond codes didn't scan. The path bbox read only `M`/`L`/`A`; it now walks every command, and the right-diamond path starts at its own top-left. A number in exponent form (`1e-7`) is no longer read as a command.
-- **Output matches 2.6.x (the dashboard)** for frames (band inside the border, text baseline, balloon pointers), circular QRs (transparent disc by default, ring drawn on top with `fill="none"`) and smooth-pattern alignment marks.
+- **Output matches 2.6.x (the dashboard)** for frames (band inside the border, text baseline, balloon pointers), circular QRs (transparent disc by default, ring drawn on top) and smooth-pattern alignment marks.
 
 - **Browser builds without an `imageServerURL` threw `NodeImageIO is not a constructor`.** Bundlers swap `NodeImageIO.js` for `BrowserImageIO.js` (the `browser` field), so the Node fallback was undefined. In a browser, `BrowserImageIO` is now always used, with the image server when one is given and direct fetches otherwise.
 - **Browser output had a fixed root size.** Ported from dashboard_version: in a browser, the root `<svg>` drops `width`/`height` and keeps its `viewBox`, so the QR scales to its container, as it did in 2.6.5. Node output is unchanged.

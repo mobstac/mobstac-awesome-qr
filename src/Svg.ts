@@ -728,8 +728,8 @@ export class SVGDrawing {
         const pos = Math.sqrt(2)*size/2 + this.config.moduleSize + padding;
         const radius = (size)/Math.sqrt(2) + this.config.moduleSize/2;
         // The ring is drawn last, as in 2.6.x, so it covers QR modules that reach
-        // the edge. fill none (not 2.6.x's #ffffff00) so no renderer can paint it over the QR.
-        const drawRing = () => finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('none');
+        // the edge. Its fill must stay transparent or it would cover the QR.
+        const drawRing = () => finalCanvas.circle(size).attr({cx: pos,cy: pos, stroke:grad, 'stroke-width':width}).radius(radius).fill('#ffffff00');
         if (this.config.backgroundImage) {
             return this.addCircularBackgroundImage(finalCanvas, Math.sqrt(2)*size + 2*this.config.moduleSize + padding, this.config.backgroundImage, pos, grad, width, radius).then(async ()=>{
                 await this.addDesignHelper(finalCanvas, canvas, gradient);
