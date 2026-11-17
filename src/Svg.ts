@@ -1954,10 +1954,10 @@ export class SVGDrawing {
         const d = width/2;
         if (isRight) {
             if (this.config.useOpacity) {
-                    context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    context.path(`M${d} 0h${d}v${d}l-${d} ${d}H0v-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY).attr({opacity: op});
             } else {
-                    context.path(`M${d*2} ${d}h${d}v${d}l-${d} ${d}H${d}v-${d}`)
+                    context.path(`M${d} 0h${d}v${d}l-${d} ${d}H0v-${d}`)
                     .fill(gradient).move(startX + this.config.margin + this.shiftX, startY + this.config.margin + this.shiftY);
             }
         } else {
