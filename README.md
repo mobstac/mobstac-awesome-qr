@@ -149,7 +149,11 @@ interface Sticker {
 
 ### Browser usage
 
-In browser environments, the package automatically uses `BrowserImageIO` instead of `NodeImageIO` (via the `browser` field in `package.json`). If your logos/backgrounds are on a different origin, provide an image proxy:
+In browser environments, the package automatically uses `BrowserImageIO` instead of `NodeImageIO`, passing it `imageServerURL` and `imageServerRequestHeaders` when they are set. Without an `imageServerURL`, images are fetched directly, so they must allow cross-origin requests.
+
+In the browser, the root `<svg>` has no `width` or `height`, only a `viewBox`, so the QR scales to the element it is placed in. Node output keeps the fixed size.
+
+If your logos/backgrounds are on a different origin, provide an image proxy:
 
 ```typescript
 import { BrowserImageIO } from 'mobstac-awesome-qr/lib/io/BrowserImageIO';
@@ -267,7 +271,7 @@ src/
 
 **Toolchain:** TypeScript 5.7, webpack 5, mocha 10 — target `es2022`. `node-fetch` fully removed (native `fetch` only). Image processing via `sharp` 0.33.x.
 
-This produces byte-for-byte identical SVG output in both Node.js and browser environments.
+This produces byte-for-byte identical SVG output in both Node.js and browser environments, except that in the browser the root `<svg>` has no `width` or `height` (see [Browser usage](#browser-usage)).
 
 ## Changelog
 

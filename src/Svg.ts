@@ -3,7 +3,7 @@ import { CanvasUtil, maxLogoScale } from './Common';
 import { DEFAULT_CANVAS_SIZE, DEFAULT_TEXT_TAG_FONT_SIZE, LogoSize, maxLogoSizeConfigERH, maxLogoSizeConfigERL, maxLogoSizeConfigERM, maxLogoSizeConfigERQ} from './Constants';
 import { DataPattern, EyeBallShape, EyeFrameShape, GradientType, QRCodeFrame, QRErrorCorrectLevel, TextTagPosition } from './Enums';
 import { QRCodeConfig, QRDrawingConfig, Sticker } from './Types';
-import { getFrameTextSize, getLengthOfLongestText } from './Util';
+import { getFrameTextSize, getLengthOfLongestText, isBrowserEnvironment } from './Util';
 import { SvgCanvas } from './svg/SvgCanvas';
 import { SvgElement, sanitizeSvg, stripRootSizeAttrs } from './svg/SvgElement';
 import { SvgGradient } from './svg/SvgGradient';
@@ -125,18 +125,19 @@ export class SVGDrawing {
         this.isPainted = false;
         if (config.imageIO) {
             this.imageIO = config.imageIO;
-        } else if (config.imageServerURL) {
-            const isBrowser = typeof (globalThis as any).window !== 'undefined';
-            if (!isBrowser) {
-                throw new Error(
-                    'imageServerURL requires a browser environment. ' +
-                    'In Node, pass an explicit imageIO instance instead.'
-                );
-            }
+        } else if (isBrowserEnvironment()) {
+            // Browser bundles swap NodeImageIO.js for BrowserImageIO.js (the package.json
+            // `browser` field), so `NodeImageIO` is undefined there. Always use
+            // BrowserImageIO in the browser, with or without an image server.
             const { BrowserImageIO } = require('./io/BrowserImageIO');
             this.imageIO = new BrowserImageIO(
                 config.imageServerURL,
                 config.imageServerRequestHeaders
+            );
+        } else if (config.imageServerURL) {
+            throw new Error(
+                'imageServerURL requires a browser environment. ' +
+                'In Node, pass an explicit imageIO instance instead.'
             );
         } else {
             this.imageIO = new NodeImageIO();
@@ -327,6 +328,9 @@ export class SVGDrawing {
                 return this.addSticker(canvas);
             })
             .then((canvas: any) => {
+                if (isBrowserEnvironment()) {
+                    this.removeRootSize(canvas);
+                }
                 return canvas.svg();
             })
             .catch((err: any) => {
@@ -334,6 +338,19 @@ export class SVGDrawing {
                 (wrapped as any).cause = err;
                 throw wrapped;
             });
+    }
+
+    /**
+     * Browser only (ported from dashboard_version): drops the root `width` and `height` so the
+     * QR scales to whatever box it is placed in, keeping a `viewBox` for the aspect ratio. Node
+     * output keeps its fixed size, which server-side rasterizing relies on.
+     */
+    private removeRootSize(canvas: SvgCanvas): void {
+        if (!canvas.root.getAttr('viewBox')) {
+            canvas.viewbox(0, 0, canvas.width(), canvas.height());
+        }
+        canvas.root.removeAttr('width');
+        canvas.root.removeAttr('height');
     }
 
     addTextTag(mainCanvas: SvgCanvas): any {

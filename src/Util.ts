@@ -1,3 +1,6 @@
+/** True in a browser (a `window` global exists), false in Node. */
+export const isBrowserEnvironment = (): boolean => typeof (globalThis as any).window !== 'undefined';
+
 export const getFrameTextSize = (configSize: number, textLength: number) => {
     let factor;
 

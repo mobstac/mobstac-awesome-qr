@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Browser builds without an `imageServerURL` threw `NodeImageIO is not a constructor`.** Bundlers swap `NodeImageIO.js` for `BrowserImageIO.js` (the `browser` field), so the Node fallback was undefined. In a browser, `BrowserImageIO` is now always used, with the image server when one is given and direct fetches otherwise.
+- **Browser output had a fixed root size.** Ported from dashboard_version: in a browser, the root `<svg>` drops `width`/`height` and keeps its `viewBox`, so the QR scales to its container, as it did in 2.6.5. Node output is unchanged.
+
 ## [5.0.0-beta.1] - 2026-03-28
 
 ### Added
