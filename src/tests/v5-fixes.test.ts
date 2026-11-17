@@ -116,7 +116,7 @@ describe('Circular frame stroke overflow padding', () => {
 // ─── 2. Circular frame transparent fill ────────────────────────────
 
 describe('Circular frame transparent fill', () => {
-    it('outer decorative circle uses transparent fill (#ffffff00), not gradient', async () => {
+    it('outer decorative ring has no fill, not gradient', async () => {
         const config = {
             text: 'https://example.com',
             size: 512,
@@ -137,7 +137,7 @@ describe('Circular frame transparent fill', () => {
         // The outer ring is the stroked circle (drawn last, over the QR)
         const outerCircle = circles.find(c => c.stroke);
         expect(outerCircle).to.exist;
-        expect(outerCircle!.fill).to.equal('#ffffff00');
+        expect(outerCircle!.fill).to.equal('none');
     });
 
     it('inner fill circle uses background color', async () => {
@@ -191,7 +191,7 @@ describe('Circular frame transparent fill', () => {
         };
         const qr = await new QRCodeBuilder(config).build(CanvasType.SVG);
         const circles = parseCircles(qr.svg as string);
-        expect(circles.find(c => c.stroke)!.fill).to.equal('#ffffff00');
+        expect(circles.find(c => c.stroke)!.fill).to.equal('none');
         expect(circles.find(c => !c.stroke)!.fill).to.equal('none');
     });
 
@@ -215,7 +215,7 @@ describe('Circular frame transparent fill', () => {
 
         // The ring is drawn over the QR, so a non-transparent fill would cover it.
         expect(circles.find(c => !c.stroke)!.fill).to.equal('rgba(255,0,0,0.5)');
-        expect(circles.find(c => c.stroke)!.fill).to.equal('#ffffff00');
+        expect(circles.find(c => c.stroke)!.fill).to.equal('none');
     });
 });
 
